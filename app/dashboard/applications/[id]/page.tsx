@@ -141,7 +141,7 @@ export default function ApplicationDetailPage() {
   const fetchApplication = async () => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`
       );
@@ -168,7 +168,7 @@ export default function ApplicationDetailPage() {
   const updateStatus = async (newStatus: string, reason?: string) => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
       const body: { status: string; rejectionReason?: string } = {
         status: newStatus,
       };
@@ -239,7 +239,7 @@ export default function ApplicationDetailPage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
         {

@@ -77,7 +77,7 @@ export async function GET(
 
     // Call backend API
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
     const response = await fetch(
       `${backendUrl}/api/evaluations/application/${applicationId}`,
       {
@@ -187,12 +187,12 @@ export async function PUT(
     console.log("Reviewer ID:", user.id);
     console.log(
       "Backend URL:",
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001"
     );
 
     // Call backend API
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
     const backendEndpoint = `${backendUrl}/api/evaluations/application/${applicationId}`;
     console.log("Calling backend endpoint:", backendEndpoint);
 

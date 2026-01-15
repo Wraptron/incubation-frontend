@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
     const primaryBackendUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       (process.env.NODE_ENV === "development"
-        ? "http://localhost:5000"
-        : "http://localhost:5000");
+        ? "http://65.1.107.13:5001"
+        : "http://65.1.107.13:5001");
 
     // Try primary backend; if blocked (e.g., macOS AirPlay on 5000), fall back to 5050
     const tryPost = async (url: string) =>

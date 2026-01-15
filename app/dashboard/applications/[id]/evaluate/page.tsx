@@ -202,7 +202,7 @@ export default function EvaluatePage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
       console.log("Fetching application:", params.id);
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`
