@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/apply/route": "/api/apply",
+  "/api/evaluations/application/[applicationId]/route": "/api/evaluations/application/[applicationId]",
+  "/apply/page": "/apply",
+  "/dashboard/applications/[id]/evaluate/page": "/dashboard/applications/[id]/evaluate",
+  "/dashboard/applications/[id]/page": "/dashboard/applications/[id]",
+  "/dashboard/cohorts/page": "/dashboard/cohorts",
+  "/dashboard/page": "/dashboard",
+  "/dashboard/users/page": "/dashboard/users",
+  "/favicon.ico/route": "/favicon.ico",
+  "/login/page": "/login",
+  "/page": "/"
+}
