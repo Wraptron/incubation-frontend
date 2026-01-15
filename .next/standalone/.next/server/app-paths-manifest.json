@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/apply/route": "app/api/apply/route.js",
+  "/api/evaluations/application/[applicationId]/route": "app/api/evaluations/application/[applicationId]/route.js",
+  "/apply/page": "app/apply/page.js",
+  "/dashboard/applications/[id]/evaluate/page": "app/dashboard/applications/[id]/evaluate/page.js",
+  "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
+  "/dashboard/cohorts/page": "app/dashboard/cohorts/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/users/page": "app/dashboard/users/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js"
+}
