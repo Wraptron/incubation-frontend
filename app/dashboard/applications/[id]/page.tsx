@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { config } from "@/lib/config";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import {
   Dialog,
@@ -168,8 +169,7 @@ export default function ApplicationDetailPage() {
 
   const fetchApplication = async () => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const backendUrl = config.apiUrl;
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`
       );
@@ -335,8 +335,7 @@ export default function ApplicationDetailPage() {
 
   const updateStatus = async (newStatus: string, reason?: string) => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const backendUrl = config.apiUrl;
       const body: { status: string; rejectionReason?: string } = {
         status: newStatus,
       };
@@ -412,8 +411,7 @@ export default function ApplicationDetailPage() {
         return;
       }
 
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const backendUrl = config.apiUrl;
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
         {

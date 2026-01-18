@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { config } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -201,8 +202,7 @@ export default function EvaluatePage() {
         return;
       }
 
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const backendUrl = config.apiUrl;
       console.log("Fetching application:", params.id);
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`

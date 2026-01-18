@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { config } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,8 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send to backend API
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const backendUrl = config.apiUrl;
     const response = await fetch(`${backendUrl}/api/applications`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

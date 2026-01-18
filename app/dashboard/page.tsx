@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { config } from "@/lib/config";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -44,8 +45,7 @@ export default function DashboardPage() {
 
   const fetchApplications = async () => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const backendUrl = config.apiUrl;
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
       const response = await fetch(`${backendUrl}/api/applications${params}`);
 
