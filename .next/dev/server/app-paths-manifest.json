@@ -1,8 +1,4 @@
 {
-  "/api/evaluations/application/[applicationId]/all/route": "app/api/evaluations/application/[applicationId]/all/route.js",
-  "/api/evaluations/application/[applicationId]/route": "app/api/evaluations/application/[applicationId]/route.js",
-  "/dashboard/applications/[id]/evaluate/page": "app/dashboard/applications/[id]/evaluate/page.js",
-  "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/login/page": "app/login/page.js",
   "/page": "app/page.js"

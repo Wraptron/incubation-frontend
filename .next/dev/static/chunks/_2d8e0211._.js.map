@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/brahmarishi/Repositories/nextjs/incubation-screen/frontend/lib/supabase.ts"],"sourcesContent":["import { createClient } from '@supabase/supabase-js';\n\nconst supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';\nconst supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || \n  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';\n\nexport const supabase = createClient(supabaseUrl, supabaseAnonKey);\n"],"names":[],"mappings":";;;;AAEoB;AAFpB;;AAEA,MAAM,cAAc,2KAAO,CAAC,GAAG,CAAC,wBAAwB,IAAI;AAC5D,MAAM,kBAAkB,2KAAO,CAAC,GAAG,CAAC,6BAA6B,IAC/D;AAEK,MAAM,WAAW,IAAA,iMAAY,EAAC,aAAa"}}]
-}
