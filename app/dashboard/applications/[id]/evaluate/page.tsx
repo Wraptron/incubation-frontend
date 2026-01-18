@@ -202,7 +202,7 @@ export default function EvaluatePage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       console.log("Fetching application:", params.id);
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`
@@ -469,7 +469,7 @@ export default function EvaluatePage() {
             <Button
               onClick={() => handleSave(false)}
               disabled={isSaving}
-              variant="default"
+              className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
             >
               {isSaving ? "Saving..." : "Save Evaluation"}
             </Button>

@@ -403,7 +403,7 @@ export default function ApplyPage() {
           <div className="flex justify-end gap-4">
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => window.history.back()}
             >
               Cancel

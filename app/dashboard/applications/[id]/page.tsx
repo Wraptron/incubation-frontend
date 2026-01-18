@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Application {
   id: string;
@@ -71,6 +72,30 @@ export default function ApplicationDetailPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [evaluations, setEvaluations] = useState<
+    Array<{
+      id: string;
+      reviewer_id: string;
+      need_score: number | null;
+      novelty_score: number | null;
+      feasibility_scalability_score: number | null;
+      market_potential_score: number | null;
+      impact_score: number | null;
+      need_comment: string | null;
+      novelty_comment: string | null;
+      feasibility_scalability_comment: string | null;
+      market_potential_comment: string | null;
+      impact_comment: string | null;
+      overall_comment: string | null;
+      total_score: number | null;
+      created_at: string;
+      reviewer?: {
+        id: string;
+        full_name: string | null;
+      };
+    }>
+  >([]);
+  const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -108,6 +133,9 @@ export default function ApplicationDetailPage() {
       // If manager, fetch reviewers list for assignment
       if (profile.role === "manager") {
         fetchReviewers();
+        fetchAllEvaluations();
+      } else if (profile.role === "reviewer") {
+        fetchReviewerEvaluation();
       }
     } catch (error) {
       console.error("Error checking user:", error);
@@ -141,7 +169,7 @@ export default function ApplicationDetailPage() {
   const fetchApplication = async () => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`
       );
@@ -165,10 +193,150 @@ export default function ApplicationDetailPage() {
     }
   };
 
+  const fetchAllEvaluations = async () => {
+    if (!user || user.role !== "manager") return;
+
+    setIsLoadingEvaluations(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) return;
+
+      const response = await fetch(
+        `/api/evaluations/application/${params.id}/all`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const evaluationsList = data.evaluations || [];
+        console.log("Fetched evaluations:", evaluationsList.length);
+        // Calculate total scores for evaluations that don't have them
+        const evaluationsWithScores = evaluationsList.map(
+          (evaluation: {
+            total_score: number | null;
+            need_score: number | null;
+            novelty_score: number | null;
+            feasibility_scalability_score: number | null;
+            market_potential_score: number | null;
+            impact_score: number | null;
+            [key: string]: unknown;
+          }) => {
+            if (
+              evaluation.total_score === null ||
+              evaluation.total_score === undefined
+            ) {
+              const scores = [
+                evaluation.need_score,
+                evaluation.novelty_score,
+                evaluation.feasibility_scalability_score,
+                evaluation.market_potential_score,
+                evaluation.impact_score,
+              ].filter((s) => s !== null && s !== undefined) as number[];
+              evaluation.total_score = scores.reduce(
+                (sum, score) => sum + score,
+                0
+              );
+            }
+            return evaluation;
+          }
+        );
+        setEvaluations(evaluationsWithScores);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(
+          "Failed to fetch evaluations:",
+          response.status,
+          errorData
+        );
+        setUpdateMessage(errorData.error || "Failed to fetch evaluations");
+        setTimeout(() => setUpdateMessage(""), 5000);
+        setEvaluations([]);
+      }
+    } catch (error) {
+      console.error("Error fetching evaluations:", error);
+      setEvaluations([]);
+    } finally {
+      setIsLoadingEvaluations(false);
+    }
+  };
+
+  const fetchReviewerEvaluation = async () => {
+    if (!user || user.role !== "reviewer") return;
+
+    setIsLoadingEvaluations(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) return;
+
+      const response = await fetch(
+        `/api/evaluations/application/${params.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.evaluation) {
+          // Calculate total score if not present
+          const evaluation = data.evaluation;
+          if (
+            evaluation.total_score === null ||
+            evaluation.total_score === undefined
+          ) {
+            const scores = [
+              evaluation.need_score,
+              evaluation.novelty_score,
+              evaluation.feasibility_scalability_score,
+              evaluation.market_potential_score,
+              evaluation.impact_score,
+            ].filter((s) => s !== null && s !== undefined) as number[];
+            evaluation.total_score = scores.reduce(
+              (sum, score) => sum + score,
+              0
+            );
+          }
+          console.log("Fetched reviewer evaluation:", evaluation);
+          setEvaluations([evaluation]);
+        } else {
+          console.log("No evaluation found for reviewer");
+          setEvaluations([]);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(
+          "Failed to fetch evaluation:",
+          response.status,
+          errorData
+        );
+        setUpdateMessage(errorData.error || "Failed to fetch evaluation");
+        setTimeout(() => setUpdateMessage(""), 5000);
+        setEvaluations([]);
+      }
+    } catch (error) {
+      console.error("Error fetching evaluation:", error);
+      setEvaluations([]);
+    } finally {
+      setIsLoadingEvaluations(false);
+    }
+  };
+
   const updateStatus = async (newStatus: string, reason?: string) => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const body: { status: string; rejectionReason?: string } = {
         status: newStatus,
       };
@@ -192,6 +360,12 @@ export default function ApplicationDetailPage() {
         setShowRejectModal(false);
         setRejectionReason("");
         fetchApplication();
+        // Refresh evaluations
+        if (user?.role === "manager") {
+          fetchAllEvaluations();
+        } else if (user?.role === "reviewer") {
+          fetchReviewerEvaluation();
+        }
       } else {
         const data = await response.json();
         setUpdateMessage(data.error || "Failed to update status");
@@ -239,7 +413,7 @@ export default function ApplicationDetailPage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
         {
@@ -261,6 +435,10 @@ export default function ApplicationDetailPage() {
         setTimeout(() => setUpdateMessage(""), 3000);
         setShowAssignReviewer(false);
         fetchApplication();
+        // Refresh evaluations
+        if (user?.role === "manager") {
+          fetchAllEvaluations();
+        }
       } else {
         const data = await response.json();
         setUpdateMessage(data.error || "Failed to assign reviewers");
@@ -412,6 +590,11 @@ export default function ApplicationDetailPage() {
                             );
                           }
                         }}
+                        className={
+                          !showAssignReviewer
+                            ? "bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
+                            : ""
+                        }
                       >
                         {showAssignReviewer
                           ? "Cancel"
@@ -422,28 +605,45 @@ export default function ApplicationDetailPage() {
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
-                        variant="destructive"
+                        className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
                       >
                         Reject
                       </Button>
                     </>
                   )}
 
-                {/* Reviewer evaluate button */}
+               
+                {/* Evaluation status indicator */}
+                {application.status === "under_review" &&
+                  application.totalReviewers &&
+                  application.totalReviewers > 0 && (
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400 px-4 py-2">
+                      Evaluations: {application.evaluationsCount || 0}/
+                      {application.totalReviewers}
+                      {application.allEvaluationsComplete && (
+                        <span className="ml-2 text-green-600 dark:text-green-400 font-medium">
+                          ✓ Complete
+                        </span>
+                      )}
+                    </div>
+                  )}
+                   {/* Reviewer evaluate button */}
                 {user?.role === "reviewer" &&
-                  application.status === "under_review" &&
-                  application.reviewers?.some((r) => r.id === user.id) && (
+                  (application.status === "pending" ||
+                    application.status === "under_review") &&
+                  (application.reviewers?.some((r) => r.id === user.id) ||
+                    application.reviewer_id === user.id) && (
                     <Button
                       onClick={() =>
                         router.push(
                           `/dashboard/applications/${params.id}/evaluate`
                         )
                       }
+                      className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
                     >
                       Evaluate
                     </Button>
                   )}
-
                 {/* Manager actions when all evaluations are complete */}
                 {user?.role === "manager" &&
                   application.status === "under_review" &&
@@ -459,26 +659,11 @@ export default function ApplicationDetailPage() {
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
-                        variant="destructive"
+                        className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
                       >
                         Reject
                       </Button>
                     </>
-                  )}
-
-                {/* Evaluation status indicator */}
-                {application.status === "under_review" &&
-                  application.totalReviewers &&
-                  application.totalReviewers > 0 && (
-                    <div className="text-sm text-zinc-600 dark:text-zinc-400 px-4 py-2">
-                      Evaluations: {application.evaluationsCount || 0}/
-                      {application.totalReviewers}
-                      {application.allEvaluationsComplete && (
-                        <span className="ml-2 text-green-600 dark:text-green-400 font-medium">
-                          ✓ Complete
-                        </span>
-                      )}
-                    </div>
                   )}
               </div>
             </div>
@@ -505,7 +690,7 @@ export default function ApplicationDetailPage() {
                   {availableReviewers.map((reviewer) => (
                     <label
                       key={reviewer.id}
-                      className="flex items-center space-x-3 p-3 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                      className="flex items-center space-x-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -550,7 +735,7 @@ export default function ApplicationDetailPage() {
                           setSelectedReviewers([]);
                         }
                       }}
-                      variant="outline"
+                      variant="default"
                     >
                       Cancel
                     </Button>
@@ -582,7 +767,7 @@ export default function ApplicationDetailPage() {
             </div>
             <DialogFooter>
               <Button
-                variant="outline"
+                variant="default"
                 onClick={() => {
                   setShowRejectModal(false);
                   setRejectionReason("");
@@ -593,7 +778,7 @@ export default function ApplicationDetailPage() {
               <Button
                 onClick={handleReject}
                 disabled={!rejectionReason.trim()}
-                variant="destructive"
+                className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90 disabled:opacity-50"
               >
                 Reject Application
               </Button>
@@ -601,182 +786,393 @@ export default function ApplicationDetailPage() {
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-6">
-          {/* Company Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Website
-                  </label>
-                  {application.website ? (
-                    <a
-                      href={application.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {application.website}
-                    </a>
-                  ) : (
-                    <p className="text-black dark:text-zinc-50">N/A</p>
-                  )}
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Description
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.description}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs
+              defaultValue="startup-info"
+              className="w-full"
+              onValueChange={(value) => {
+                // Refresh evaluations when switching to evaluations tab
+                if (value === "evaluations") {
+                  if (user?.role === "manager") {
+                    fetchAllEvaluations();
+                  } else if (user?.role === "reviewer") {
+                    fetchReviewerEvaluation();
+                  }
+                }
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="startup-info">
+                  Startup Information
+                </TabsTrigger>
+                <TabsTrigger value="application-form">
+                  Application Form
+                </TabsTrigger>
+                <TabsTrigger value="evaluations">Evaluations</TabsTrigger>
+              </TabsList>
 
-          {/* Founder Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Founder Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Founder Name
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.founder_name}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Co-Founders
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.co_founders || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Email
-                  </label>
-                  <a
-                    href={`mailto:${application.email}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {application.email}
-                  </a>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Phone
-                  </label>
-                  <a
-                    href={`tel:${application.phone}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {application.phone}
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Startup Information Tab */}
+              <TabsContent value="startup-info" className="space-y-6 mt-6">
+                {/* Company Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Company Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Website
+                        </label>
+                        {application.website ? (
+                          <a
+                            href={application.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline block"
+                          >
+                            {application.website}
+                          </a>
+                        ) : (
+                          <p className="text-black dark:text-zinc-50">N/A</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Description
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Business Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Business Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Problem
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.problem}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Solution
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.solution}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Target Market
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.target_market}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Business Model
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.business_model}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Founder Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Founder Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Founder Name
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.founder_name}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Co-Founders
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.co_founders || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Email
+                        </label>
+                        <a
+                          href={`mailto:${application.email}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline block"
+                        >
+                          {application.email}
+                        </a>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Phone
+                        </label>
+                        <a
+                          href={`tel:${application.phone}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline block"
+                        >
+                          {application.phone}
+                        </a>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          {/* Funding & Traction */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Funding & Traction</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Funding Stage
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.funding_stage?.replace("_", " ") || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Funding Amount
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.funding_amount || "N/A"}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Current Traction
-                  </label>
-                  <p className="text-black dark:text-zinc-50">
-                    {application.current_traction || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Application Form Tab */}
+              <TabsContent value="application-form" className="space-y-6 mt-6">
+                {/* Business Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Business Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Problem
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.problem}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Solution
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.solution}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Target Market
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.target_market}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Business Model
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.business_model}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          {/* Why Incubator */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Why Our Incubator?</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-black dark:text-zinc-50">
-                {application.why_incubator}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+                {/* Funding & Traction */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Funding & Traction</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Funding Stage
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.funding_stage?.replace("_", " ") ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Funding Amount
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.funding_amount || "N/A"}
+                        </p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Current Traction
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.current_traction || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Why Incubator */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Why Our Incubator?</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-black dark:text-zinc-50">
+                      {application.why_incubator}
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Evaluations Tab */}
+              <TabsContent value="evaluations" className="space-y-6 mt-6">
+                {isLoadingEvaluations ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        Loading evaluations...
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : evaluations.length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        {user?.role === "manager"
+                          ? "No evaluations have been submitted yet."
+                          : "You haven't submitted an evaluation yet."}
+                      </p>
+                      {user?.role === "reviewer" &&
+                        (application.status === "pending" ||
+                          application.status === "under_review") &&
+                        (application.reviewers?.some((r) => r.id === user.id) ||
+                          application.reviewer_id === user.id) && (
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/applications/${params.id}/evaluate`
+                              )
+                            }
+                            variant="default"
+                            className="mt-4"
+                          >
+                            Start Evaluation
+                          </Button>
+                        )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  evaluations.map((evaluation) => (
+                    <Card key={evaluation.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <CardTitle>
+                            Evaluation
+                            {evaluation.reviewer && (
+                              <span className="text-sm font-normal text-zinc-600 dark:text-zinc-400 ml-2">
+                                by {evaluation.reviewer.full_name || "Unknown"}
+                              </span>
+                            )}
+                          </CardTitle>
+                          {evaluation.total_score !== null && (
+                            <Badge variant="secondary" className="text-lg">
+                              Total: {evaluation.total_score}/50
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                          Submitted:{" "}
+                          {new Date(evaluation.created_at).toLocaleDateString()}
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {/* Need */}
+                          {evaluation.need_score !== null && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                  1. Need
+                                </label>
+                                <Badge variant="secondary">
+                                  {evaluation.need_score}/10
+                                </Badge>
+                              </div>
+                              {evaluation.need_comment && (
+                                <p className="text-sm text-black dark:text-zinc-50 mt-1">
+                                  {evaluation.need_comment}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Novelty */}
+                          {evaluation.novelty_score !== null && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                  2. Novelty
+                                </label>
+                                <Badge variant="secondary">
+                                  {evaluation.novelty_score}/10
+                                </Badge>
+                              </div>
+                              {evaluation.novelty_comment && (
+                                <p className="text-sm text-black dark:text-zinc-50 mt-1">
+                                  {evaluation.novelty_comment}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Feasibility & Scalability */}
+                          {evaluation.feasibility_scalability_score !==
+                            null && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                  3. Feasibility & Scalability
+                                </label>
+                                <Badge variant="secondary">
+                                  {evaluation.feasibility_scalability_score}/10
+                                </Badge>
+                              </div>
+                              {evaluation.feasibility_scalability_comment && (
+                                <p className="text-sm text-black dark:text-zinc-50 mt-1">
+                                  {evaluation.feasibility_scalability_comment}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Market Potential */}
+                          {evaluation.market_potential_score !== null && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                  4. Market Potential
+                                </label>
+                                <Badge variant="secondary">
+                                  {evaluation.market_potential_score}/10
+                                </Badge>
+                              </div>
+                              {evaluation.market_potential_comment && (
+                                <p className="text-sm text-black dark:text-zinc-50 mt-1">
+                                  {evaluation.market_potential_comment}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Impact */}
+                          {evaluation.impact_score !== null && (
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                  5. Impact
+                                </label>
+                                <Badge variant="secondary">
+                                  {evaluation.impact_score}/10
+                                </Badge>
+                              </div>
+                              {evaluation.impact_comment && (
+                                <p className="text-sm text-black dark:text-zinc-50 mt-1">
+                                  {evaluation.impact_comment}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Overall Comment */}
+                          {evaluation.overall_comment && (
+                            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                              <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-2 block">
+                                Overall Comment
+                              </label>
+                              <p className="text-sm text-black dark:text-zinc-50">
+                                {evaluation.overall_comment}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </span>
             <Button
               onClick={handleLogout}
-              variant="outline"
+              variant="default"
               size="sm"
             >
               Logout

@@ -3,25 +3,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { ArrowLeftIcon, ArrowRightIcon, RocketIcon } from "lucide-react";
 
 interface SidebarProps {
   userRole: string;
 }
 
 export default function Sidebar({ userRole }: SidebarProps) {
-  const [isMinimized, setIsMinimized] = useState(false);
-  const pathname = usePathname();
-
-  // Load sidebar state from localStorage
-  useEffect(() => {
-    const savedState = localStorage.getItem("sidebarMinimized");
-    if (savedState !== null) {
-      setIsMinimized(savedState === "true");
-      updateContentMargin(savedState === "true");
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedState = localStorage.getItem("sidebarMinimized");
+      return savedState === "true";
     }
-  }, []);
+    return false;
+  });
+  const pathname = usePathname();
 
   // Update content margin based on sidebar state
   const updateContentMargin = (minimized: boolean) => {
@@ -30,6 +27,11 @@ export default function Sidebar({ userRole }: SidebarProps) {
       (content as HTMLElement).style.marginLeft = minimized ? "4rem" : "16rem";
     }
   };
+
+  // Initialize content margin on mount
+  useEffect(() => {
+    updateContentMargin(isMinimized);
+  }, [isMinimized]);
 
   // Save sidebar state to localStorage
   const toggleMinimize = () => {
@@ -121,46 +123,45 @@ export default function Sidebar({ userRole }: SidebarProps) {
       style={{ width: isMinimized ? "4rem" : "16rem" }}
     >
       {/* Header */}
-      <div className="h-16 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4">
-        {!isMinimized && (
-          <h2 className="text-lg font-bold text-black dark:text-zinc-50">
-            Dashboard
-          </h2>
+      <div
+        className={`h-16 border-b border-zinc-200 dark:border-zinc-800 flex items-center ${
+          isMinimized ? "justify-center" : "justify-between"
+        } px-4`}
+      >
+        {isMinimized ? (
+          <div className="flex items-center justify-center">
+            <svg
+              className="w-6 h-6 text-black dark:text-zinc-50"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-black dark:text-zinc-50">
+              LaunchPad
+            </h2>
+          </div>
         )}
         <Button
           onClick={toggleMinimize}
           variant="ghost"
           size="icon"
           aria-label={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
+          className={isMinimized ? "absolute right-2" : ""}
         >
           {isMinimized ? (
-            <svg
-              className="w-5 h-5 text-zinc-600 dark:text-zinc-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <ArrowRightIcon className="w-5 h-5 text-zinc-600 dark:text-zinc-400 mr-4" />
           ) : (
-            <svg
-              className="w-5 h-5 text-zinc-600 dark:text-zinc-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <ArrowLeftIcon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
           )}
         </Button>
       </div>
@@ -174,14 +175,26 @@ export default function Sidebar({ userRole }: SidebarProps) {
               <li key={item.name}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    active
-                      ? "bg-black dark:bg-zinc-50 text-white dark:text-black"
-                      : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className={`flex items-center transition-colors ${
+                    isMinimized
+                      ? active
+                        ? "justify-center w-10 h-10 rounded bg-black dark:bg-zinc-50 text-white dark:text-black"
+                        : "justify-center w-10 h-10 rounded text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      : active
+                      ? "gap-3 px-3 py-2 rounded-md bg-black dark:bg-zinc-50 text-white dark:text-black"
+                      : "gap-3 px-3 py-2 rounded-md text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   }`}
                   title={isMinimized ? item.name : undefined}
                 >
-                  <span className="flex-shrink-0">{item.icon}</span>
+                  <span
+                    className={`flex-shrink-0 ${
+                      isMinimized && active
+                        ? "flex items-center justify-center"
+                        : ""
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
                   {!isMinimized && (
                     <span className="font-medium">{item.name}</span>
                   )}
