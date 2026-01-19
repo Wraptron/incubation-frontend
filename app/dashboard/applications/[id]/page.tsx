@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { backendUrl } from "@/lib/config";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import {
   Dialog,
@@ -168,8 +169,6 @@ export default function ApplicationDetailPage() {
 
   const fetchApplication = async () => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
       );
@@ -335,8 +334,6 @@ export default function ApplicationDetailPage() {
 
   const updateStatus = async (newStatus: string, reason?: string) => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const body: { status: string; rejectionReason?: string } = {
         status: newStatus,
       };
@@ -412,8 +409,6 @@ export default function ApplicationDetailPage() {
         return;
       }
 
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
         {

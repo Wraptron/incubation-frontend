@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { backendUrl } from "@/lib/config";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,8 +45,6 @@ export default function DashboardPage() {
 
   const fetchApplications = async () => {
     try {
-      const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
       const response = await fetch(`${backendUrl}/api/applications${params}`);
 
