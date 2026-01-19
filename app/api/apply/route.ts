@@ -90,9 +90,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`Sending request to: ${backendUrl}/api/applications`);
+    console.log(`Sending request to: http://65.1.107.13:5001/api/applications`);
     
-    const response = await fetch(`${backendUrl}/api/applications`, {
+    const response = await fetch(`http://65.1.107.13:5001/api/applications`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -122,9 +122,9 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log(`Fetching from: ${backendUrl}/api/applications`);
+    console.log(`Fetching from: http://65.1.107.13:5001/api/applications`);
     
-    const response = await fetch(`${backendUrl}/api/applications`, {
+    const response = await fetch(`http://65.1.107.13:5001/api/applications`, {
       method: "GET",
       headers: { 
         "Content-Type": "application/json",
