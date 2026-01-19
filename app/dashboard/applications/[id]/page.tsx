@@ -169,9 +169,9 @@ export default function ApplicationDetailPage() {
   const fetchApplication = async () => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`
+        `${backendUrl}/api/applications/${params.id}`,
       );
 
       if (response.ok) {
@@ -180,7 +180,7 @@ export default function ApplicationDetailPage() {
         // Initialize selected reviewers with currently assigned reviewers
         if (data.application.reviewers) {
           setSelectedReviewers(
-            data.application.reviewers.map((r: { id: string }) => r.id)
+            data.application.reviewers.map((r: { id: string }) => r.id),
           );
         }
       } else {
@@ -210,7 +210,7 @@ export default function ApplicationDetailPage() {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -241,11 +241,11 @@ export default function ApplicationDetailPage() {
               ].filter((s) => s !== null && s !== undefined) as number[];
               evaluation.total_score = scores.reduce(
                 (sum, score) => sum + score,
-                0
+                0,
               );
             }
             return evaluation;
-          }
+          },
         );
         setEvaluations(evaluationsWithScores);
       } else {
@@ -253,7 +253,7 @@ export default function ApplicationDetailPage() {
         console.error(
           "Failed to fetch evaluations:",
           response.status,
-          errorData
+          errorData,
         );
         setUpdateMessage(errorData.error || "Failed to fetch evaluations");
         setTimeout(() => setUpdateMessage(""), 5000);
@@ -284,7 +284,7 @@ export default function ApplicationDetailPage() {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -305,7 +305,7 @@ export default function ApplicationDetailPage() {
             ].filter((s) => s !== null && s !== undefined) as number[];
             evaluation.total_score = scores.reduce(
               (sum, score) => sum + score,
-              0
+              0,
             );
           }
           console.log("Fetched reviewer evaluation:", evaluation);
@@ -319,7 +319,7 @@ export default function ApplicationDetailPage() {
         console.error(
           "Failed to fetch evaluation:",
           response.status,
-          errorData
+          errorData,
         );
         setUpdateMessage(errorData.error || "Failed to fetch evaluation");
         setTimeout(() => setUpdateMessage(""), 5000);
@@ -336,7 +336,7 @@ export default function ApplicationDetailPage() {
   const updateStatus = async (newStatus: string, reason?: string) => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const body: { status: string; rejectionReason?: string } = {
         status: newStatus,
       };
@@ -351,7 +351,7 @@ export default function ApplicationDetailPage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-        }
+        },
       );
 
       if (response.ok) {
@@ -413,7 +413,7 @@ export default function ApplicationDetailPage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const response = await fetch(
         `${backendUrl}/api/applications/${params.id}`,
         {
@@ -423,14 +423,14 @@ export default function ApplicationDetailPage() {
             reviewerIds: selectedReviewers,
             // Backend will auto-transition from pending to under_review
           }),
-        }
+        },
       );
 
       if (response.ok) {
         setUpdateMessage(
           selectedReviewers.length === 1
             ? "Reviewer assigned successfully"
-            : `${selectedReviewers.length} reviewers assigned successfully`
+            : `${selectedReviewers.length} reviewers assigned successfully`,
         );
         setTimeout(() => setUpdateMessage(""), 3000);
         setShowAssignReviewer(false);
@@ -586,7 +586,7 @@ export default function ApplicationDetailPage() {
                           // Initialize selected reviewers when opening
                           if (!showAssignReviewer && application.reviewers) {
                             setSelectedReviewers(
-                              application.reviewers.map((r) => r.id)
+                              application.reviewers.map((r) => r.id),
                             );
                           }
                         }}
@@ -599,9 +599,9 @@ export default function ApplicationDetailPage() {
                         {showAssignReviewer
                           ? "Cancel"
                           : application.reviewers &&
-                            application.reviewers.length > 0
-                          ? "Manage Reviewers"
-                          : "Assign Reviewers"}
+                              application.reviewers.length > 0
+                            ? "Manage Reviewers"
+                            : "Assign Reviewers"}
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
@@ -612,7 +612,6 @@ export default function ApplicationDetailPage() {
                     </>
                   )}
 
-               
                 {/* Evaluation status indicator */}
                 {application.status === "under_review" &&
                   application.totalReviewers &&
@@ -627,7 +626,7 @@ export default function ApplicationDetailPage() {
                       )}
                     </div>
                   )}
-                   {/* Reviewer evaluate button */}
+                {/* Reviewer evaluate button */}
                 {user?.role === "reviewer" &&
                   (application.status === "pending" ||
                     application.status === "under_review") &&
@@ -636,7 +635,7 @@ export default function ApplicationDetailPage() {
                     <Button
                       onClick={() =>
                         router.push(
-                          `/dashboard/applications/${params.id}/evaluate`
+                          `/dashboard/applications/${params.id}/evaluate`,
                         )
                       }
                       className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
@@ -729,7 +728,7 @@ export default function ApplicationDetailPage() {
                         // Reset selection when canceling
                         if (application?.reviewers) {
                           setSelectedReviewers(
-                            application.reviewers.map((r) => r.id)
+                            application.reviewers.map((r) => r.id),
                           );
                         } else {
                           setSelectedReviewers([]);
@@ -1020,7 +1019,7 @@ export default function ApplicationDetailPage() {
                           <Button
                             onClick={() =>
                               router.push(
-                                `/dashboard/applications/${params.id}/evaluate`
+                                `/dashboard/applications/${params.id}/evaluate`,
                               )
                             }
                             variant="default"

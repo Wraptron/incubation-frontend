@@ -45,7 +45,7 @@ export default function DashboardPage() {
   const fetchApplications = async () => {
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
       const response = await fetch(`${backendUrl}/api/applications${params}`);
 
@@ -58,7 +58,7 @@ export default function DashboardPage() {
         console.error(
           "Error fetching applications:",
           response.status,
-          errorData
+          errorData,
         );
       }
     } catch (error) {
@@ -299,7 +299,7 @@ export default function DashboardPage() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   router.push(
-                                    `/dashboard/applications/${app.id}/evaluate`
+                                    `/dashboard/applications/${app.id}/evaluate`,
                                   );
                                 }}
                               >

@@ -10,7 +10,7 @@ const supabaseAnonKey =
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ applicationId: string }> }
+  { params }: { params: Promise<{ applicationId: string }> },
 ) {
   try {
     // Await params in Next.js 15+
@@ -32,7 +32,7 @@ export async function GET(
       console.error("Invalid applicationId in GET route:", applicationId);
       return NextResponse.json(
         { error: "Invalid application ID", received: applicationId },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -71,20 +71,20 @@ export async function GET(
     if (!profile || profile.role !== "reviewer") {
       return NextResponse.json(
         { error: "Forbidden - Reviewer access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     // Call backend API
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
     const response = await fetch(
       `${backendUrl}/api/evaluations/application/${applicationId}`,
       {
         headers: {
           "x-reviewer-id": user.id,
         },
-      }
+      },
     );
 
     const data = await response.json();
@@ -92,7 +92,7 @@ export async function GET(
     if (!response.ok) {
       return NextResponse.json(
         { error: data.error || "Failed to fetch evaluation" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -101,14 +101,14 @@ export async function GET(
     console.error("Error fetching evaluation:", error);
     return NextResponse.json(
       { error: "Failed to fetch evaluation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ applicationId: string }> }
+  { params }: { params: Promise<{ applicationId: string }> },
 ) {
   try {
     // Await params in Next.js 15+
@@ -130,7 +130,7 @@ export async function PUT(
       console.error("Invalid applicationId in PUT route:", applicationId);
       return NextResponse.json(
         { error: "Invalid application ID", received: applicationId },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -169,7 +169,7 @@ export async function PUT(
     if (!profile || profile.role !== "reviewer") {
       return NextResponse.json(
         { error: "Forbidden - Reviewer access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -180,19 +180,19 @@ export async function PUT(
       console.error("User or user.id is missing:", { user });
       return NextResponse.json(
         { error: "User ID is missing" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     console.log("Reviewer ID:", user.id);
     console.log(
       "Backend URL:",
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000",
     );
 
     // Call backend API
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
     const backendEndpoint = `${backendUrl}/api/evaluations/application/${applicationId}`;
     console.log("Calling backend endpoint:", backendEndpoint);
 
@@ -210,7 +210,7 @@ export async function PUT(
     if (!response.ok) {
       return NextResponse.json(
         { error: data.error || "Failed to save evaluation" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -219,7 +219,7 @@ export async function PUT(
     console.error("Error saving evaluation:", error);
     return NextResponse.json(
       { error: "Failed to save evaluation" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

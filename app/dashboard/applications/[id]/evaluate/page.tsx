@@ -202,10 +202,10 @@ export default function EvaluatePage() {
       }
 
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
       console.log("Fetching application:", params.id);
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`
+        `${backendUrl}/api/applications/${params.id}`,
       );
 
       if (response.ok) {
@@ -249,7 +249,7 @@ export default function EvaluatePage() {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -371,7 +371,7 @@ export default function EvaluatePage() {
             needScore: parseInt(formData.needScore),
             noveltyScore: parseInt(formData.noveltyScore),
             feasibilityScalabilityScore: parseInt(
-              formData.feasibilityScalabilityScore
+              formData.feasibilityScalabilityScore,
             ),
             marketPotentialScore: parseInt(formData.marketPotentialScore),
             impactScore: parseInt(formData.impactScore),
@@ -383,7 +383,7 @@ export default function EvaluatePage() {
             impactComment: formData.impactComment || null,
             overallComment: formData.overallComment || null,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -392,7 +392,7 @@ export default function EvaluatePage() {
         setSaveMessage(
           evaluation
             ? "Evaluation updated successfully"
-            : "Evaluation saved successfully"
+            : "Evaluation saved successfully",
         );
         setEvaluation(data.evaluation);
         setTimeout(() => setSaveMessage(""), 3000);
@@ -723,7 +723,7 @@ export default function EvaluatePage() {
                             onChange={(e) =>
                               handleScoreChange(
                                 criterion.scoreKey,
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className={`flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer 
@@ -750,7 +750,7 @@ export default function EvaluatePage() {
                           onChange={(e) =>
                             handleCommentChange(
                               criterion.commentKey,
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="mt-1"
