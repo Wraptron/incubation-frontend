@@ -60,6 +60,7 @@
 
 
 import { NextRequest, NextResponse } from "next/server";
+import { backendUrl } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,9 +90,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send to backend API - Using hardcoded IP
-    const backendUrl = "http://13.126.35.2:5000";
-    
     console.log(`Sending request to: ${backendUrl}/api/applications`);
     
     const response = await fetch(`${backendUrl}/api/applications`, {
@@ -124,9 +122,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Get backend URL - Using hardcoded IP
-    const backendUrl = "http://13.126.35.2:5000";
-    
     console.log(`Fetching from: ${backendUrl}/api/applications`);
     
     const response = await fetch(`${backendUrl}/api/applications`, {

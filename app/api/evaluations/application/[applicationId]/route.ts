@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { backendUrl } from "@/lib/config";
 
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -76,8 +77,6 @@ export async function GET(
     }
 
     // Call backend API
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
     const response = await fetch(
       `${backendUrl}/api/evaluations/application/${applicationId}`,
       {
@@ -185,14 +184,9 @@ export async function PUT(
     }
 
     console.log("Reviewer ID:", user.id);
-    console.log(
-      "Backend URL:",
-      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000",
-    );
+    console.log("Backend URL:", backendUrl);
 
     // Call backend API
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5000";
     const backendEndpoint = `${backendUrl}/api/evaluations/application/${applicationId}`;
     console.log("Calling backend endpoint:", backendEndpoint);
 
