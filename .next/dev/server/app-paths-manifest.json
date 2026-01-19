@@ -1,6 +1,5 @@
 {
-  "/dashboard/cohorts/page": "app/dashboard/cohorts/page.js",
+  "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/users/page": "app/dashboard/users/page.js",
   "/login/page": "app/login/page.js"
 }

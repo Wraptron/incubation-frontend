@@ -24,7 +24,7 @@ __turbopack_context__.s([
     ()=>backendUrl
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = /*#__PURE__*/ __turbopack_context__.i("[project]/node_modules/next/dist/build/polyfills/process.js [app-client] (ecmascript)");
-const backendUrl = ("TURBOPACK compile-time value", "http://65.1.107.13:5000") || "http://13.126.35.2:5000";
+const backendUrl = ("TURBOPACK compile-time value", "http://65.1.107.13:5001") || "http://13.126.35.2:5001";
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
