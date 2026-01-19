@@ -1,2 +1,2 @@
 export const backendUrl =
-  process.env.NEXT_PUBLIC_API_URL || "http://13.126.35.2:5001";
+  process.env.NEXT_PUBLIC_API_URL || "http://65.1.107.13:5001";
