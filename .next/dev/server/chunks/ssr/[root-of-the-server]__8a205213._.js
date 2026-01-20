@@ -43,7 +43,7 @@ __turbopack_context__.s([
     "backendUrl",
     ()=>backendUrl
 ]);
-const backendUrl = ("TURBOPACK compile-time value", "http://65.1.107.13:5001") || "http://13.126.35.2:5001";
+const backendUrl = ("TURBOPACK compile-time value", "http://65.1.107.13:5001") || "http://65.1.107.13:5001";
 }),
 "[project]/lib/utils.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
