@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { backendUrl } from "@/lib/config";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -204,7 +203,7 @@ export default function EvaluatePage() {
 
       console.log("Fetching application:", params.id);
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`,
+        `/api/applications/${params.id}`,
       );
 
       if (response.ok) {

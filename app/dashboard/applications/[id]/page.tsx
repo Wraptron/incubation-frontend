@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { backendUrl } from "@/lib/config";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import {
   Dialog,
@@ -170,7 +169,7 @@ export default function ApplicationDetailPage() {
   const fetchApplication = async () => {
     try {
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`,
+        `/api/applications/${params.id}`,
       );
 
       if (response.ok) {
@@ -343,7 +342,7 @@ export default function ApplicationDetailPage() {
       }
 
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`,
+        `/api/applications/${params.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -410,7 +409,7 @@ export default function ApplicationDetailPage() {
       }
 
       const response = await fetch(
-        `${backendUrl}/api/applications/${params.id}`,
+        `/api/applications/${params.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

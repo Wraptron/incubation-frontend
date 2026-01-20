@@ -48,7 +48,7 @@ __turbopack_context__.s([
     "backendUrl",
     ()=>backendUrl
 ]);
-const backendUrl = ("TURBOPACK compile-time value", "http://localhost:5001") || "http://65.1.107.13:5001";
+const backendUrl = ("TURBOPACK compile-time value", "http://65.1.107.13:5001") || "http://65.1.107.13:5001";
 }),
 "[project]/app/api/evaluations/application/[applicationId]/all/route.ts [app-route] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
