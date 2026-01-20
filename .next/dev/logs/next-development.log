@@ -13,3 +13,7 @@
 [00:14:04.900] Server  LOG     === Frontend API Route - GET All Evaluations ===
 [00:14:04.901] Server  LOG     Application ID from params: "b2131a3c-6981-4e16-9ac3-ec2c82334064"
 [00:14:06.271] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
+[00:37:01.033] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:37:02.433] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"}]
+[00:37:08.603] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:37:08.799] Browser WARN    Image with src "http://localhost:3000/wraptron_logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
