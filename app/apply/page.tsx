@@ -29,10 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Plus, Trash2 } from "lucide-react";
+import { ToastContainer, ToastProps } from "@/components/ui/toast";
 
 export default function ApplyPage() {
   const router = useRouter();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [toasts, setToasts] = useState<Array<ToastProps & { id: string }>>([]);
   const [formData, setFormData] = useState({
     email: "",
     teamName: "",
@@ -46,16 +49,33 @@ export default function ApplyPage() {
     channel: "",
     channelOther: "",
     coFoundersCount: "",
-    facultyInvolved: "",
+    facultyInvolved: [] as Array<{
+      name: string;
+      designation: string;
+      department: string;
+      university: string;
+      roleInStartup: string;
+    }>,
     priorEntrepreneurshipExperience: "",
     teamPriorEntrepreneurshipExperience: "",
     priorExperienceDetails: "",
     mcaRegistered: "",
     dpiitRegistered: "",
     dpiitDetails: "",
-    externalFunding: "",
+    externalFunding: [] as Array<{
+      funding: string;
+      fundingType: string;
+      amount: string;
+      description: string;
+    }>,
     currentlyIncubated: "",
-    teamMembers: "",
+    teamMembers: [] as Array<{
+      name: string;
+      rollNumber: string;
+      email: string;
+      mailId: string;
+      department: string;
+    }>,
     nirmaanCanHelp: "",
     preIncubationReason: "",
     heardAboutStartups: "",
@@ -64,6 +84,7 @@ export default function ApplyPage() {
     problemSolving: "",
     yourSolution: "",
     solutionType: "",
+    solutionTypeOther: "",
     targetIndustry: "",
     otherIndustries: [] as string[],
     industryOther: "",
@@ -92,6 +113,8 @@ export default function ApplyPage() {
   const [presentationFile, setPresentationFile] = useState<File | null>(null);
   const [document1File, setDocument1File] = useState<File | null>(null);
   const [document2File, setDocument2File] = useState<File | null>(null);
+  const [ipFile, setIpFile] = useState<File | null>(null);
+  const [potentialIpFile, setPotentialIpFile] = useState<File | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -129,11 +152,53 @@ export default function ApplyPage() {
     }));
   };
 
+  const addToast = (toast: Omit<ToastProps, "id" | "onClose">) => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts((prev) => [...prev, { ...toast, id, onClose: () => removeToast(id) }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus("idle");
     setErrorMessage("");
+
+    // Validate required radio button fields
+    const requiredRadioFields = [
+      { field: "isIITM", label: "Are you from IITM?" },
+      { field: "priorEntrepreneurshipExperience", label: "Do you have prior entrepreneurship experience?" },
+      { field: "teamPriorEntrepreneurshipExperience", label: "Does anyone on your team have prior entrepreneurship experience?" },
+      { field: "mcaRegistered", label: "Is the startup registered with MCA?" },
+      { field: "hasIntellectualProperty", label: "Do you have any intellectual property (IP) on your solution?" },
+      { field: "hasPotentialIntellectualProperty", label: "Do you see any potential intellectual property (IP) on your solution?" },
+      { field: "hasProofOfConcept", label: "Do you have a proof of concept to validate your idea?" },
+      { field: "hasPatentsOrPapers", label: "Have you filed for any patents/published papers?" },
+    ];
+
+    const missingFields: string[] = [];
+    for (const { field, label } of requiredRadioFields) {
+      if (!formData[field as keyof typeof formData] || String(formData[field as keyof typeof formData]).trim() === "") {
+        missingFields.push(label);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      setIsSubmitting(false);
+      // Show toasts one by one with a delay
+      missingFields.forEach((field, index) => {
+        setTimeout(() => {
+          addToast({
+            variant: "destructive",
+            description: `Please select an option for: ${field}`,
+          });
+        }, index * 500); // 500ms delay between each toast
+      });
+      return;
+    }
 
     try {
       // Create FormData for file upload
@@ -142,7 +207,11 @@ export default function ApplyPage() {
       // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (
-          (key === "technologiesUtilized" || key === "otherIndustries") &&
+          (key === "technologiesUtilized" || 
+           key === "otherIndustries" || 
+           key === "facultyInvolved" ||
+           key === "teamMembers" ||
+           key === "externalFunding") &&
           Array.isArray(value)
         ) {
           formDataToSend.append(key, JSON.stringify(value));
@@ -162,6 +231,30 @@ export default function ApplyPage() {
       }
       if (document2File) {
         formDataToSend.append("document2File", document2File);
+      }
+
+      // Add IP files if selected
+      if (ipFile) {
+        formDataToSend.append("ipFile", ipFile);
+        console.log("Adding IP file to FormData:", { name: ipFile.name, size: ipFile.size, type: ipFile.type });
+      } else {
+        console.log("No IP file to add. hasIntellectualProperty:", formData.hasIntellectualProperty);
+      }
+      if (potentialIpFile) {
+        formDataToSend.append("potentialIpFile", potentialIpFile);
+        console.log("Adding potential IP file to FormData:", { name: potentialIpFile.name, size: potentialIpFile.size, type: potentialIpFile.type });
+      } else {
+        console.log("No potential IP file to add. hasPotentialIntellectualProperty:", formData.hasPotentialIntellectualProperty);
+      }
+
+      // Debug: Log all FormData entries (excluding file contents)
+      console.log("FormData entries being sent:");
+      for (const [key, value] of formDataToSend.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
       }
 
       const response = await fetch("/api/apply", {
@@ -194,6 +287,7 @@ export default function ApplyPage() {
 
   const showNonIITMFields = formData.isIITM === "No";
   const showChannelOther = formData.channel === "Others";
+  const showSolutionTypeOther = formData.solutionType === "Others";
   const showPriorExperience =
     formData.priorEntrepreneurshipExperience === "Yes" ||
     formData.teamPriorEntrepreneurshipExperience === "Yes";
@@ -205,6 +299,9 @@ export default function ApplyPage() {
 
   return (
     <>
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
       {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
@@ -437,7 +534,7 @@ export default function ApplyPage() {
                   required
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  placeholder="+91 9876543210"
+                  placeholder="+91 XXXXXXXXXX"
                 />
               </div>
 
@@ -514,18 +611,193 @@ export default function ApplyPage() {
                 <Label htmlFor="facultyInvolved">
                   Faculty Involved (Name, Designation, Department, Institute
                   {"{IITM or other}"} and Role in the team){" "}
-                  <span className="text-sm text-zinc-500">
-                    (if no faculty is involved then please write NA)
-                  </span>
                 </Label>
-                <Textarea
-                  id="facultyInvolved"
-                  name="facultyInvolved"
-                  rows={3}
-                  value={formData.facultyInvolved}
-                  onChange={handleChange}
-                  placeholder="Eg: &lt;Name&gt;, &lt;Designation & Department&gt;, &lt;University&gt;, &lt;Role in the startup&gt;"
-                />
+                <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-zinc-100 dark:bg-zinc-800">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            1. Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            2. Designation
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            3. Department
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            4. University
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                            5. Role in Startup
+                          </th>
+                          <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.facultyInvolved.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-3 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400"
+                            >
+                              No faculty members added. Click the Add button below to add one.
+                            </td>
+                          </tr>
+                        ) : (
+                          formData.facultyInvolved.map((faculty, index) => (
+                            <tr
+                              key={index}
+                              className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={faculty.name}
+                                  onChange={(e) => {
+                                    const updated = [...formData.facultyInvolved];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      name: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter name"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={faculty.designation}
+                                  onChange={(e) => {
+                                    const updated = [...formData.facultyInvolved];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      designation: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter designation"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={faculty.department}
+                                  onChange={(e) => {
+                                    const updated = [...formData.facultyInvolved];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      department: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter department"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={faculty.university}
+                                  onChange={(e) => {
+                                    const updated = [...formData.facultyInvolved];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      university: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  placeholder="IITM or other"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={faculty.roleInStartup}
+                                  onChange={(e) => {
+                                    const updated = [...formData.facultyInvolved];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      roleInStartup: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter role"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = formData.facultyInvolved.filter(
+                                      (_, i) => i !== index
+                                    );
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      facultyInvolved: updated,
+                                    }));
+                                  }}
+                                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                  aria-label="Remove faculty member"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          facultyInvolved: [
+                            ...prev.facultyInvolved,
+                            {
+                              name: "",
+                              designation: "",
+                              department: "",
+                              university: "",
+                              roleInStartup: "",
+                            },
+                          ],
+                        }));
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Faculty Member
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -586,7 +858,7 @@ export default function ApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="priorExperienceDetails">
-                  Please provide a brief idea about your prior experience as an
+                  Please provide a brief idea about your prior experience or your team's prior experience as an
                   entrepreneur. Do share any links to demos or websites or
                   reports that could help us understand your venture.
                 </Label>
@@ -662,14 +934,169 @@ export default function ApplyPage() {
                   External Funding Received (Grants/Funds) (Please mention the
                   funding body and the amount)
                 </Label>
-                <Textarea
-                  id="externalFunding"
-                  name="externalFunding"
-                  rows={3}
-                  value={formData.externalFunding}
-                  onChange={handleChange}
-                  placeholder="Ex. 2 lakhs grant from TN Government"
-                />
+                <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-zinc-100 dark:bg-zinc-800">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            1. Funding
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            2. Funding Type
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            3. Amount
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                            4. Description (if any)
+                          </th>
+                          <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.externalFunding.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={5}
+                              className="px-3 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400"
+                            >
+                              No funding entries added. Click the Add button below to add one.
+                            </td>
+                          </tr>
+                        ) : (
+                          formData.externalFunding.map((funding, index) => (
+                            <tr
+                              key={index}
+                              className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={funding.funding}
+                                  onChange={(e) => {
+                                    const updated = [...formData.externalFunding];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      funding: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      externalFunding: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter Fund Name"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={funding.fundingType}
+                                  onChange={(e) => {
+                                    const updated = [...formData.externalFunding];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      fundingType: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      externalFunding: updated,
+                                    }));
+                                  }}
+                                  placeholder="Ex. Grant, Fund, etc."
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={funding.amount}
+                                  onChange={(e) => {
+                                    const updated = [...formData.externalFunding];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      amount: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      externalFunding: updated,
+                                    }));
+                                  }}
+                                  placeholder="Ex. 200000"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={funding.description}
+                                  onChange={(e) => {
+                                    const updated = [...formData.externalFunding];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      description: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      externalFunding: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter description (optional)"
+                                  className="w-full"
+                                />
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = formData.externalFunding.filter(
+                                      (_, i) => i !== index
+                                    );
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      externalFunding: updated,
+                                    }));
+                                  }}
+                                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                  aria-label="Remove funding entry"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          externalFunding: [
+                            ...prev.externalFunding,
+                            {
+                              funding: "",
+                              fundingType: "",
+                              amount: "",
+                              description: "",
+                            },
+                          ],
+                        }));
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Funding Entry
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -700,24 +1127,178 @@ export default function ApplyPage() {
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor="teamMembers">
-                  Enter the team members names with their roll numbers below
-                  separated by a semicolon (;){" "}
+                  Enter the team members names with their roll numbers below{" "}
                   <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-sm text-zinc-500 mb-2">
-                  Members can be students, project staff or even outside
-                  members. However, at least one of the co-founders needs to be
-                  a current student at IITM.
-                </p>
-                <Textarea
-                  id="teamMembers"
-                  name="teamMembers"
-                  required
-                  rows={4}
-                  value={formData.teamMembers}
-                  onChange={handleChange}
-                  placeholder="Name1, RollNumber1; Name2, RollNumber2; ..."
-                />
+                <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-zinc-100 dark:bg-zinc-800">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            1. Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            2. Roll Number
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            3. Email
+                          </th>
+                         
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                            4. Department
+                          </th>
+                          <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.teamMembers.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-3 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400"
+                            >
+                              No team members added. Click the Add button below to add one.
+                            </td>
+                          </tr>
+                        ) : (
+                          formData.teamMembers.map((member, index) => (
+                            <tr
+                              key={index}
+                              className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.name}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      name: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter name"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.rollNumber}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      rollNumber: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter roll number"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="email"
+                                  value={member.email}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      email: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter email"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={member.department}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      department: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter department"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = formData.teamMembers.filter(
+                                      (_, i) => i !== index
+                                    );
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                  aria-label="Remove team member"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          teamMembers: [
+                            ...prev.teamMembers,
+                            {
+                              name: "",
+                              rollNumber: "",
+                              email: "",
+                              mailId: "",
+                              department: "",
+                            },
+                          ],
+                        }));
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Team Member
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -731,6 +1312,22 @@ export default function ApplyPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="heardAboutNirmaan">
+                  Where did you get to know about Nirmaan?{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="heardAboutNirmaan"
+                  name="heardAboutNirmaan"
+                  required
+                  rows={3}
+                  value={formData.heardAboutNirmaan}
+                  onChange={handleChange}
+                  placeholder="Tell us how you heard about Nirmaan..."
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="nirmaanCanHelp">
                   I believe Nirmaan can help me with...{" "}
@@ -792,21 +1389,6 @@ export default function ApplyPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="heardAboutNirmaan">
-                  Where did you get to know about Nirmaan?{" "}
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Textarea
-                  id="heardAboutNirmaan"
-                  name="heardAboutNirmaan"
-                  required
-                  rows={3}
-                  value={formData.heardAboutNirmaan}
-                  onChange={handleChange}
-                  placeholder="Tell us how you heard about Nirmaan..."
-                />
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="problemSolving">
@@ -848,7 +1430,11 @@ export default function ApplyPage() {
                 <Select
                   value={formData.solutionType}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, solutionType: value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      solutionType: value,
+                      solutionTypeOther: "",
+                    }))
                   }
                   required
                 >
@@ -868,9 +1454,29 @@ export default function ApplyPage() {
                     <SelectItem value="Service Oriented / Services Offered / Consultancy">
                       Service Oriented / Services Offered / Consultancy
                     </SelectItem>
+                    <SelectItem value="Others">
+                      Others
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {showSolutionTypeOther && (
+                <div className="space-y-2">
+                  <Label htmlFor="solutionTypeOther">
+                    Please specify <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="solutionTypeOther"
+                    name="solutionTypeOther"
+                    type="text"
+                    required={showSolutionTypeOther}
+                    value={formData.solutionTypeOther}
+                    onChange={handleChange}
+                    placeholder="Enter solution type"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1168,9 +1774,16 @@ export default function ApplyPage() {
                 </Label>
                 <RadioGroup
                   value={formData.hasIntellectualProperty}
-                  onValueChange={(value) =>
-                    handleRadioChange("hasIntellectualProperty", value)
-                  }
+                  onValueChange={(value) => {
+                    handleRadioChange("hasIntellectualProperty", value);
+                    if (value === "No") {
+                      setIpFile(null);
+                      const fileInput = document.getElementById(
+                        "ipFile",
+                      ) as HTMLInputElement;
+                      if (fileInput) fileInput.value = "";
+                    }
+                  }}
                   className="flex gap-6"
                 >
                   <RadioGroupItem value="Yes" id="ip-yes">
@@ -1182,6 +1795,56 @@ export default function ApplyPage() {
                 </RadioGroup>
               </div>
 
+              {formData.hasIntellectualProperty === "Yes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="ipFile">
+                    Upload IP Documents{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="ipFile"
+                      name="ipFile"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      required={formData.hasIntellectualProperty === "Yes"}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setIpFile(file);
+                          setErrorMessage("");
+                        }
+                      }}
+                      className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-900 dark:file:text-zinc-50 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700"
+                    />
+                    {ipFile && (
+                      <div className="flex items-center gap-2 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                        <span className="text-sm text-zinc-900 dark:text-zinc-50">
+                          Selected: {ipFile.name} (
+                          {(ipFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIpFile(null);
+                            const fileInput = document.getElementById(
+                              "ipFile",
+                            ) as HTMLInputElement;
+                            if (fileInput) fileInput.value = "";
+                          }}
+                          className="text-red-500 hover:text-red-600 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-zinc-500">
+                    Accepted formats: PDF, DOC, DOCX
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <Label>
                   Do you see any potential intellectual property (IP) on your
@@ -1189,9 +1852,16 @@ export default function ApplyPage() {
                 </Label>
                 <RadioGroup
                   value={formData.hasPotentialIntellectualProperty}
-                  onValueChange={(value) =>
-                    handleRadioChange("hasPotentialIntellectualProperty", value)
-                  }
+                  onValueChange={(value) => {
+                    handleRadioChange("hasPotentialIntellectualProperty", value);
+                    if (value === "No") {
+                      setPotentialIpFile(null);
+                      const fileInput = document.getElementById(
+                        "potentialIpFile",
+                      ) as HTMLInputElement;
+                      if (fileInput) fileInput.value = "";
+                    }
+                  }}
                   className="flex gap-6"
                 >
                   <RadioGroupItem value="Yes" id="potential-ip-yes">
@@ -1202,6 +1872,56 @@ export default function ApplyPage() {
                   </RadioGroupItem>
                 </RadioGroup>
               </div>
+
+              {formData.hasPotentialIntellectualProperty === "Yes" && (
+                <div className="space-y-2">
+                  <Label htmlFor="potentialIpFile">
+                    Upload Potential IP Documents{" "}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="potentialIpFile"
+                      name="potentialIpFile"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      required={formData.hasPotentialIntellectualProperty === "Yes"}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setPotentialIpFile(file);
+                          setErrorMessage("");
+                        }
+                      }}
+                      className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-900 dark:file:text-zinc-50 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700"
+                    />
+                    {potentialIpFile && (
+                      <div className="flex items-center gap-2 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-md">
+                        <span className="text-sm text-zinc-900 dark:text-zinc-50">
+                          Selected: {potentialIpFile.name} (
+                          {(potentialIpFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPotentialIpFile(null);
+                            const fileInput = document.getElementById(
+                              "potentialIpFile",
+                            ) as HTMLInputElement;
+                            if (fileInput) fileInput.value = "";
+                          }}
+                          className="text-red-500 hover:text-red-600 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-zinc-500">
+                    Accepted formats: PDF, DOC, DOCX
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1394,7 +2114,7 @@ export default function ApplyPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="seedFundUtilizationPlan">
-                  How do you plan to use the Rs. 2 lakh seed fund...{" "}
+                  How do you plan to use the seed fund...{" "}
                   <span className="text-red-500">*</span>
                 </Label>
                 <Textarea

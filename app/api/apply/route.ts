@@ -9,13 +9,24 @@ export async function POST(request: NextRequest) {
     // Parse FormData instead of JSON (for file uploads)
     const formData = await request.formData();
     
-    // Convert FormData to a regular object
+    // Extract files directly from FormData (before converting to object)
+    const presentationFile = formData.get('presentationFile') as File | null;
+    const document1File = formData.get('document1File') as File | null;
+    const document2File = formData.get('document2File') as File | null;
+    const ipFile = formData.get('ipFile') as File | null;
+    const potentialIpFile = formData.get('potentialIpFile') as File | null;
+    
+    // Debug logging
+    console.log("Files received:", {
+      ipFile: ipFile ? { name: ipFile.name, size: ipFile.size, type: ipFile.type } : null,
+      potentialIpFile: potentialIpFile ? { name: potentialIpFile.name, size: potentialIpFile.size, type: potentialIpFile.type } : null,
+    });
+    
+    // Convert FormData to a regular object (excluding file fields)
     const body: Record<string, any> = {};
     formData.forEach((value, key) => {
-      // Skip file fields
-      if (key.endsWith('File')) {
-        body[key] = value;
-      } else {
+      // Skip file fields - we handle them separately above
+      if (!key.endsWith('File')) {
         body[key] = value.toString();
       }
     });
@@ -53,7 +64,23 @@ export async function POST(request: NextRequest) {
     ];
 
     for (const field of requiredFields) {
-      if (!body[field] || String(body[field]).trim() === "") {
+      // Special handling for array fields
+      if (field === 'teamMembers') {
+        let teamMembersValue = body[field];
+        if (typeof teamMembersValue === 'string') {
+          try {
+            teamMembersValue = JSON.parse(teamMembersValue);
+          } catch {
+            teamMembersValue = [];
+          }
+        }
+        if (!Array.isArray(teamMembersValue) || teamMembersValue.length === 0) {
+          return NextResponse.json(
+            { error: `Missing required field: ${field}. At least one team member is required.` },
+            { status: 400 }
+          );
+        }
+      } else if (!body[field] || String(body[field]).trim() === "") {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
           { status: 400 }
@@ -65,8 +92,8 @@ export async function POST(request: NextRequest) {
     const fileUrls: Record<string, string> = {};
     
     // Upload presentation file
-    if (body.presentationFile && body.presentationFile instanceof File) {
-      const file = body.presentationFile as File;
+    if (presentationFile && presentationFile instanceof File) {
+      const file = presentationFile;
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-presentation.${fileExt}`;
       const filePath = `applications/${fileName}`;
@@ -86,8 +113,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Upload document files
-    if (body.document1File && body.document1File instanceof File) {
-      const file = body.document1File as File;
+    if (document1File && document1File instanceof File) {
+      const file = document1File;
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-doc1.${fileExt}`;
       const filePath = `applications/${fileName}`;
@@ -106,8 +133,8 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    if (body.document2File && body.document2File instanceof File) {
-      const file = body.document2File as File;
+    if (document2File && document2File instanceof File) {
+      const file = document2File;
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-doc2.${fileExt}`;
       const filePath = `applications/${fileName}`;
@@ -124,6 +151,70 @@ export async function POST(request: NextRequest) {
           .getPublicUrl(filePath);
         fileUrls.document2 = publicUrl;
       }
+    }
+
+    // Upload IP file
+    if (ipFile && ipFile !== null && ipFile.size > 0) {
+      try {
+        const file = ipFile as File;
+        const fileExt = file.name.split('.').pop() || 'pdf';
+        const fileName = `${Date.now()}-ip.${fileExt}`;
+        const filePath = `applications/${fileName}`;
+        
+        console.log("Attempting to upload IP file:", { name: file.name, size: file.size, type: file.type });
+        
+        const { data: uploadData, error: uploadError } = await supabaseServer
+          .storage
+          .from('application-files')
+          .upload(filePath, file);
+        
+        if (uploadError) {
+          console.error("Error uploading IP file:", uploadError);
+        } else if (uploadData) {
+          const { data: { publicUrl } } = supabaseServer
+            .storage
+            .from('application-files')
+            .getPublicUrl(filePath);
+          fileUrls.ipFile = publicUrl;
+          console.log("IP file uploaded successfully:", publicUrl);
+        }
+      } catch (error) {
+        console.error("Exception uploading IP file:", error);
+      }
+    } else {
+      console.log("IP file not provided or invalid:", { ipFile, isFile: ipFile instanceof File });
+    }
+
+    // Upload potential IP file
+    if (potentialIpFile && potentialIpFile !== null && potentialIpFile.size > 0) {
+      try {
+        const file = potentialIpFile as File;
+        const fileExt = file.name.split('.').pop() || 'pdf';
+        const fileName = `${Date.now()}-potential-ip.${fileExt}`;
+        const filePath = `applications/${fileName}`;
+        
+        console.log("Attempting to upload potential IP file:", { name: file.name, size: file.size, type: file.type });
+        
+        const { data: uploadData, error: uploadError } = await supabaseServer
+          .storage
+          .from('application-files')
+          .upload(filePath, file);
+        
+        if (uploadError) {
+          console.error("Error uploading potential IP file:", uploadError);
+        } else if (uploadData) {
+          const { data: { publicUrl } } = supabaseServer
+            .storage
+            .from('application-files')
+            .getPublicUrl(filePath);
+          fileUrls.potentialIpFile = publicUrl;
+          console.log("Potential IP file uploaded successfully:", publicUrl);
+        }
+      } catch (error) {
+        console.error("Exception uploading potential IP file:", error);
+      }
+    } else {
+      console.log("Potential IP file not provided or invalid:", { potentialIpFile, isFile: potentialIpFile instanceof File });
     }
 
     // Parse JSONB fields if they're strings
@@ -145,6 +236,53 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let facultyInvolved = body.facultyInvolved;
+    if (typeof facultyInvolved === 'string') {
+      try {
+        facultyInvolved = JSON.parse(facultyInvolved);
+        // If empty array, set to "NA" string as per requirement
+        if (Array.isArray(facultyInvolved) && facultyInvolved.length === 0) {
+          facultyInvolved = "NA";
+        }
+      } catch {
+        facultyInvolved = "NA";
+      }
+    }
+    // If it's already an array but empty, set to "NA"
+    if (Array.isArray(facultyInvolved) && facultyInvolved.length === 0) {
+      facultyInvolved = "NA";
+    }
+
+    let teamMembers = body.teamMembers;
+    if (typeof teamMembers === 'string') {
+      try {
+        teamMembers = JSON.parse(teamMembers);
+      } catch {
+        teamMembers = [];
+      }
+    }
+    // Ensure it's an array
+    if (!Array.isArray(teamMembers)) {
+      teamMembers = [];
+    }
+
+    let externalFunding = body.externalFunding;
+    if (typeof externalFunding === 'string') {
+      try {
+        externalFunding = JSON.parse(externalFunding);
+      } catch {
+        externalFunding = [];
+      }
+    }
+    // Ensure it's an array
+    if (!Array.isArray(externalFunding)) {
+      externalFunding = [];
+    }
+    // If empty array, set to null
+    if (Array.isArray(externalFunding) && externalFunding.length === 0) {
+      externalFunding = null;
+    }
+
     // Map ALL frontend fields to database fields matching the new_application schema
     const applicationData: Record<string, any> = {
       // Basic Information
@@ -160,7 +298,7 @@ export async function POST(request: NextRequest) {
       channel: body.channel || "N/A",
       channel_other: body.channelOther || null,
       co_founders_count: parseInt(body.coFoundersCount) || 0,
-      faculty_involved: body.facultyInvolved || null,
+      faculty_involved: facultyInvolved || "NA",
 
       // Entrepreneurship Experience
       prior_entrepreneurship_experience: body.priorEntrepreneurshipExperience || "No",
@@ -171,11 +309,11 @@ export async function POST(request: NextRequest) {
       mca_registered: body.mcaRegistered || "No",
       dpiit_registered: body.dpiitRegistered || null,
       dpiit_details: body.dpiitDetails || null,
-      external_funding: body.externalFunding || null,
+      external_funding: externalFunding || null,
       currently_incubated: body.currentlyIncubated || null,
 
       // Team Members
-      team_members: body.teamMembers || "N/A",
+      team_members: teamMembers || [],
 
       // About Nirmaan Program
       nirmaan_can_help: body.nirmaanCanHelp || "N/A",
@@ -187,6 +325,7 @@ export async function POST(request: NextRequest) {
       problem_solving: body.problemSolving || "N/A",
       your_solution: body.yourSolution || "N/A",
       solution_type: body.solutionType || "N/A",
+      solution_type_other: body.solutionTypeOther || null,
 
       // Industry & Technologies
       target_industry: body.targetIndustry || "N/A",
@@ -200,6 +339,8 @@ export async function POST(request: NextRequest) {
       startup_stage: body.startupStage || "N/A",
       has_intellectual_property: body.hasIntellectualProperty || "No",
       has_potential_intellectual_property: body.hasPotentialIntellectualProperty || "No",
+      ip_file_link: fileUrls.ipFile || null,
+      potential_ip_file_link: fileUrls.potentialIpFile || null,
 
       // Presentation & Proof
       nirmaan_presentation_link: body.nirmaanPresentationLink || fileUrls.presentation || "N/A",
@@ -218,6 +359,19 @@ export async function POST(request: NextRequest) {
       status: "pending",
     };
 
+    // Debug: Log file URLs and application data before insert
+    console.log("File URLs to be saved:", { 
+      ipFile: fileUrls.ipFile, 
+      potentialIpFile: fileUrls.potentialIpFile,
+      allFileUrls: fileUrls
+    });
+    console.log("IP fields in applicationData:", {
+      has_intellectual_property: applicationData.has_intellectual_property,
+      ip_file_link: applicationData.ip_file_link,
+      has_potential_intellectual_property: applicationData.has_potential_intellectual_property,
+      potential_ip_file_link: applicationData.potential_ip_file_link,
+    });
+
     const { data, error } = await supabaseServer
       .from("new_application")
       .insert(applicationData)
@@ -226,11 +380,32 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Supabase insert error:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
+      console.error("Application data that failed to insert:", JSON.stringify(applicationData, null, 2));
+      
+      // Check if error is related to missing columns
+      if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+        return NextResponse.json(
+          { 
+            error: "Database schema error. Please ensure ip_file_link and potential_ip_file_link columns exist in the new_application table.",
+            details: error.message 
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
         { error: "Failed to submit application", details: error.message },
         { status: 500 }
       );
     }
+    
+    // Log successful insert with IP file links
+    console.log("Application inserted successfully:", {
+      id: data.id,
+      ip_file_link: data.ip_file_link,
+      potential_ip_file_link: data.potential_ip_file_link
+    });
 
     return NextResponse.json(
       {
