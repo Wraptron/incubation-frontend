@@ -1,6 +1,7 @@
-[00:00:01.959] Server  LOG     ✓ Ready in 1385ms
-[00:00:03.244] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:03.687] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:02.437] Server  LOG     ✓ Ready in 2s
+[00:00:17.834] Server  LOG     ○ Compiling / ...
+[00:00:21.496] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:22.020] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -18,41 +19,30 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
                   <__next_root_layout_boundary__>
-                    <SegmentViewNode type="layout" pagePath="/incubatio...">
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
                       <SegmentTrieNode>
                       <link>
-                      <script>
                       <RootLayout>
                         <html lang="en">
                           <body
-                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+                            className="__variable_188709 __variable_9a8899 antialiased"
 -                           cz-shortcut-listen="true"
                           >
                   ...
 
-[00:00:12.249] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:19.488] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:00:19.685] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:00:31.175] Browser LOG     📧 Starting reviewer assignment process...
-[00:00:31.175] Browser LOG     📋 Application ID: 96f4aa7b-7f6a-48d6-a1d0-4cbcf9fad35d
-[00:00:31.175] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 2"]
-[00:00:31.175] Browser LOG     📧 Email notifications will be sent to assigned reviewers
-[00:02:01.776] Server  LOG     ✓ Compiled in 798ms
-[00:02:54.767] Server  LOG     ✓ Compiled in 113ms
-[00:03:22.235] Server  LOG     ✓ Compiled in 236ms
-[00:04:03.754] Server  LOG     ✓ Compiled in 66ms
-[00:06:12.458] Server  LOG     ✓ Compiled in 167ms
-[00:07:00.043] Server  LOG     ✓ Compiled in 81ms
-[00:07:00.683] Browser ERROR   uncaughtError: ReferenceError: formatStatus is not defined
-[00:07:12.577] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
-[00:07:12.578] Server  LOG     ✓ Compiled in 320ms
-[00:07:13.912] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:07:14.095] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:22.020] Browser WARN    Image with src "http://localhost:3000/wraptron_logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:09:23.016] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:11:31.185] Server  LOG     === Frontend API Route - GET Evaluation ===
+[00:11:31.185] Server  LOG     Application ID from params: "ac021845-9cb1-4294-a0ce-ce5fca3909de"
+[00:11:31.188] Server  LOG     Params object: {}
+[00:11:31.933] Browser LOG     No evaluation found for reviewer
+[00:14:25.668] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:14:26.033] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -70,29 +60,257 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
                   <__next_root_layout_boundary__>
-                    <SegmentViewNode type="layout" pagePath="/incubatio...">
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
                       <SegmentTrieNode>
                       <link>
-                      <script>
                       <RootLayout>
                         <html lang="en">
+                          <head>
                           <body
-                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+                            className="__variable_188709 __variable_9a8899 antialiased"
 -                           cz-shortcut-listen="true"
                           >
                   ...
 
-[00:07:14.893] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:07:29.837] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:07:30.057] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:07:40.011] Browser LOG     📧 Starting reviewer assignment process...
-[00:07:40.011] Browser LOG     📋 Application ID: 96f4aa7b-7f6a-48d6-a1d0-4cbcf9fad35d
-[00:07:40.011] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 2"]
-[00:07:40.011] Browser LOG     📧 Email notifications will be sent to assigned reviewers
-[00:07:48.965] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:07:49.164] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:14:26.033] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:22:55.710] Server  ERROR   ⨯ ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/apply/page.tsx
+[00:22:56.129] Browser ERROR   ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/apply/page.tsx
+[00:22:56.129] Browser ERROR   ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/apply/page.tsx
+[00:23:01.358] Server  ERROR   ⨯ ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/apply/page.tsx
+[00:23:01.701] Browser ERROR   ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/apply/page.tsx
+[00:23:02.135] Server  LOG     ○ Compiling /_error ...
+[00:23:02.241] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+
+Caused by:
+    Syntax Error
+[00:23:03.016] Browser ERROR   ./app/apply/page.tsx
+Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      · ▲
+      ╰────
+  × Expected '</', got '<eof>'
+      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
+ 1552 │       </div>
+ 1553 │     </div>
+ 1554 │   );
+ 1555 │ }
+      ╰────
+
+Caused by:
+    Syntax Error
+[00:23:04.490] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:23:04.726] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:23:06.755] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:23:07.534] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:23:08.516] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/apply" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:25:45.330] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:26:00.055] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:26:00.334] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:26:09.577] Server  LOG     === Frontend API Route - GET All Evaluations ===
+[00:26:09.577] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
+[00:26:10.508] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
+[00:26:33.904] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:26:34.157] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:27:34.042] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:27:34.293] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:29:48.781] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:29:49.102] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:30:02.104] Browser LOG     📧 Starting reviewer assignment process...
+[00:30:02.104] Browser LOG     📋 Application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:30:02.104] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 3"]
+[00:30:02.104] Browser LOG     📧 Email notifications will be sent to assigned reviewers
+[00:30:04.720] Server  LOG     === Frontend API Route - GET All Evaluations ===
+[00:30:04.720] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
+[00:30:05.449] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
+[00:30:21.608] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:30:21.851] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:30:58.735] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:30:58.897] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:32:23.820] Server  LOG     === Frontend API Route - GET Evaluation ===
+[00:32:23.821] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
+[00:32:23.822] Server  LOG     Params object: {}
+[00:32:24.416] Browser LOG     No evaluation found for reviewer
+[00:32:28.849] Browser LOG     === EvaluatePage Mount ===
+[00:32:28.849] Browser LOG     Params: {"id":"2bc92dfb-0af9-45a0-a639-5cc75f44a28b"}
+[00:32:28.849] Browser LOG     Params.id: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:28.849] Browser LOG     Params.id type: string
+[00:32:28.849] Browser LOG     Valid params.id found: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:28.849] Browser LOG     === EvaluatePage Mount ===
+[00:32:28.849] Browser LOG     Params: {"id":"2bc92dfb-0af9-45a0-a639-5cc75f44a28b"}
+[00:32:28.849] Browser LOG     Params.id: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:28.849] Browser LOG     Params.id type: string
+[00:32:28.849] Browser LOG     Valid params.id found: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:29.351] Server  LOG     === Frontend API Route - GET Evaluation ===
+[00:32:29.352] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
+[00:32:29.352] Server  LOG     Params object: {}
+[00:32:29.367] Browser LOG     Fetching application: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:29.367] Browser LOG     Fetching evaluation for application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:29.596] Browser LOG     Fetching application: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:29.596] Browser LOG     Fetching evaluation for application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
+[00:32:29.978] Server  LOG     === Frontend API Route - GET Evaluation ===
+[00:32:29.978] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
+[00:32:29.978] Server  LOG     Params object: {}

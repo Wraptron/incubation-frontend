@@ -534,7 +534,7 @@ export default function EvaluatePage() {
             <Button
               onClick={() => handleSave(false)}
               disabled={isSaving}
-              className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
+              variant="default"
             >
               {isSaving ? "Saving..." : "Save Evaluation"}
             </Button>

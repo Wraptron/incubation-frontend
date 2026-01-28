@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,8 +22,17 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ApplyPage() {
+  const router = useRouter();
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     teamName: "",
@@ -163,59 +173,12 @@ export default function ApplyPage() {
 
       if (response.ok) {
         setSubmitStatus("success");
-        // Reset form
-        setPresentationFile(null);
-        setDocument1File(null);
-        setDocument2File(null);
-        setFormData({
-          email: "",
-          teamName: "",
-          yourName: "",
-          isIITM: "",
-          rollNumber: "",
-          rollNumberOther: "",
-          collegeName: "",
-          currentOccupation: "",
-          phoneNumber: "",
-          channel: "",
-          channelOther: "",
-          coFoundersCount: "",
-          facultyInvolved: "",
-          priorEntrepreneurshipExperience: "",
-          teamPriorEntrepreneurshipExperience: "",
-          priorExperienceDetails: "",
-          mcaRegistered: "",
-          dpiitRegistered: "",
-          dpiitDetails: "",
-          externalFunding: "",
-          currentlyIncubated: "",
-          teamMembers: "",
-          nirmaanCanHelp: "",
-          preIncubationReason: "",
-          heardAboutStartups: "",
-          heardAboutNirmaan: "",
-          problemSolving: "",
-          yourSolution: "",
-          solutionType: "",
-          targetIndustry: "",
-          otherIndustries: [],
-          industryOther: "",
-          otherIndustriesOther: "",
-          technologiesUtilized: [],
-          otherTechnologyDetails: "",
-          startupStage: "",
-          hasIntellectualProperty: "",
-          hasPotentialIntellectualProperty: "",
-          nirmaanPresentationLink: "",
-          hasProofOfConcept: "",
-          proofOfConceptDetails: "",
-          hasPatentsOrPapers: "",
-          patentsOrPapersDetails: "",
-          seedFundUtilizationPlan: "",
-          pitchVideoLink: "",
-          document1Link: "",
-          document2Link: "",
-        });
+        setShowSuccessDialog(true);
+        
+        // Redirect to home page after 3 seconds
+        setTimeout(() => {
+          router.push("/");
+        }, 3000);
       } else {
         setSubmitStatus("error");
         setErrorMessage(data.error || "Failed to submit application");
@@ -241,35 +204,82 @@ export default function ApplyPage() {
   const showPatentsOrPapersDetails = formData.hasPatentsOrPapers === "Yes";
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
-            Pre-Incubation Application
-          </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Apply to join our pre-incubation program. Fill out the form below
-            and we'll get back to you soon.
-          </p>
-        </div>
+    <>
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">
+              Application Submitted Successfully!
+            </DialogTitle>
+            <DialogDescription className="text-center text-base">
+              Thank you for applying to NIRMAAN Pre-Incubation Program. We have
+              received your application and will review it shortly. You will be
+              redirected to the home page in a few seconds.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={() => router.push("/")}
+              variant="default"
+              className="px-8"
+            >
+              Go to Home
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-        {submitStatus === "success" && (
-          <Alert className="mb-6">
-            <AlertDescription>
-              Thank you! Your application has been submitted successfully. We'll
-              review it and get back to you soon.
-            </AlertDescription>
-          </Alert>
-        )}
+      <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <img
+                src="/nirmaan logo.png"
+                alt="Nirmaan logo"
+                className="w-20 h-20 rounded-2xl shadow-lg"
+              />
+              <div className="text-left">
+                <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
+                  NIRMAAN
+                </h1>
+                <p className="text-primary font-semibold">IITM Pre-Incubation</p>
+              </div>
+            </div>
+            <h2 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
+              Pre-Incubation Application
+            </h2>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400">
+              Apply to join Nirmaan's pre-incubation program. Fill out the form below
+              and we'll get back to you soon.
+            </p>
+          </div>
 
-        {submitStatus === "error" && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>
-              {errorMessage ||
-                "There was an error submitting your application. Please try again."}
-            </AlertDescription>
-          </Alert>
-        )}
+          {submitStatus === "error" && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>
+                {errorMessage ||
+                  "There was an error submitting your application. Please try again."}
+              </AlertDescription>
+            </Alert>
+          )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
@@ -1530,17 +1540,19 @@ export default function ApplyPage() {
           <div className="flex justify-end gap-4">
             <Button
               type="button"
-              variant="default"
+              variant="outline"
               onClick={() => window.history.back()}
+              className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} variant="default">
               {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
           </div>
         </form>
       </div>
     </div>
+    </>
   );
 }

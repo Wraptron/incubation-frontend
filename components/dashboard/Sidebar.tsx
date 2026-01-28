@@ -124,31 +124,31 @@ export default function Sidebar({ userRole }: SidebarProps) {
     >
       {/* Header */}
       <div
-        className={`h-16 border-b border-zinc-200 dark:border-zinc-800 flex items-center ${
+        className={`h-20 border-b border-zinc-200 dark:border-zinc-800 flex items-center ${
           isMinimized ? "justify-center" : "justify-between"
         } px-4`}
       >
         {isMinimized ? (
           <div className="flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-black dark:text-zinc-50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+            <img
+              src="/nirmaan logo.png"
+              alt="Nirmaan logo"
+              className="w-10 h-10 rounded-lg"
+            />
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-black dark:text-zinc-50">
-              LaunchPad
-            </h2>
+          <div className="flex items-center gap-3">
+            <img
+              src="/nirmaan logo.png"
+              alt="Nirmaan logo"
+              className="w-12 h-12 rounded-lg shadow-md"
+            />
+            <div>
+              <h2 className="text-lg font-bold text-black dark:text-zinc-50">
+                NIRMAAN
+              </h2>
+              <p className="text-xs text-primary font-semibold">LaunchPad</p>
+            </div>
           </div>
         )}
         <Button
@@ -178,10 +178,10 @@ export default function Sidebar({ userRole }: SidebarProps) {
                   className={`flex items-center transition-colors ${
                     isMinimized
                       ? active
-                        ? "justify-center w-10 h-10 rounded bg-black dark:bg-zinc-50 text-white dark:text-black"
+                        ? "justify-center w-10 h-10 rounded bg-primary text-white"
                         : "justify-center w-10 h-10 rounded text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                       : active
-                      ? "gap-3 px-3 py-2 rounded-md bg-black dark:bg-zinc-50 text-white dark:text-black"
+                      ? "gap-3 px-3 py-2 rounded-md bg-primary text-white"
                       : "gap-3 px-3 py-2 rounded-md text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   }`}
                   title={isMinimized ? item.name : undefined}

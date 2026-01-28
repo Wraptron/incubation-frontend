@@ -100,11 +100,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex-1 flex flex-col ml-64 transition-all duration-300 sidebar-content">
         {/* Top Navigation Bar */}
         <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 h-16 flex items-center justify-between px-6">
-          <div className="flex-1"></div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
-              {user.email} ({user.role})
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              NIRMAAN Dashboard
             </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                {user.email}
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 capitalize">
+                {user.role}
+              </p>
+            </div>
             <Button
               onClick={handleLogout}
               variant="default"

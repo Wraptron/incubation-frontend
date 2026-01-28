@@ -118,11 +118,11 @@ export default function DashboardPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800",
-      under_review: "bg-blue-100 text-blue-800",
-      approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-      withdrawn: "bg-gray-100 text-gray-800",
+      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+      under_review: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      approved: "bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary font-semibold",
+      rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+      withdrawn: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     };
     return colors[status] || "bg-gray-100 text-gray-800";
   };
