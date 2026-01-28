@@ -777,11 +777,8 @@ export default function ApplicationDetailPage() {
                             );
                           }
                         }}
-                        className={
-                          !showAssignReviewer
-                            ? "bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
-                            : ""
-                        }
+                        variant={!showAssignReviewer ? "default" : "outline"}
+                        className={!showAssignReviewer ? "" : "border-2 border-primary text-primary hover:bg-primary hover:text-white"}
                       >
                         {showAssignReviewer
                           ? "Cancel"
@@ -792,7 +789,7 @@ export default function ApplicationDetailPage() {
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
-                        className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
+                        variant="default"
                       >
                         Reject
                       </Button>
@@ -825,7 +822,7 @@ export default function ApplicationDetailPage() {
                           `/dashboard/applications/${params.id}/evaluate`,
                         )
                       }
-                      className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
+                      variant="default"
                     >
                       Evaluate
                     </Button>
@@ -845,7 +842,7 @@ export default function ApplicationDetailPage() {
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
-                        className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90"
+                        variant="default"
                       >
                         Reject
                       </Button>
@@ -953,8 +950,9 @@ export default function ApplicationDetailPage() {
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-2 mt-3">
-                  <button
-                    className="px-4 py-2 border rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  <Button
+                    variant="outline"
+                    className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
                     onClick={() => {
                       setShowAssignReviewer(false);
                       setSearchQuery("");
@@ -970,19 +968,16 @@ export default function ApplicationDetailPage() {
                     }}
                   >
                     Cancel
-                  </button>
-                  <button
-                    className={`px-4 py-2 rounded text-white ${
-                      selectedReviewers.length < 2
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
+                  </Button>
+                  <Button
+                    className={selectedReviewers.length < 2 ? "opacity-50 cursor-not-allowed" : ""}
+                    variant="default"
                     disabled={selectedReviewers.length < 2}
                     onClick={() => assignReviewers()}
                   >
                     Assign {selectedReviewers.length} Reviewer
                     {selectedReviewers.length !== 1 && "s"}
-                  </button>
+                  </Button>
                 </div>
 
                 {selectedReviewers.length < 2 && (
@@ -1016,18 +1011,20 @@ export default function ApplicationDetailPage() {
             </div>
             <DialogFooter>
               <Button
-                variant="default"
+                variant="outline"
                 onClick={() => {
                   setShowRejectModal(false);
                   setRejectionReason("");
                 }}
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleReject}
                 disabled={!rejectionReason.trim()}
-                className="bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90 disabled:opacity-50"
+                variant="default"
+                className="disabled:opacity-50"
               >
                 Reject Application
               </Button>

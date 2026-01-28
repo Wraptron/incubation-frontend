@@ -73,13 +73,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
+        <div className="flex flex-col items-center mb-8">
+          <img
+            src="/nirmaan logo.png"
+            alt="Nirmaan logo"
+            className="w-24 h-24 rounded-2xl shadow-lg mb-4"
+          />
+          <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
+            NIRMAAN
+          </h1>
+          <p className="text-primary font-semibold">LaunchPad Admin</p>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">Login</CardTitle>
+            <CardTitle className="text-2xl">Admin Login</CardTitle>
             <CardDescription>
-              Sign in to access the admin dashboard
+              Sign in to access the management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>

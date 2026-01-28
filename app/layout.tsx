@@ -13,9 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wraptron Launchpad",
+  title: "Nirmaan LaunchPad | IITM Pre-Incubation Center",
   description:
-    "A platform for managing startup applications to an incubation program. Built with Next.js and Node.js.",
+    "IITM Nirmaan - A platform for managing startup applications to our pre-incubation program. Get access to mentorship, funding, and resources to build your startup.",
+  keywords: "IITM, Nirmaan, Pre-Incubation, Startup, Incubation, Funding, Mentorship",
 };
 
 export default function RootLayout({
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/nirmaan logo.png" type="image/png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
