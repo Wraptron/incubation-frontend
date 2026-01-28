@@ -38,7 +38,13 @@ interface Application {
   channel?: string;
   channel_other?: string | null;
   co_founders_count?: number;
-  faculty_involved?: string | null;
+  faculty_involved?: string | Array<{
+    name: string;
+    designation: string;
+    department: string;
+    university: string;
+    roleInStartup: string;
+  }> | null;
   co_founders?: string | null;
   
   // Entrepreneurship Experience
@@ -50,12 +56,23 @@ interface Application {
   mca_registered?: string;
   dpiit_registered?: string | null;
   dpiit_details?: string | null;
-  external_funding?: string | null;
+  external_funding?: string | Array<{
+    funding: string;
+    fundingType: string;
+    amount: string;
+    description: string;
+  }> | null;
   funding_amount?: string | null;
   currently_incubated?: string | null;
   
   // Team Members
-  team_members?: string;
+  team_members?: string | Array<{
+    name: string;
+    rollNumber: string;
+    email: string;
+    mailId: string;
+    department: string;
+  }> | null;
   
   // About Nirmaan Program
   nirmaan_can_help?: string;
@@ -70,6 +87,7 @@ interface Application {
   your_solution?: string;
   solution?: string;
   solution_type?: string;
+  solution_type_other?: string | null;
   business_model?: string;
   description?: string;
   
@@ -1067,7 +1085,7 @@ export default function ApplicationDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div>
+                      {/* <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Website
                         </label>
@@ -1083,7 +1101,7 @@ export default function ApplicationDetailPage() {
                         ) : (
                           <p className="text-black dark:text-zinc-50">N/A</p>
                         )}
-                      </div>
+                      </div> */}
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Description
@@ -1115,9 +1133,19 @@ export default function ApplicationDetailPage() {
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Co-Founders
                         </label>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.co_founders || "N/A"}
-                        </p>
+                        {Array.isArray(application.team_members) && application.team_members.length > 0 ? (
+                          <div className="text-black dark:text-zinc-50">
+                            {application.team_members.map((member, idx) => (
+                              <div key={idx} className="mb-2">
+                                {member.name} ({member.rollNumber})
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-black dark:text-zinc-50">
+                            {typeof application.team_members === 'string' ? application.team_members : "N/A"}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -1261,12 +1289,59 @@ export default function ApplicationDetailPage() {
                       </div>
                       {application.faculty_involved && (
                         <div className="md:col-span-2">
-                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 block mb-2">
                             Faculty Involved
                           </label>
-                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
-                            {application.faculty_involved}
-                          </p>
+                          {(() => {
+                            // Parse faculty_involved - it can be an array, "NA" string, or null
+                            let facultyData: any = application.faculty_involved;
+                            
+                            // If it's a string, try to parse it
+                            if (typeof facultyData === 'string') {
+                              if (facultyData === 'NA' || facultyData === '"NA"') {
+                                return <p className="text-black dark:text-zinc-50">N/A</p>;
+                              }
+                              try {
+                                facultyData = JSON.parse(facultyData);
+                              } catch {
+                                // If parsing fails, display as string
+                                return <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">{facultyData}</p>;
+                              }
+                            }
+                            
+                            // If it's an array, display as table
+                            if (Array.isArray(facultyData) && facultyData.length > 0) {
+                              return (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full border-collapse border border-zinc-300 dark:border-zinc-700">
+                                    <thead>
+                                      <tr className="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700">
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Name</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Designation</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Department</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">University</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">Role in Startup</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {facultyData.map((faculty: any, index: number) => (
+                                        <tr key={index} className="border-b border-zinc-200 dark:border-zinc-800">
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{faculty.name || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{faculty.designation || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{faculty.department || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{faculty.university || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50">{faculty.roleInStartup || "N/A"}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              );
+                            }
+                            
+                            // Default fallback
+                            return <p className="text-black dark:text-zinc-50">N/A</p>;
+                          })()}
                         </div>
                       )}
                     </div>
@@ -1347,12 +1422,54 @@ export default function ApplicationDetailPage() {
                       )}
                       {application.external_funding && (
                         <div>
-                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 block mb-2">
                             External Funding
                           </label>
-                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
-                            {application.external_funding}
-                          </p>
+                          {(() => {
+                            // Parse external_funding - it can be an array, string, or null
+                            let fundingData: any = application.external_funding;
+                            
+                            // If it's a string, try to parse it
+                            if (typeof fundingData === 'string') {
+                              try {
+                                fundingData = JSON.parse(fundingData);
+                              } catch {
+                                // If parsing fails, display as string
+                                return <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">{fundingData}</p>;
+                              }
+                            }
+                            
+                            // If it's an array, display as table
+                            if (Array.isArray(fundingData) && fundingData.length > 0) {
+                              return (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full border-collapse border border-zinc-300 dark:border-zinc-700">
+                                    <thead>
+                                      <tr className="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700">
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Funding</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Funding Type</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Amount</th>
+                                        <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">Description</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {fundingData.map((funding: any, index: number) => (
+                                        <tr key={index} className="border-b border-zinc-200 dark:border-zinc-800">
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{funding.funding || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{funding.fundingType || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{funding.amount || "N/A"}</td>
+                                          <td className="px-3 py-2 text-black dark:text-zinc-50">{funding.description || "N/A"}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              );
+                            }
+                            
+                            // Default fallback
+                            return <p className="text-black dark:text-zinc-50">N/A</p>;
+                          })()}
                         </div>
                       )}
                       {application.currently_incubated && (
@@ -1375,14 +1492,75 @@ export default function ApplicationDetailPage() {
                     <CardTitle>Team Members</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div>
-                      <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                        Team Members
-                      </label>
-                      <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
-                        {application.team_members || "N/A"}
-                      </p>
-                    </div>
+                    {(() => {
+                      // Parse team_members - it can be an array, string, or null
+                      let teamData: any = application.team_members;
+                      
+                      // If it's a string, try to parse it
+                      if (typeof teamData === 'string') {
+                        try {
+                          teamData = JSON.parse(teamData);
+                        } catch {
+                          // If parsing fails, display as string
+                          return (
+                            <div>
+                              <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                Team Members
+                              </label>
+                              <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                                {teamData}
+                              </p>
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // If it's an array, display as table
+                      if (Array.isArray(teamData) && teamData.length > 0) {
+                        return (
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse border border-zinc-300 dark:border-zinc-700">
+                              <thead>
+                                <tr className="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-300 dark:border-zinc-700">
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Name</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Roll Number</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Email</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Department</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {teamData.map((member: any, index: number) => (
+                                  <tr key={index} className="border-b border-zinc-200 dark:border-zinc-800">
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.name || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.rollNumber || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                                      {member.email ? (
+                                        <a href={`mailto:${member.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                                          {member.email}
+                                        </a>
+                                      ) : (
+                                        "N/A"
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50">{member.department || "N/A"}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+                      
+                      // Default fallback
+                      return (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Team Members
+                          </label>
+                          <p className="text-black dark:text-zinc-50">N/A</p>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
 
@@ -1466,8 +1644,23 @@ export default function ApplicationDetailPage() {
                         </label>
                         <p className="text-black dark:text-zinc-50">
                           {application.solution_type || application.business_model || "N/A"}
+                          {application.solution_type === "Others" && application.solution_type_other && (
+                            <span className="ml-2 text-zinc-600 dark:text-zinc-400">
+                              ({application.solution_type_other})
+                            </span>
+                          )}
                         </p>
                       </div>
+                      {application.solution_type === "Others" && application.solution_type_other && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Solution Type (Other Details)
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.solution_type_other}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
