@@ -11,23 +11,90 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 interface Application {
   id: string;
-  company_name: string;
-  website: string;
-  description: string;
-  founder_name: string;
-  co_founders: string;
+  // Basic Information
   email: string;
-  phone: string;
-  problem: string;
-  solution: string;
-  target_market: string;
-  business_model: string;
-  funding_stage: string;
-  funding_amount: string;
-  current_traction: string;
-  why_incubator: string;
+  team_name?: string;
+  company_name?: string;
+  your_name?: string;
+  founder_name?: string;
+  is_iitm?: string;
+  roll_number?: string;
+  roll_number_other?: string | null;
+  college_name?: string | null;
+  current_occupation?: string | null;
+  phone_number?: string;
+  phone?: string;
+  channel?: string;
+  channel_other?: string | null;
+  co_founders_count?: number;
+  faculty_involved?: string | null;
+  co_founders?: string | null;
+  
+  // Entrepreneurship Experience
+  prior_entrepreneurship_experience?: string;
+  team_prior_entrepreneurship_experience?: string;
+  prior_experience_details?: string | null;
+  
+  // Startup Registration & Funding
+  mca_registered?: string;
+  dpiit_registered?: string | null;
+  dpiit_details?: string | null;
+  external_funding?: string | null;
+  funding_amount?: string | null;
+  currently_incubated?: string | null;
+  
+  // Team Members
+  team_members?: string;
+  
+  // About Nirmaan Program
+  nirmaan_can_help?: string;
+  pre_incubation_reason?: string;
+  heard_about_startups?: string;
+  heard_about_nirmaan?: string;
+  why_incubator?: string;
+  
+  // Problem & Solution
+  problem_solving?: string;
+  problem?: string;
+  your_solution?: string;
+  solution?: string;
+  solution_type?: string;
+  business_model?: string;
+  description?: string;
+  
+  // Industry & Technologies
+  target_industry?: string;
+  target_market?: string;
+  other_industries?: string[] | null;
+  industry_other?: string | null;
+  other_industries_other?: string | null;
+  technologies_utilized?: string[] | null;
+  other_technology_details?: string | null;
+  
+  // Startup Stage & IP
+  startup_stage?: string;
+  has_intellectual_property?: string;
+  has_potential_intellectual_property?: string;
+  
+  // Presentation & Proof
+  nirmaan_presentation_link?: string;
+  has_proof_of_concept?: string;
+  proof_of_concept_details?: string | null;
+  current_traction?: string | null;
+  has_patents_or_papers?: string;
+  patents_or_papers_details?: string | null;
+  
+  // Seed Fund & Pitch
+  seed_fund_utilization_plan?: string;
+  pitch_video_link?: string;
+  document1_link?: string | null;
+  document2_link?: string | null;
+  
+  // Status & Metadata
   status: string;
-  created_at: string;
+  website?: string | null;
+  funding_stage?: string | null;
+  created_at?: string;
 }
 
 interface Evaluation {
@@ -502,68 +569,16 @@ export default function EvaluatePage() {
             {/* Left Side - Application Details */}
             <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6 overflow-y-auto">
               <h2 className="text-2xl font-bold mb-4 text-black dark:text-zinc-50">
-                {application.company_name}
+                {application.team_name || application.company_name || "Application"}
               </h2>
 
               <div className="space-y-6">
-                {/* Company Information */}
+                {/* Basic Information */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
-                    Company Information
+                    Basic Information
                   </h3>
                   <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                        Website:{" "}
-                      </span>
-                      {application.website ? (
-                        <a
-                          href={application.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {application.website}
-                        </a>
-                      ) : (
-                        <span className="text-zinc-400">N/A</span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                        Description:{" "}
-                      </span>
-                      <p className="text-black dark:text-zinc-50 mt-1">
-                        {application.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Founder Information */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
-                    Founder Information
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                        Founder:{" "}
-                      </span>
-                      <span className="text-black dark:text-zinc-50">
-                        {application.founder_name}
-                      </span>
-                    </div>
-                    {application.co_founders && (
-                      <div>
-                        <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                          Co-Founders:{" "}
-                        </span>
-                        <span className="text-black dark:text-zinc-50">
-                          {application.co_founders}
-                        </span>
-                      </div>
-                    )}
                     <div>
                       <span className="font-medium text-zinc-600 dark:text-zinc-400">
                         Email:{" "}
@@ -577,105 +592,569 @@ export default function EvaluatePage() {
                     </div>
                     <div>
                       <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                        Phone:{" "}
-                      </span>
-                      <a
-                        href={`tel:${application.phone}`}
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        {application.phone}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Business Details */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
-                    Business Details
-                  </h3>
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
-                        Problem:
-                      </span>
-                      <p className="text-black dark:text-zinc-50">
-                        {application.problem}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
-                        Solution:
-                      </span>
-                      <p className="text-black dark:text-zinc-50">
-                        {application.solution}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
-                        Target Market:
-                      </span>
-                      <p className="text-black dark:text-zinc-50">
-                        {application.target_market}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
-                        Business Model:
-                      </span>
-                      <p className="text-black dark:text-zinc-50">
-                        {application.business_model}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Funding & Traction */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
-                    Funding & Traction
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                        Funding Stage:{" "}
+                        Team/Startup Name:{" "}
                       </span>
                       <span className="text-black dark:text-zinc-50">
-                        {application.funding_stage?.replace("_", " ") || "N/A"}
+                        {application.team_name || application.company_name || "N/A"}
                       </span>
                     </div>
-                    {application.funding_amount && (
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Your Name:{" "}
+                      </span>
+                      <span className="text-black dark:text-zinc-50">
+                        {application.your_name || application.founder_name || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Are you from IITM:{" "}
+                      </span>
+                      <span className="text-black dark:text-zinc-50">
+                        {application.is_iitm || "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Roll Number:{" "}
+                      </span>
+                      <span className="text-black dark:text-zinc-50">
+                        {application.roll_number || "N/A"}
+                      </span>
+                    </div>
+                    {application.roll_number_other && (
                       <div>
                         <span className="font-medium text-zinc-600 dark:text-zinc-400">
-                          Funding Amount:{" "}
+                          Roll Number (Other):{" "}
                         </span>
                         <span className="text-black dark:text-zinc-50">
-                          {application.funding_amount}
+                          {application.roll_number_other}
                         </span>
                       </div>
                     )}
-                    {application.current_traction && (
+                    {application.college_name && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                          College Name:{" "}
+                        </span>
+                        <span className="text-black dark:text-zinc-50">
+                          {application.college_name}
+                        </span>
+                      </div>
+                    )}
+                    {application.current_occupation && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                          Current Occupation:{" "}
+                        </span>
+                        <span className="text-black dark:text-zinc-50">
+                          {application.current_occupation}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Phone:{" "}
+                      </span>
+                      <a
+                        href={`tel:${application.phone_number || application.phone}`}
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {application.phone_number || application.phone || "N/A"}
+                      </a>
+                    </div>
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Channel:{" "}
+                      </span>
+                      <span className="text-black dark:text-zinc-50">
+                        {application.channel || "N/A"}
+                      </span>
+                    </div>
+                    {application.channel_other && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                          Channel (Other):{" "}
+                        </span>
+                        <span className="text-black dark:text-zinc-50">
+                          {application.channel_other}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                        Co-Founders Count:{" "}
+                      </span>
+                      <span className="text-black dark:text-zinc-50">
+                        {application.co_founders_count ?? "N/A"}
+                      </span>
+                    </div>
+                    {application.faculty_involved && (
                       <div>
                         <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
-                          Current Traction:
+                          Faculty Involved:
                         </span>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.current_traction}
+                        <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                          {application.faculty_involved}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Why Incubator */}
+                {/* Entrepreneurship Experience */}
+                {(application.prior_entrepreneurship_experience || application.team_prior_entrepreneurship_experience || application.prior_experience_details) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Entrepreneurship Experience
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.prior_entrepreneurship_experience && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Prior Entrepreneurship Experience:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.prior_entrepreneurship_experience}
+                          </span>
+                        </div>
+                      )}
+                      {application.team_prior_entrepreneurship_experience && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Team Prior Entrepreneurship Experience:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.team_prior_entrepreneurship_experience}
+                          </span>
+                        </div>
+                      )}
+                      {application.prior_experience_details && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Prior Experience Details:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.prior_experience_details}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Startup Registration & Funding */}
+                {(application.mca_registered || application.dpiit_registered || application.external_funding || application.currently_incubated) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Startup Registration & Funding
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.mca_registered && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            MCA Registered:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.mca_registered}
+                          </span>
+                        </div>
+                      )}
+                      {application.dpiit_registered && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            DPIIT Registered:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.dpiit_registered}
+                          </span>
+                        </div>
+                      )}
+                      {application.dpiit_details && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            DPIIT Details:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.dpiit_details}
+                          </span>
+                        </div>
+                      )}
+                      {application.external_funding && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            External Funding:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.external_funding}
+                          </p>
+                        </div>
+                      )}
+                      {application.currently_incubated && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Currently Incubated:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.currently_incubated}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Team Members */}
+                {application.team_members && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Team Members
+                    </h3>
+                    <div className="text-sm">
+                      <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                        {application.team_members}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* About Nirmaan Program */}
+                {(application.nirmaan_can_help || application.pre_incubation_reason || application.heard_about_startups || application.heard_about_nirmaan) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      About Nirmaan Program
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.nirmaan_can_help && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            How Nirmaan Can Help:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.nirmaan_can_help}
+                          </p>
+                        </div>
+                      )}
+                      {application.pre_incubation_reason && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Pre-Incubation Reason:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.pre_incubation_reason}
+                          </p>
+                        </div>
+                      )}
+                      {application.heard_about_startups && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Heard About Startups:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.heard_about_startups}
+                          </p>
+                        </div>
+                      )}
+                      {application.heard_about_nirmaan && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Heard About Nirmaan:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.heard_about_nirmaan}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Problem & Solution */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
-                    Why Our Incubator?
+                    Problem & Solution
                   </h3>
-                  <p className="text-sm text-black dark:text-zinc-50">
-                    {application.why_incubator}
-                  </p>
+                  <div className="space-y-3 text-sm">
+                    {(application.problem_solving || application.problem) && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                          Problem:
+                        </span>
+                        <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                          {application.problem_solving || application.problem}
+                        </p>
+                      </div>
+                    )}
+                    {(application.your_solution || application.solution) && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                          Solution:
+                        </span>
+                        <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                          {application.your_solution || application.solution}
+                        </p>
+                      </div>
+                    )}
+                    {(application.solution_type || application.business_model) && (
+                      <div>
+                        <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                          Solution Type:
+                        </span>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.solution_type || application.business_model}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Industry & Technologies */}
+                {(application.target_industry || application.target_market || application.other_industries || application.technologies_utilized) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Industry & Technologies
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {(application.target_industry || application.target_market) && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Target Industry:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.target_industry || application.target_market}
+                          </span>
+                        </div>
+                      )}
+                      {application.industry_other && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Industry (Other):{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.industry_other}
+                          </span>
+                        </div>
+                      )}
+                      {application.other_industries && application.other_industries.length > 0 && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Industries:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {Array.isArray(application.other_industries)
+                              ? application.other_industries.join(", ")
+                              : application.other_industries}
+                          </span>
+                        </div>
+                      )}
+                      {application.other_industries_other && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Industries (Other):{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.other_industries_other}
+                          </span>
+                        </div>
+                      )}
+                      {application.technologies_utilized && application.technologies_utilized.length > 0 && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Technologies Utilized:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {Array.isArray(application.technologies_utilized)
+                              ? application.technologies_utilized.join(", ")
+                              : application.technologies_utilized}
+                          </span>
+                        </div>
+                      )}
+                      {application.other_technology_details && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Technology Details:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.other_technology_details}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Startup Stage & IP */}
+                {(application.startup_stage || application.has_intellectual_property || application.has_potential_intellectual_property) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Startup Stage & Intellectual Property
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.startup_stage && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Startup Stage:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.startup_stage}
+                          </span>
+                        </div>
+                      )}
+                      {application.has_intellectual_property && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Has Intellectual Property:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.has_intellectual_property}
+                          </span>
+                        </div>
+                      )}
+                      {application.has_potential_intellectual_property && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Has Potential Intellectual Property:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.has_potential_intellectual_property}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Presentation & Proof */}
+                {(application.nirmaan_presentation_link || application.has_proof_of_concept || application.proof_of_concept_details || application.has_patents_or_papers || application.patents_or_papers_details) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Presentation & Proof of Concept
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.nirmaan_presentation_link && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Nirmaan Presentation:{" "}
+                          </span>
+                          <a
+                            href={application.nirmaan_presentation_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                          >
+                            {application.nirmaan_presentation_link}
+                          </a>
+                        </div>
+                      )}
+                      {application.has_proof_of_concept && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Has Proof of Concept:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.has_proof_of_concept}
+                          </span>
+                        </div>
+                      )}
+                      {application.proof_of_concept_details && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Proof of Concept Details:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.proof_of_concept_details}
+                          </p>
+                        </div>
+                      )}
+                      {application.has_patents_or_papers && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Has Patents or Papers:{" "}
+                          </span>
+                          <span className="text-black dark:text-zinc-50">
+                            {application.has_patents_or_papers}
+                          </span>
+                        </div>
+                      )}
+                      {application.patents_or_papers_details && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Patents or Papers Details:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.patents_or_papers_details}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Seed Fund & Pitch */}
+                {(application.seed_fund_utilization_plan || application.pitch_video_link || application.document1_link || application.document2_link) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-black dark:text-zinc-50">
+                      Seed Fund & Pitch Video
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {application.seed_fund_utilization_plan && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                            Seed Fund Utilization Plan:
+                          </span>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.seed_fund_utilization_plan}
+                          </p>
+                        </div>
+                      )}
+                      {application.pitch_video_link && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Pitch Video Link:{" "}
+                          </span>
+                          <a
+                            href={application.pitch_video_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                          >
+                            {application.pitch_video_link}
+                          </a>
+                        </div>
+                      )}
+                      {application.document1_link && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Document 1:{" "}
+                          </span>
+                          <a
+                            href={application.document1_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                          >
+                            {application.document1_link}
+                          </a>
+                        </div>
+                      )}
+                      {application.document2_link && (
+                        <div>
+                          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                            Document 2:{" "}
+                          </span>
+                          <a
+                            href={application.document2_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+                          >
+                            {application.document2_link}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

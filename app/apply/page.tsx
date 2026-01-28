@@ -894,7 +894,7 @@ export default function ApplyPage() {
                   <SelectTrigger id="targetIndustry">
                     <SelectValue placeholder="Select main industry" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className=" max-h-[250px] overflow-y-auto">
                     <SelectItem value="Aerospace & Drones Applications">
                       Aerospace & Drones Applications
                     </SelectItem>
@@ -1209,12 +1209,11 @@ export default function ApplyPage() {
                   Upload your Nirmaan Presentation as per the Template. (Max 10
                   MB size){" "}
                   <a
-                    href="#"
+                    href="/Nirmaan Sample Pitchdeck.pptx"
                     className="text-blue-500 hover:text-blue-600 underline"
                     onClick={(e) => {
                       e.preventDefault();
-                      // Add your template link here
-                      window.open("#", "_blank");
+                      window.open("/Nirmaan Sample Pitchdeck.pptx", "_blank");
                     }}
                   >
                     Find template here

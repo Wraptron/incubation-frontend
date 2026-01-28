@@ -22,24 +22,89 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Application {
   id: string;
-  company_name: string;
-  website: string;
-  description: string;
-  founder_name: string;
-  co_founders: string;
+  // Basic Information
   email: string;
-  phone: string;
-  problem: string;
-  solution: string;
-  target_market: string;
-  business_model: string;
-  funding_stage: string;
-  funding_amount: string;
-  current_traction: string;
-  why_incubator: string;
+  team_name?: string;
+  company_name?: string;
+  your_name?: string;
+  founder_name?: string;
+  is_iitm?: string;
+  roll_number?: string;
+  roll_number_other?: string | null;
+  college_name?: string | null;
+  current_occupation?: string | null;
+  phone_number?: string;
+  phone?: string;
+  channel?: string;
+  channel_other?: string | null;
+  co_founders_count?: number;
+  faculty_involved?: string | null;
+  co_founders?: string | null;
+  
+  // Entrepreneurship Experience
+  prior_entrepreneurship_experience?: string;
+  team_prior_entrepreneurship_experience?: string;
+  prior_experience_details?: string | null;
+  
+  // Startup Registration & Funding
+  mca_registered?: string;
+  dpiit_registered?: string | null;
+  dpiit_details?: string | null;
+  external_funding?: string | null;
+  funding_amount?: string | null;
+  currently_incubated?: string | null;
+  
+  // Team Members
+  team_members?: string;
+  
+  // About Nirmaan Program
+  nirmaan_can_help?: string;
+  pre_incubation_reason?: string;
+  heard_about_startups?: string;
+  heard_about_nirmaan?: string;
+  why_incubator?: string;
+  
+  // Problem & Solution
+  problem_solving?: string;
+  problem?: string;
+  your_solution?: string;
+  solution?: string;
+  solution_type?: string;
+  business_model?: string;
+  description?: string;
+  
+  // Industry & Technologies
+  target_industry?: string;
+  target_market?: string;
+  other_industries?: string[] | null;
+  industry_other?: string | null;
+  other_industries_other?: string | null;
+  technologies_utilized?: string[] | null;
+  other_technology_details?: string | null;
+  
+  // Startup Stage & IP
+  startup_stage?: string;
+  has_intellectual_property?: string;
+  has_potential_intellectual_property?: string;
+  
+  // Presentation & Proof
+  nirmaan_presentation_link?: string;
+  has_proof_of_concept?: string;
+  proof_of_concept_details?: string | null;
+  current_traction?: string | null;
+  has_patents_or_papers?: string;
+  patents_or_papers_details?: string | null;
+  
+  // Seed Fund & Pitch
+  seed_fund_utilization_plan?: string;
+  pitch_video_link?: string;
+  document1_link?: string | null;
+  document2_link?: string | null;
+  
+  // Status & Metadata
   status: string;
   rejection_reason?: string | null;
-  reviewer_id: string | null;
+  reviewer_id?: string | null;
   reviewers?: Array<{
     id: string;
     full_name: string | null;
@@ -52,7 +117,10 @@ interface Application {
   allEvaluationsComplete?: boolean;
   evaluationsCount?: number;
   totalReviewers?: number;
-  created_at: string;
+  submitted_at?: string;
+  created_at?: string;
+  website?: string | null;
+  funding_stage?: string | null;
 }
 
 export default function ApplicationDetailPage() {
@@ -1083,94 +1151,571 @@ export default function ApplicationDetailPage() {
 
               {/* Application Form Tab */}
               <TabsContent value="application-form" className="space-y-6 mt-6">
-                {/* Business Details */}
+                {/* Basic Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Business Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Problem
-                        </label>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.problem}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Solution
-                        </label>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.solution}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Target Market
-                        </label>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.target_market}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Business Model
-                        </label>
-                        <p className="text-black dark:text-zinc-50">
-                          {application.business_model}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Funding & Traction */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Funding & Traction</CardTitle>
+                    <CardTitle>Basic Information</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Funding Stage
+                          Email
                         </label>
                         <p className="text-black dark:text-zinc-50">
-                          {application.funding_stage?.replace("_", " ") ||
-                            "N/A"}
+                          {application.email}
                         </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Funding Amount
+                          Team/Startup Name
                         </label>
                         <p className="text-black dark:text-zinc-50">
-                          {application.funding_amount || "N/A"}
+                          {application.team_name || application.company_name || "N/A"}
                         </p>
                       </div>
-                      <div className="md:col-span-2">
+                      <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                          Current Traction
+                          Your Name
                         </label>
                         <p className="text-black dark:text-zinc-50">
-                          {application.current_traction || "N/A"}
+                          {application.your_name || application.founder_name || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Are you from IITM?
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.is_iitm || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Roll Number
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.roll_number || "N/A"}
+                        </p>
+                      </div>
+                      {application.roll_number_other && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Roll Number (Other)
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.roll_number_other}
+                          </p>
+                        </div>
+                      )}
+                      {application.college_name && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            College Name
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.college_name}
+                          </p>
+                        </div>
+                      )}
+                      {application.current_occupation && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Current Occupation
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.current_occupation}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Phone Number
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.phone_number || application.phone || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Channel
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.channel || "N/A"}
+                        </p>
+                      </div>
+                      {application.channel_other && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Channel (Other)
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.channel_other}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Co-Founders Count
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.co_founders_count ?? "N/A"}
+                        </p>
+                      </div>
+                      {application.faculty_involved && (
+                        <div className="md:col-span-2">
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Faculty Involved
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.faculty_involved}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Entrepreneurship Experience */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Entrepreneurship Experience</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Prior Entrepreneurship Experience
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.prior_entrepreneurship_experience || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Team Prior Entrepreneurship Experience
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.team_prior_entrepreneurship_experience || "N/A"}
+                        </p>
+                      </div>
+                      {application.prior_experience_details && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Prior Experience Details
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.prior_experience_details}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Startup Registration & Funding */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Startup Registration & Funding</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          MCA Registered
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.mca_registered || "N/A"}
+                        </p>
+                      </div>
+                      {application.dpiit_registered && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            DPIIT Registered
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.dpiit_registered}
+                          </p>
+                        </div>
+                      )}
+                      {application.dpiit_details && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            DPIIT Details
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.dpiit_details}
+                          </p>
+                        </div>
+                      )}
+                      {application.external_funding && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            External Funding
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.external_funding}
+                          </p>
+                        </div>
+                      )}
+                      {application.currently_incubated && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Currently Incubated
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.currently_incubated}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Team Members */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Team Members</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                        Team Members
+                      </label>
+                      <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                        {application.team_members || "N/A"}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* About Nirmaan Program */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>About Nirmaan Program</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {application.nirmaan_can_help && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            How Nirmaan Can Help
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.nirmaan_can_help}
+                          </p>
+                        </div>
+                      )}
+                      {application.pre_incubation_reason && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Pre-Incubation Reason
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.pre_incubation_reason}
+                          </p>
+                        </div>
+                      )}
+                      {application.heard_about_startups && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Heard About Startups
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.heard_about_startups}
+                          </p>
+                        </div>
+                      )}
+                      {application.heard_about_nirmaan && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Heard About Nirmaan
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.heard_about_nirmaan}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Problem & Solution */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Problem & Solution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Problem Solving
+                        </label>
+                        <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                          {application.problem_solving || application.problem || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Your Solution
+                        </label>
+                        <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                          {application.your_solution || application.solution || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Solution Type
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.solution_type || application.business_model || "N/A"}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Why Incubator */}
+                {/* Industry & Technologies */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Why Our Incubator?</CardTitle>
+                    <CardTitle>Industry & Technologies</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-black dark:text-zinc-50">
-                      {application.why_incubator}
-                    </p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Target Industry
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.target_industry || application.target_market || "N/A"}
+                        </p>
+                      </div>
+                      {application.industry_other && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Industry (Other)
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.industry_other}
+                          </p>
+                        </div>
+                      )}
+                      {application.other_industries && application.other_industries.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Industries
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {Array.isArray(application.other_industries) 
+                              ? application.other_industries.join(", ")
+                              : application.other_industries}
+                          </p>
+                        </div>
+                      )}
+                      {application.other_industries_other && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Industries (Other)
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.other_industries_other}
+                          </p>
+                        </div>
+                      )}
+                      {application.technologies_utilized && application.technologies_utilized.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Technologies Utilized
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {Array.isArray(application.technologies_utilized)
+                              ? application.technologies_utilized.join(", ")
+                              : application.technologies_utilized}
+                          </p>
+                        </div>
+                      )}
+                      {application.other_technology_details && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Other Technology Details
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            {application.other_technology_details}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Startup Stage & IP */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Startup Stage & Intellectual Property</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Startup Stage
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.startup_stage || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Has Intellectual Property
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.has_intellectual_property || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Has Potential Intellectual Property
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.has_potential_intellectual_property || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Presentation & Proof */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Presentation & Proof of Concept</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {application.nirmaan_presentation_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Nirmaan Presentation Link
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.nirmaan_presentation_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {application.nirmaan_presentation_link}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Has Proof of Concept
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.has_proof_of_concept || "N/A"}
+                        </p>
+                      </div>
+                      {application.proof_of_concept_details && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Proof of Concept Details
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.proof_of_concept_details}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                          Has Patents or Papers
+                        </label>
+                        <p className="text-black dark:text-zinc-50">
+                          {application.has_patents_or_papers || "N/A"}
+                        </p>
+                      </div>
+                      {application.patents_or_papers_details && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Patents or Papers Details
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.patents_or_papers_details}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Seed Fund & Pitch */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Seed Fund & Pitch Video</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {application.seed_fund_utilization_plan && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Seed Fund Utilization Plan
+                          </label>
+                          <p className="text-black dark:text-zinc-50 whitespace-pre-wrap">
+                            {application.seed_fund_utilization_plan}
+                          </p>
+                        </div>
+                      )}
+                      {application.pitch_video_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Pitch Video Link
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.pitch_video_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {application.pitch_video_link}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+                      {application.document1_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Document 1 Link
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.document1_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {application.document1_link}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+                      {application.document2_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Document 2 Link
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.document2_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {application.document2_link}
+                            </a>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
