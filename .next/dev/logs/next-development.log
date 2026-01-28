@@ -1,7 +1,6 @@
-[00:00:02.437] Server  LOG     ✓ Ready in 2s
-[00:00:17.834] Server  LOG     ○ Compiling / ...
-[00:00:21.496] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:22.020] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:03.721] Server  LOG     ✓ Ready in 3.1s
+[00:00:08.665] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:09.060] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -19,48 +18,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
-              <RedirectBoundary>
-                <RedirectErrorBoundary router={{...}}>
-                  <Head>
-                  <__next_root_layout_boundary__>
-                    <SegmentViewNode type="layout" pagePath="layout.tsx">
-                      <SegmentTrieNode>
-                      <link>
-                      <RootLayout>
-                        <html lang="en">
-                          <body
-                            className="__variable_188709 __variable_9a8899 antialiased"
--                           cz-shortcut-listen="true"
-                          >
-                  ...
-
-[00:00:22.020] Browser WARN    Image with src "http://localhost:3000/wraptron_logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:09:23.016] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:11:31.185] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:11:31.185] Server  LOG     Application ID from params: "ac021845-9cb1-4294-a0ce-ce5fca3909de"
-[00:11:31.188] Server  LOG     Params object: {}
-[00:11:31.933] Browser LOG     No evaluation found for reviewer
-[00:14:25.668] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:14:26.033] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
-
-- A server/client branch `if (typeof window !== 'undefined')`.
-- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
-- Date formatting in a user's locale which doesn't match the server.
-- External changing data without sending a snapshot of it along with the HTML.
-- Invalid HTML tag nesting.
-
-It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
-
-%s%s https://react.dev/link/hydration-mismatch 
-
-  ...
-    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
-      <AppDevOverlayErrorBoundary globalError={[...]}>
-        <ReplaySsrOnlyErrors>
-        <DevRootHTTPAccessFallbackBoundary>
-          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -77,162 +35,8 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:14:26.033] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:22:55.710] Server  ERROR   ⨯ ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/apply/page.tsx
-[00:22:56.129] Browser ERROR   ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/apply/page.tsx
-[00:22:56.129] Browser ERROR   ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/apply/page.tsx
-[00:23:01.358] Server  ERROR   ⨯ ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/apply/page.tsx
-[00:23:01.701] Browser ERROR   ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-
-Import trace for requested module:
-./app/apply/page.tsx
-[00:23:02.135] Server  LOG     ○ Compiling /_error ...
-[00:23:02.241] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-
-Caused by:
-    Syntax Error
-[00:23:03.016] Browser ERROR   ./app/apply/page.tsx
-Error:   × Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      · ▲
-      ╰────
-  × Expected '</', got '<eof>'
-      ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/apply/page.tsx:1555:1]
- 1552 │       </div>
- 1553 │     </div>
- 1554 │   );
- 1555 │ }
-      ╰────
-
-Caused by:
-    Syntax Error
-[00:23:04.490] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
-[00:23:04.726] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
-[00:23:06.755] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
-[00:23:07.534] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:23:08.516] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:10.961] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:11.373] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -250,7 +54,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/apply" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -267,50 +71,201 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:25:45.330] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:26:00.055] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:26:00.334] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:26:09.577] Server  LOG     === Frontend API Route - GET All Evaluations ===
-[00:26:09.577] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
-[00:26:10.508] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
-[00:26:33.904] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:26:34.157] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:27:34.042] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:27:34.293] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:29:48.781] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:29:49.102] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:30:02.104] Browser LOG     📧 Starting reviewer assignment process...
-[00:30:02.104] Browser LOG     📋 Application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:30:02.104] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 3"]
-[00:30:02.104] Browser LOG     📧 Email notifications will be sent to assigned reviewers
-[00:30:04.720] Server  LOG     === Frontend API Route - GET All Evaluations ===
-[00:30:04.720] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
-[00:30:05.449] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
-[00:30:21.608] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:30:21.851] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:30:58.735] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:30:58.897] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
-[00:32:23.820] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:32:23.821] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
-[00:32:23.822] Server  LOG     Params object: {}
-[00:32:24.416] Browser LOG     No evaluation found for reviewer
-[00:32:28.849] Browser LOG     === EvaluatePage Mount ===
-[00:32:28.849] Browser LOG     Params: {"id":"2bc92dfb-0af9-45a0-a639-5cc75f44a28b"}
-[00:32:28.849] Browser LOG     Params.id: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:28.849] Browser LOG     Params.id type: string
-[00:32:28.849] Browser LOG     Valid params.id found: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:28.849] Browser LOG     === EvaluatePage Mount ===
-[00:32:28.849] Browser LOG     Params: {"id":"2bc92dfb-0af9-45a0-a639-5cc75f44a28b"}
-[00:32:28.849] Browser LOG     Params.id: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:28.849] Browser LOG     Params.id type: string
-[00:32:28.849] Browser LOG     Valid params.id found: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:29.351] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:32:29.352] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
-[00:32:29.352] Server  LOG     Params object: {}
-[00:32:29.367] Browser LOG     Fetching application: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:29.367] Browser LOG     Fetching evaluation for application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:29.596] Browser LOG     Fetching application: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:29.596] Browser LOG     Fetching evaluation for application ID: 2bc92dfb-0af9-45a0-a639-5cc75f44a28b
-[00:32:29.978] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:32:29.978] Server  LOG     Application ID from params: "2bc92dfb-0af9-45a0-a639-5cc75f44a28b"
-[00:32:29.978] Server  LOG     Params object: {}
+[00:00:47.481] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:47.794] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:01:03.771] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:04.251] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:10:35.795] Server  LOG     Calling backend URL: "http://localhost:5001/api/users/change-password"
+[00:10:36.411] Server  LOG     Response status: 200
+[00:18:16.738] Server  LOG     Calling backend URL: "http://localhost:5001/api/users"
+[00:18:22.489] Server  LOG     Response status: 201
+[00:18:22.490] Server  LOG     Response content-type: "application/json; charset=utf-8"
+[00:33:30.957] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:33:31.887] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[02:12:55.263] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[02:20:44.941] Server  LOG     Calling backend URL: "http://localhost:5001/api/users"
+[02:20:49.461] Server  LOG     Response status: 201
+[02:20:49.462] Server  LOG     Response content-type: "application/json; charset=utf-8"
+[02:22:38.824] Server  LOG     Calling backend URL: "http://localhost:5001/api/users/change-password"
+[02:22:39.467] Server  LOG     Response status: 200
+[02:24:28.699] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Debug User","id":"98ec0424-70cb-4f6c-9c7e-08981e0c099e"},{"full_name":"Final Check User","id":"ebfee0b1-c4cb-4e2c-962d-88b6a99c9227"},{"full_name":"Charu","id":"5f126fa9-a8e8-4048-944c-fc29744fd5f3"},{"full_name":"virat","id":"4e9440ac-63d2-4b4d-a7fa-0a3785fda08e"},{"full_name":"Rohith Sharma","id":"a07a6a05-d564-4fd4-982c-cdd049c82532"},{"full_name":"Rishi","id":"59e4fc32-c9a0-444d-9ef4-fc1282826032"}]
+[02:24:32.996] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Debug User","id":"98ec0424-70cb-4f6c-9c7e-08981e0c099e"},{"full_name":"Final Check User","id":"ebfee0b1-c4cb-4e2c-962d-88b6a99c9227"},{"full_name":"Charu","id":"5f126fa9-a8e8-4048-944c-fc29744fd5f3"},{"full_name":"virat","id":"4e9440ac-63d2-4b4d-a7fa-0a3785fda08e"},{"full_name":"Rohith Sharma","id":"a07a6a05-d564-4fd4-982c-cdd049c82532"},{"full_name":"Rishi","id":"59e4fc32-c9a0-444d-9ef4-fc1282826032"}]
+[02:24:33.316] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Debug User","id":"98ec0424-70cb-4f6c-9c7e-08981e0c099e"},{"full_name":"Final Check User","id":"ebfee0b1-c4cb-4e2c-962d-88b6a99c9227"},{"full_name":"Charu","id":"5f126fa9-a8e8-4048-944c-fc29744fd5f3"},{"full_name":"virat","id":"4e9440ac-63d2-4b4d-a7fa-0a3785fda08e"},{"full_name":"Rohith Sharma","id":"a07a6a05-d564-4fd4-982c-cdd049c82532"},{"full_name":"Rishi","id":"59e4fc32-c9a0-444d-9ef4-fc1282826032"}]
+[02:24:38.602] Browser ERROR   uncaughtError: Error: Objects are not valid as a React child (found: object with keys {name, email, mailId, department, rollNumber}). If you meant to render a collection of children, use an array instead.
+[02:24:58.119] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[02:24:58.574] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[02:25:24.509] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Debug User","id":"98ec0424-70cb-4f6c-9c7e-08981e0c099e"},{"full_name":"Final Check User","id":"ebfee0b1-c4cb-4e2c-962d-88b6a99c9227"},{"full_name":"Charu","id":"5f126fa9-a8e8-4048-944c-fc29744fd5f3"},{"full_name":"virat","id":"4e9440ac-63d2-4b4d-a7fa-0a3785fda08e"},{"full_name":"Rohith Sharma","id":"a07a6a05-d564-4fd4-982c-cdd049c82532"},{"full_name":"Rishi","id":"59e4fc32-c9a0-444d-9ef4-fc1282826032"}]
+[02:25:24.771] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Debug User","id":"98ec0424-70cb-4f6c-9c7e-08981e0c099e"},{"full_name":"Final Check User","id":"ebfee0b1-c4cb-4e2c-962d-88b6a99c9227"},{"full_name":"Charu","id":"5f126fa9-a8e8-4048-944c-fc29744fd5f3"},{"full_name":"virat","id":"4e9440ac-63d2-4b4d-a7fa-0a3785fda08e"},{"full_name":"Rohith Sharma","id":"a07a6a05-d564-4fd4-982c-cdd049c82532"},{"full_name":"Rishi","id":"59e4fc32-c9a0-444d-9ef4-fc1282826032"}]
+[02:28:19.728] Browser ERROR   uncaughtError: Error: Objects are not valid as a React child (found: object with keys {name, department, university, designation, roleInStartup}). If you meant to render a collection of children, use an array instead.
+[02:28:36.990] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[02:28:37.352] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+

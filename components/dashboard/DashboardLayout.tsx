@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Sidebar from "./Sidebar";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { KeyRound, CheckCircle, AlertCircle } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,6 +32,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -82,6 +103,64 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push("/login");
   };
 
+  const handleChangePassword = async () => {
+    setIsChangingPassword(true);
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    try {
+      // Validate passwords
+      if (!passwordData.newPassword || !passwordData.confirmPassword) {
+        throw new Error("Please fill in all fields");
+      }
+
+      if (passwordData.newPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters long");
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      // Call API to change password
+      const response = await fetch("/api/users/change-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to change password");
+      }
+
+      setPasswordSuccess(true);
+      setPasswordData({ newPassword: "", confirmPassword: "" });
+      
+      // Close dialog after 2 seconds
+      setTimeout(() => {
+        setIsPasswordDialogOpen(false);
+        setPasswordSuccess(false);
+      }, 2000);
+    } catch (err: any) {
+      setPasswordError(err.message || "Failed to change password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const resetPasswordDialog = () => {
+    setPasswordData({ newPassword: "", confirmPassword: "" });
+    setPasswordError(null);
+    setPasswordSuccess(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
@@ -115,6 +194,100 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {user.role}
               </p>
             </div>
+            
+            <Dialog open={isPasswordDialogOpen} onOpenChange={(open) => {
+              if (!open) resetPasswordDialog();
+              setIsPasswordDialogOpen(open);
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Change Password
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                {!passwordSuccess ? (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Change Password</DialogTitle>
+                      <DialogDescription>
+                        Enter your new password below. Password must be at least 8 characters long.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                      {passwordError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{passwordError}</AlertDescription>
+                        </Alert>
+                      )}
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          placeholder="Enter new password"
+                          value={passwordData.newPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, newPassword: e.target.value })
+                          }
+                          disabled={isChangingPassword}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="Confirm new password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                          }
+                          disabled={isChangingPassword}
+                        />
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsPasswordDialogOpen(false)}
+                        disabled={isChangingPassword}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleChangePassword}
+                        disabled={
+                          isChangingPassword ||
+                          !passwordData.newPassword ||
+                          !passwordData.confirmPassword
+                        }
+                      >
+                        {isChangingPassword ? "Changing..." : "Change Password"}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="h-5 w-5" />
+                        Password Changed Successfully
+                      </DialogTitle>
+                      <DialogDescription>
+                        Your password has been updated. You can now use your new password to log in.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
+
             <Button
               onClick={handleLogout}
               variant="default"
