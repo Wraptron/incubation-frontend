@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     const offset = Number(searchParams.get("offset") ?? 0);
 
     let query = supabaseServer
-      .from("startup_applications")
+      .from("new_application")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("submitted_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (statusParam && statusParam !== "all") {
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     let countQuery = supabaseServer
-      .from("startup_applications")
+      .from("new_application")
       .select("*", { count: "exact", head: true });
 
     if (statusParam && statusParam !== "all") {
@@ -78,8 +78,13 @@ export async function GET(request: NextRequest) {
 
     const { count } = await countQuery;
 
+    // Map new_application fields to old field names for frontend compatibility
     const enriched = (data || []).map((app: any) => ({
       ...app,
+      company_name: app.team_name || app.company_name,
+      founder_name: app.your_name || app.founder_name,
+      phone: app.phone_number || app.phone,
+      created_at: app.submitted_at || app.created_at,
       reviewers: reviewersMap[app.id] || [],
     }));
 

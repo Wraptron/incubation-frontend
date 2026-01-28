@@ -6,7 +6,7 @@ const uuidRegex =
 
 const buildApplicationResponse = async (id: string) => {
   const { data: application, error } = await supabaseServer
-    .from("startup_applications")
+    .from("new_application")
     .select("*")
     .eq("id", id)
     .single();
@@ -52,9 +52,33 @@ const buildApplicationResponse = async (id: string) => {
   const allEvaluationsComplete =
     totalReviewers > 0 && evaluationsCount >= totalReviewers;
 
+  // Map new_application fields to old field names for frontend compatibility
   return {
     application: {
       ...application,
+      // Basic mappings
+      company_name: application.team_name || application.company_name,
+      founder_name: application.your_name || application.founder_name,
+      phone: application.phone_number || application.phone,
+      created_at: application.submitted_at || application.created_at,
+      
+      // Content mappings
+      problem: application.problem_solving || application.problem,
+      solution: application.your_solution || application.solution,
+      description: application.your_solution || application.problem_solving || application.description,
+      
+      // Business mappings
+      target_market: application.target_industry || application.target_market,
+      business_model: application.solution_type || application.business_model,
+      current_traction: application.proof_of_concept_details || application.current_traction,
+      why_incubator: application.nirmaan_can_help || application.pre_incubation_reason || application.why_incubator,
+      funding_amount: application.external_funding || application.funding_amount,
+      
+      // Additional fields with fallbacks
+      website: application.website || null,
+      co_founders: application.faculty_involved || application.co_founders || null,
+      funding_stage: application.funding_stage || null,
+      
       reviewers,
       totalReviewers,
       evaluationsCount,
@@ -155,7 +179,7 @@ export async function PUT(
 
       // Move to under_review when reviewers get assigned
       await supabaseServer
-        .from("startup_applications")
+        .from("new_application")
         .update({ status: "under_review" })
         .eq("id", id);
     }
@@ -173,7 +197,7 @@ export async function PUT(
       }
 
       const { error: updateError } = await supabaseServer
-        .from("startup_applications")
+        .from("new_application")
         .update(updateData)
         .eq("id", id);
 

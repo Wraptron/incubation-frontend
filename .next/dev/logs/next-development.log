@@ -1,19 +1,98 @@
-[00:00:02.461] Server  LOG     ✓ Ready in 1797ms
-[00:00:16.438] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:16.569] Browser WARN    Image with src "http://localhost:3000/wraptron_logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:22.539] Browser ERROR   Error fetching applications: {}
-[00:00:22.643] Browser ERROR   Error fetching applications: {}
-[00:00:50.125] Browser ERROR   Error fetching applications: {}
-[00:00:50.378] Browser ERROR   Error fetching applications: {}
-[00:02:31.583] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:12:13.994] Server  LOG     ✓ Compiled in 68ms
-[00:12:48.733] Server  LOG     ✓ Compiled in 152ms
-[00:13:59.346] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"}]
-[00:13:59.651] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"}]
-[00:14:04.900] Server  LOG     === Frontend API Route - GET All Evaluations ===
-[00:14:04.901] Server  LOG     Application ID from params: "b2131a3c-6981-4e16-9ac3-ec2c82334064"
-[00:14:06.271] Browser ERROR   Failed to fetch evaluations: 500 {"error":"Failed to fetch evaluations"}
-[00:37:01.033] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:37:02.433] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"}]
-[00:37:08.603] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:37:08.799] Browser WARN    Image with src "http://localhost:3000/wraptron_logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:01.959] Server  LOG     ✓ Ready in 1385ms
+[00:00:03.244] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.687] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/incubatio...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:00:12.249] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:19.488] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:00:19.685] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:00:31.175] Browser LOG     📧 Starting reviewer assignment process...
+[00:00:31.175] Browser LOG     📋 Application ID: 96f4aa7b-7f6a-48d6-a1d0-4cbcf9fad35d
+[00:00:31.175] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 2"]
+[00:00:31.175] Browser LOG     📧 Email notifications will be sent to assigned reviewers
+[00:02:01.776] Server  LOG     ✓ Compiled in 798ms
+[00:02:54.767] Server  LOG     ✓ Compiled in 113ms
+[00:03:22.235] Server  LOG     ✓ Compiled in 236ms
+[00:04:03.754] Server  LOG     ✓ Compiled in 66ms
+[00:06:12.458] Server  LOG     ✓ Compiled in 167ms
+[00:07:00.043] Server  LOG     ✓ Compiled in 81ms
+[00:07:00.683] Browser ERROR   uncaughtError: ReferenceError: formatStatus is not defined
+[00:07:12.577] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:07:12.578] Server  LOG     ✓ Compiled in 320ms
+[00:07:13.912] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:14.095] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/incubatio...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:07:14.893] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:07:29.837] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:07:30.057] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:07:40.011] Browser LOG     📧 Starting reviewer assignment process...
+[00:07:40.011] Browser LOG     📋 Application ID: 96f4aa7b-7f6a-48d6-a1d0-4cbcf9fad35d
+[00:07:40.011] Browser LOG     👥 Assigning 2 reviewer(s): ["Reviewer 1","Reviewer 2"]
+[00:07:40.011] Browser LOG     📧 Email notifications will be sent to assigned reviewers
+[00:07:48.965] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]
+[00:07:49.164] Browser LOG     Fetched reviewers: [{"full_name":"Reviewer 2","id":"4ad6fd43-9292-460b-b18e-d5a6d9fcde72"},{"full_name":"Reviewer 3","id":"4989c720-2c3e-494f-b3d4-d1a5097495ee"},{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"}]

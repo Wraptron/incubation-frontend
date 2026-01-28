@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { formatStatus } from "@/lib/utils";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import {
   Dialog,
@@ -96,6 +97,9 @@ export default function ApplicationDetailPage() {
     }>
   >([]);
   const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     checkUser();
@@ -351,7 +355,7 @@ export default function ApplicationDetailPage() {
       );
 
       if (response.ok) {
-        setUpdateMessage(`Status updated to ${newStatus.replace("_", " ")}`);
+        setUpdateMessage(`Status updated to ${formatStatus(newStatus)}`);
         setTimeout(() => setUpdateMessage(""), 3000);
         setShowRejectModal(false);
         setRejectionReason("");
@@ -374,6 +378,95 @@ export default function ApplicationDetailPage() {
     }
   };
 
+  // const handleReject = () => {
+  //   if (!rejectionReason.trim()) {
+  //     setUpdateMessage("Please provide a reason for rejection");
+  //     setTimeout(() => setUpdateMessage(""), 3000);
+  //     return;
+  //   }
+  //   updateStatus("rejected", rejectionReason);
+  // };
+
+  // const handleReviewerToggle = (reviewerId: string) => {
+  //   setSelectedReviewers((prev) => {
+  //     if (prev.includes(reviewerId)) {
+  //       // Remove reviewer
+  //       return prev.filter((id) => id !== reviewerId);
+  //     } else {
+  //       // Add reviewer (max 5)
+  //       if (prev.length >= 5) {
+  //         setUpdateMessage("Maximum of 5 reviewers allowed");
+  //         setTimeout(() => setUpdateMessage(""), 3000);
+  //         return prev;
+  //       }
+  //       return [...prev, reviewerId];
+  //     }
+  //   });
+  // };
+
+  // const assignReviewers = async () => {
+  //   try {
+  //     if (selectedReviewers.length === 0) {
+  //       setUpdateMessage("Please select at least one reviewer");
+  //       setTimeout(() => setUpdateMessage(""), 3000);
+  //       return;
+  //     }
+
+  //     const response = await fetch(
+  //       `/api/applications/${params.id}`,
+  //       {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           reviewerIds: selectedReviewers,
+  //           // Backend will auto-transition from pending to under_review
+  //         }),
+  //       },
+  //     );
+
+  //     if (response.ok) {
+  //       setUpdateMessage(
+  //         selectedReviewers.length === 1
+  //           ? "Reviewer assigned successfully"
+  //           : `${selectedReviewers.length} reviewers assigned successfully`,
+  //       );
+  //       setTimeout(() => setUpdateMessage(""), 3000);
+  //       setShowAssignReviewer(false);
+  //       fetchApplication();
+  //       // Refresh evaluations
+  //       if (user?.role === "manager") {
+  //         fetchAllEvaluations();
+  //       }
+  //     } else {
+  //       const data = await response.json();
+  //       setUpdateMessage(data.error || "Failed to assign reviewers");
+  //       setTimeout(() => setUpdateMessage(""), 3000);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error assigning reviewer:", error);
+  //     setUpdateMessage("Error assigning reviewer");
+  //     setTimeout(() => setUpdateMessage(""), 3000);
+  //   }
+  // };
+
+  // const getStatusColor = (status: string) => {
+  //   const colors: Record<string, string> = {
+  //     pending:
+  //       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800",
+  //     under_review:
+  //       "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+  //     approved:
+  //       "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
+  //     rejected:
+  //       "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200 border-red-200 dark:border-red-800",
+  //     withdrawn:
+  //       "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-200 border-gray-200 dark:border-gray-800",
+  //   };
+  //   return (
+  //     colors[status] ||
+  //     "bg-gray-100 text-gray-800 border-gray-200 dark:border-gray-800"
+  //   );
+  // };
   const handleReject = () => {
     if (!rejectionReason.trim()) {
       setUpdateMessage("Please provide a reason for rejection");
@@ -382,7 +475,7 @@ export default function ApplicationDetailPage() {
     }
     updateStatus("rejected", rejectionReason);
   };
-
+  
   const handleReviewerToggle = (reviewerId: string) => {
     setSelectedReviewers((prev) => {
       if (prev.includes(reviewerId)) {
@@ -400,13 +493,30 @@ export default function ApplicationDetailPage() {
     });
   };
 
+  const removeReviewer = (reviewerId: string) => {
+    setSelectedReviewers((prev) => prev.filter((id) => id !== reviewerId));
+  };
+
   const assignReviewers = async () => {
     try {
-      if (selectedReviewers.length === 0) {
-        setUpdateMessage("Please select at least one reviewer");
+      if (selectedReviewers.length < 2) {
+        setUpdateMessage("Please select at least 2 reviewers");
         setTimeout(() => setUpdateMessage(""), 3000);
         return;
       }
+
+      // Get reviewer names for logging
+      const reviewerNames = selectedReviewers
+        .map((id) => {
+          const reviewer = availableReviewers.find((r) => r.id === id);
+          return reviewer?.full_name || "Unknown";
+        })
+        .filter(Boolean);
+
+      console.log("📧 Starting reviewer assignment process...");
+      console.log(`📋 Application ID: ${params.id}`);
+      console.log(`👥 Assigning ${selectedReviewers.length} reviewer(s):`, reviewerNames);
+      console.log(`📧 Email notifications will be sent to assigned reviewers`);
 
       const response = await fetch(
         `/api/applications/${params.id}`,
@@ -421,13 +531,13 @@ export default function ApplicationDetailPage() {
       );
 
       if (response.ok) {
-        setUpdateMessage(
-          selectedReviewers.length === 1
-            ? "Reviewer assigned successfully"
-            : `${selectedReviewers.length} reviewers assigned successfully`,
-        );
+            setUpdateMessage(
+          `${selectedReviewers.length} reviewers assigned successfully`,
+            );
         setTimeout(() => setUpdateMessage(""), 3000);
         setShowAssignReviewer(false);
+        setSearchQuery("");
+        setShowDropdown(false);
         fetchApplication();
         // Refresh evaluations
         if (user?.role === "manager") {
@@ -444,7 +554,6 @@ export default function ApplicationDetailPage() {
       setTimeout(() => setUpdateMessage(""), 3000);
     }
   };
-
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending:
@@ -463,7 +572,23 @@ export default function ApplicationDetailPage() {
       "bg-gray-100 text-gray-800 border-gray-200 dark:border-gray-800"
     );
   };
+      
+  // Filter reviewers based on search query
+  const filteredReviewers = availableReviewers.filter(
+    (reviewer) =>
+      !selectedReviewers.includes(reviewer.id) &&
+      (reviewer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        false)
+  );
 
+  const getSelectedReviewerNames = () => {
+    return selectedReviewers
+      .map((id) => {
+        const reviewer = availableReviewers.find((r) => r.id === id);
+        return reviewer?.full_name || "Unknown";
+      })
+      .filter(Boolean);
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
@@ -520,7 +645,7 @@ export default function ApplicationDetailPage() {
                     Status:
                   </span>
                   <Badge className={getStatusColor(application.status)}>
-                    {application.status.replace("_", " ")}
+                    {formatStatus(application.status)}
                   </Badge>
                 </div>
                 {application.status === "rejected" &&
@@ -665,78 +790,141 @@ export default function ApplicationDetailPage() {
 
         {/* Assign Reviewers Section */}
         {showAssignReviewer && user?.role === "manager" && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Assign Reviewers (up to 5)</CardTitle>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Select up to 5 reviewers for this application. Currently
-                selected: {selectedReviewers.length}/5
+          <div className="space-y-4 w-full max-w-md">
+            <h3 className="font-semibold">
+              Assign Reviewers (minimum 2, maximum 5)
+            </h3>
+            <p>
+              Select at least 2 reviewers. Currently selected:{" "}
+              {selectedReviewers.length}
+            </p>
+
+            {availableReviewers.length === 0 ? (
+              <p className="text-red-500">
+                No reviewers available. Please create reviewer accounts first.
               </p>
-            </CardHeader>
-            <CardContent>
-              {availableReviewers.length === 0 ? (
-                <p className="text-zinc-600 dark:text-zinc-400">
-                  No reviewers available. Please create reviewer accounts first.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {availableReviewers.map((reviewer) => (
-                    <label
-                      key={reviewer.id}
-                      className="flex items-center space-x-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedReviewers.includes(reviewer.id)}
-                        onChange={() => handleReviewerToggle(reviewer.id)}
-                        disabled={
-                          !selectedReviewers.includes(reviewer.id) &&
-                          selectedReviewers.length >= 5
-                        }
-                        className="w-4 h-4 text-black border-zinc-300 rounded focus:ring-2 focus:ring-black dark:focus:ring-zinc-500"
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-black dark:text-zinc-50">
-                          {reviewer.full_name || "Unnamed Reviewer"}
-                        </div>
-                        <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                          ID: {reviewer.id.substring(0, 8)}...
-                        </div>
+            ) : (
+              <>
+                {/* Selected Reviewers */}
+                {selectedReviewers.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {getSelectedReviewerNames().map((name, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-1 bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded-full text-sm"
+                      >
+                        {name}
+                        <button
+                          onClick={() =>
+                            removeReviewer(selectedReviewers[index])
+                          }
+                          className="hover:text-red-500"
+                        >
+                          ✕
+                        </button>
                       </div>
-                    </label>
-                  ))}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={assignReviewers}
-                      disabled={selectedReviewers.length === 0}
-                    >
-                      Assign{" "}
-                      {selectedReviewers.length > 0
-                        ? `${selectedReviewers.length} `
-                        : ""}
-                      Reviewer{selectedReviewers.length !== 1 ? "s" : ""}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowAssignReviewer(false);
-                        // Reset selection when canceling
-                        if (application?.reviewers) {
-                          setSelectedReviewers(
-                            application.reviewers.map((r) => r.id),
-                          );
-                        } else {
-                          setSelectedReviewers([]);
-                        }
-                      }}
-                      variant="default"
-                    >
-                      Cancel
-                    </Button>
+                    ))}
                   </div>
+                )}
+
+                {/* Searchable Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <input
+                    type="text"
+                    placeholder="Search and add reviewers"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowDropdown(true)}
+                    className="w-full pl-3 pr-10 py-2 border rounded-md focus:outline-none focus:ring"
+                  />
+
+                  {/* Dropdown */}
+                  {showDropdown && (
+                    <ul className="absolute z-50 w-full max-h-30 overflow-y-auto border rounded-md bg-white dark:bg-zinc-800 mt-2 shadow-lg">
+                      {filteredReviewers.length === 0 ? (
+                        <li className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                          No reviewers found
+                        </li>
+                      ) : (
+                        filteredReviewers.map((reviewer) => {
+                          const isSelected = selectedReviewers.includes(
+                            reviewer.id,
+                          );
+                          const isDisabled =
+                            selectedReviewers.length >= 5 && !isSelected;
+
+                          return (
+                            <li
+                              key={reviewer.id}
+                              onClick={() => {
+                                if (!isDisabled) {
+                                  handleReviewerToggle(reviewer.id);
+                                  setShowDropdown(false);
+                                  setSearchQuery("");
+                                }
+                              }}
+                              className={`flex justify-between px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors ${
+                                isDisabled
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <span>
+                                {reviewer.full_name || "Unnamed Reviewer"}
+                              </span>
+                              {isSelected && (
+                                <span className="text-green-500">✓</span>
+                              )}
+                            </li>
+                          );
+                        })
+                      )}
+                    </ul>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-2 mt-3">
+                  <button
+                    className="px-4 py-2 border rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                    onClick={() => {
+                      setShowAssignReviewer(false);
+                      setSearchQuery("");
+                      setShowDropdown(false);
+                      // Reset selection
+                      if (application?.reviewers) {
+                        setSelectedReviewers(
+                          application.reviewers.map((r) => r.id),
+                        );
+                      } else {
+                        setSelectedReviewers([]);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded text-white ${
+                      selectedReviewers.length < 2
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                    disabled={selectedReviewers.length < 2}
+                    onClick={() => assignReviewers()}
+                  >
+                    Assign {selectedReviewers.length} Reviewer
+                    {selectedReviewers.length !== 1 && "s"}
+                  </button>
+                </div>
+
+                {selectedReviewers.length < 2 && (
+                  <p className="text-red-500 mt-1">
+                    ⚠️ Please select at least 2 reviewers to proceed
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         )}
 
         {/* Reject Modal */}
