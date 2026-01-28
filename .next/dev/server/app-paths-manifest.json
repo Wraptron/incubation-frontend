@@ -1,11 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/api/applications/[id]/route": "app/api/applications/[id]/route.js",
   "/api/applications/route": "app/api/applications/route.js",
-  "/api/evaluations/application/[applicationId]/all/route": "app/api/evaluations/application/[applicationId]/all/route.js",
   "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/users/page": "app/dashboard/users/page.js",
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js"
+  "/login/page": "app/login/page.js"
 }

@@ -8,6 +8,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatStatus } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                 variant={filterStatus === status ? "default" : "ghost"}
                 onClick={() => setFilterStatus(status)}
               >
-                {status.replace("_", " ")}
+                {formatStatus(status)}
               </Button>
             ),
           )}
@@ -176,8 +177,8 @@ export default function DashboardPage() {
                     <TableCell>{app.founder_name}</TableCell>
                     <TableCell>{app.email}</TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(app.status)}>
-                        {app.status.replace("_", " ")}
+                    <Badge className={getStatusColor(app.status)}>
+                    {formatStatus(app.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>
