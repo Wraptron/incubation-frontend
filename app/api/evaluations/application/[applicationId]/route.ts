@@ -199,11 +199,29 @@ export async function PUT(
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    let data: { error?: string; details?: string; evaluation?: unknown } = {};
+    try {
+      const text = await response.text();
+      if (text) {
+        data = JSON.parse(text);
+      }
+    } catch (parseError) {
+      console.error("Backend response was not JSON:", parseError);
+      return NextResponse.json(
+        {
+          error: "Failed to save evaluation",
+          details: response.status === 500 ? "Server error (check backend logs or database migration)" : undefined,
+        },
+        { status: response.status },
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || "Failed to save evaluation" },
+        {
+          error: data.error || "Failed to save evaluation",
+          details: data.details,
+        },
         { status: response.status },
       );
     }
@@ -212,7 +230,10 @@ export async function PUT(
   } catch (error: any) {
     console.error("Error saving evaluation:", error);
     return NextResponse.json(
-      { error: "Failed to save evaluation" },
+      {
+        error: "Failed to save evaluation",
+        details: error?.message,
+      },
       { status: 500 },
     );
   }
