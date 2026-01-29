@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatStatus } from "@/lib/utils";
+import { extractFilenameFromS3Url } from "@/lib/s3";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import {
   Dialog,
@@ -112,6 +113,10 @@ interface Application {
   current_traction?: string | null;
   has_patents_or_papers?: string;
   patents_or_papers_details?: string | null;
+  
+  // IP Files
+  ip_file_link?: string | null;
+  potential_ip_file_link?: string | null;
   
   // Seed Fund & Pitch
   seed_fund_utilization_plan?: string;
@@ -1761,6 +1766,23 @@ export default function ApplicationDetailPage() {
                           {application.has_intellectual_property || "N/A"}
                         </p>
                       </div>
+                      {application.has_intellectual_property === "Yes" && application.ip_file_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            IP Documents
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.ip_file_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {extractFilenameFromS3Url(application.ip_file_link)}
+                            </a>
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Has Potential Intellectual Property
@@ -1769,6 +1791,23 @@ export default function ApplicationDetailPage() {
                           {application.has_potential_intellectual_property || "N/A"}
                         </p>
                       </div>
+                      {application.has_potential_intellectual_property === "Yes" && application.potential_ip_file_link && (
+                        <div>
+                          <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                            Potential IP Documents
+                          </label>
+                          <p className="text-black dark:text-zinc-50">
+                            <a
+                              href={application.potential_ip_file_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {extractFilenameFromS3Url(application.potential_ip_file_link)}
+                            </a>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1783,7 +1822,7 @@ export default function ApplicationDetailPage() {
                       {application.nirmaan_presentation_link && (
                         <div>
                           <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                            Nirmaan Presentation Link
+                            Nirmaan Presentation
                           </label>
                           <p className="text-black dark:text-zinc-50">
                             <a
@@ -1792,7 +1831,7 @@ export default function ApplicationDetailPage() {
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline"
                             >
-                              {application.nirmaan_presentation_link}
+                              {extractFilenameFromS3Url(application.nirmaan_presentation_link)}
                             </a>
                           </p>
                         </div>
@@ -1874,7 +1913,7 @@ export default function ApplicationDetailPage() {
                       {application.document1_link && (
                         <div>
                           <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                            Document 1 Link
+                            Document 1
                           </label>
                           <p className="text-black dark:text-zinc-50">
                             <a
@@ -1883,7 +1922,7 @@ export default function ApplicationDetailPage() {
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline"
                             >
-                              {application.document1_link}
+                              {extractFilenameFromS3Url(application.document1_link)}
                             </a>
                           </p>
                         </div>
@@ -1891,7 +1930,7 @@ export default function ApplicationDetailPage() {
                       {application.document2_link && (
                         <div>
                           <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                            Document 2 Link
+                            Document 2
                           </label>
                           <p className="text-black dark:text-zinc-50">
                             <a
@@ -1900,7 +1939,7 @@ export default function ApplicationDetailPage() {
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline"
                             >
-                              {application.document2_link}
+                              {extractFilenameFromS3Url(application.document2_link)}
                             </a>
                           </p>
                         </div>
