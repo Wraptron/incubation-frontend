@@ -34,7 +34,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserPlus, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { UserPlus, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -72,7 +82,9 @@ export default function UsersPage() {
   });
   const [createdUser, setCreatedUser] = useState<CreatedUserResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     checkUserAndFetchUsers();
@@ -88,6 +100,8 @@ export default function UsersPage() {
         router.push("/login");
         return;
       }
+
+      setCurrentUserId(user.id);
 
       const { data: profile } = await supabase
         .from("user_profiles")
@@ -157,20 +171,33 @@ export default function UsersPage() {
     }
   };
 
-  const copyPassword = () => {
-    if (createdUser?.password) {
-      navigator.clipboard.writeText(createdUser.password);
-      setPasswordCopied(true);
-      setTimeout(() => setPasswordCopied(false), 2000);
-    }
-  };
-
   const resetDialog = () => {
     setIsDialogOpen(false);
     setCreatedUser(null);
     setError(null);
-    setPasswordCopied(false);
     setNewUser({ email: "", fullName: "", role: "reviewer" });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/users/${userToDelete.id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+      setUserToDelete(null);
+      await fetchUsers();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete user");
+      console.error("Error deleting user:", err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -302,67 +329,9 @@ export default function UsersPage() {
                       User Created Successfully
                     </DialogTitle>
                     <DialogDescription>
-                      The user account has been created. Please share the
-                      credentials below with the user.
+                      The user account has been created.
                     </DialogDescription>
                   </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    {!createdUser.emailSent && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Email notification could not be sent. Please share the
-                          credentials manually with the user.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="space-y-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 p-4">
-                      <div>
-                        <Label className="text-xs text-zinc-500">Name</Label>
-                        <p className="font-medium">{createdUser.fullName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">Email</Label>
-                        <p className="font-medium">{createdUser.email}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">Role</Label>
-                        <p className="font-medium capitalize">
-                          {createdUser.role}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">
-                          Temporary Password
-                        </Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <code className="flex-1 bg-white dark:bg-zinc-800 px-3 py-2 rounded border font-mono text-sm">
-                            {createdUser.password}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={copyPassword}
-                          >
-                            {passwordCopied ? (
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Alert>
-                      <AlertDescription className="text-sm">
-                        The user should change this password after their first
-                        login for security purposes.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
 
                   <DialogFooter>
                     <Button onClick={resetDialog} className="w-full">
@@ -375,6 +344,13 @@ export default function UsersPage() {
           </Dialog>
         </div>
 
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <Card>
           <div className="overflow-x-auto">
             <Table>
@@ -384,6 +360,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -406,6 +383,56 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {user.id === currentUserId ? (
+                        <span className="text-xs text-zinc-500">(you)</span>
+                      ) : (
+                        <AlertDialog
+                          open={userToDelete?.id === user.id}
+                          onOpenChange={(open) =>
+                            !open && setUserToDelete(null)
+                          }
+                        >
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete user?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently remove{" "}
+                                <strong>{user.full_name || user.email_address}</strong>{" "}
+                                from the system. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel
+                                disabled={isDeleting}
+                                onClick={() => setUserToDelete(null)}
+                              >
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleDeleteUser();
+                                }}
+                                className="bg-red-600 hover:bg-red-700"
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={() => setUserToDelete(user)}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialog>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

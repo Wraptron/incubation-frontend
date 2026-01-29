@@ -1,33 +1,39 @@
-[00:00:00.728] Server  LOG     ✓ Ready in 561ms
-[00:00:10.198] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:10.199] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:10.199] Server  LOG     Params object: {}
-[00:00:10.744] Browser LOG     Fetched reviewer evaluation: {"application_id":"6080ed73-8916-40aa-8a33-290d692b33ea","created_at":"2026-01-29T17:07:11.753821+00:00","feasibility_scalability_comment":null,"feasibility_scalability_score":5,"id":"28704a81-c4ba-4a45-89df-cf9285d40bab","impact_comment":null,"impact_score":5,"market_potential_comment":null,"market_potential_score":5,"need_comment":null,"need_score":5,"novelty_comment":null,"novelty_score":5,"overall_comment":null,"reviewer":{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},"reviewer_id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb","total_score":25,"updated_at":"2026-01-29T17:35:42.585305+00:00"}
-[00:00:11.986] Browser LOG     === EvaluatePage Mount ===
-[00:00:11.986] Browser LOG     Params: {"id":"6080ed73-8916-40aa-8a33-290d692b33ea"}
-[00:00:11.986] Browser LOG     Params.id: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     Params.id type: string
-[00:00:11.986] Browser LOG     Valid params.id found: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m === EvaluatePage Mount ===
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params: {"id":"6080ed73-8916-40aa-8a33-290d692b33ea"}
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params.id: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params.id type: string
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Valid params.id found: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.180] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:12.181] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:12.181] Server  LOG     Params object: {}
-[00:00:12.350] Browser LOG     Fetching application: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching evaluation for application ID: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching application: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching evaluation for application ID: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.564] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:12.564] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:12.565] Server  LOG     Params object: {}
-[00:00:15.868] Server  LOG     === Frontend API Route - PUT Evaluation ===
-[00:00:15.869] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:15.869] Server  LOG     Params object: {}
-[00:00:15.956] Browser LOG     [Frontend] Submitting evaluation data: {"applicationId":"6080ed73-8916-40aa-8a33-290d692b33ea","feasibilityScalabilityComment":null,"feasibilityScalabilityScore":"5","impactComment":null,"impactScore":"5","marketPotentialComment":null,"marketPotentialScore":"5","needComment":null,"needScore":"5.4","noveltyComment":null,"noveltyScore":"5","overallComment":null}
-[00:00:16.027] Server  LOG     Reviewer ID: "19f33dd3-31a8-47b2-aead-de6f28d95ffb"
-[00:00:16.027] Server  LOG     Backend URL: "http://localhost:5001"
-[00:00:16.027] Server  LOG     Calling backend endpoint: "http://localhost:5001/api/evaluations/application/6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:02:07.239] Server  LOG       Reload env: .env.local
+[00:00:03.496] Server  LOG     ✓ Ready in 2.9s
+[00:00:13.055] Server  LOG     ○ Compiling / ...
+[00:00:14.952] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:15.403] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <RootLayout>
+                        <html lang="en">
+                          <head>
+                          <body
+                            className="__variable_188709 __variable_9a8899 antialiased"
+-                           cz-shortcut-listen="true"
+                          >
+                  ...
+
+[00:00:15.403] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
