@@ -2604,7 +2604,7 @@ export default function ApplyPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={handleSaveDraft}
+                onClick={() => handleSaveDraft()}
                 disabled={isSavingDraft || isSubmitting}
                 className="border-2 border-zinc-300 dark:border-zinc-600"
               >
