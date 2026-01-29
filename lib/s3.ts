@@ -7,11 +7,11 @@ const s3Client = new S3Client({
   region: REGION,
   credentials:
     process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
-      ? {
+    ? {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        }
-      : undefined,
+      }
+    : undefined,
 });
 
 /**
@@ -64,7 +64,7 @@ export async function uploadFileToS3(
       filename: file.name, // Return original filename for display
     };
   } catch (err) {
-    console.error("S3 upload error:", err);
+      console.error("S3 upload error:", err);
     return null;
   }
 }
