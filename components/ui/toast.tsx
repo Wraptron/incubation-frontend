@@ -4,7 +4,7 @@ import * as React from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export interface ToastProps {
+export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
   id: string
   title?: string
   description: string
