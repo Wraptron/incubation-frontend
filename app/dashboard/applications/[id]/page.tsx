@@ -331,19 +331,29 @@ export default function ApplicationDetailPage() {
       }
 
       if (response.ok) {
-        const evaluationsList = data.evaluations || [];
+        type EvaluationItem = {
+          id: string;
+          reviewer_id: string;
+          need_score: number | null;
+          novelty_score: number | null;
+          feasibility_scalability_score: number | null;
+          market_potential_score: number | null;
+          impact_score: number | null;
+          need_comment: string | null;
+          novelty_comment: string | null;
+          feasibility_scalability_comment: string | null;
+          market_potential_comment: string | null;
+          impact_comment: string | null;
+          overall_comment: string | null;
+          total_score: number | null;
+          created_at: string;
+          reviewer?: { id: string; full_name: string | null };
+        };
+        const evaluationsList = (data.evaluations || []) as EvaluationItem[];
         console.log("Fetched evaluations:", evaluationsList.length);
         // Calculate total scores for evaluations that don't have them
         const evaluationsWithScores = evaluationsList.map(
-          (evaluation: {
-            total_score: number | null;
-            need_score: number | null;
-            novelty_score: number | null;
-            feasibility_scalability_score: number | null;
-            market_potential_score: number | null;
-            impact_score: number | null;
-            [key: string]: unknown;
-          }) => {
+          (evaluation: EvaluationItem) => {
             if (
               evaluation.total_score === null ||
               evaluation.total_score === undefined
@@ -438,16 +448,26 @@ export default function ApplicationDetailPage() {
 
       if (response.ok) {
         if (data.evaluation) {
-          // Calculate total score if not present
-          const evaluation = data.evaluation as {
-            total_score?: number | null;
-            need_score?: number | null;
-            novelty_score?: number | null;
-            feasibility_scalability_score?: number | null;
-            market_potential_score?: number | null;
-            impact_score?: number | null;
-            [key: string]: unknown;
+          // Calculate total score if not present; cast to full evaluation shape for state
+          type EvaluationItem = {
+            id: string;
+            reviewer_id: string;
+            need_score: number | null;
+            novelty_score: number | null;
+            feasibility_scalability_score: number | null;
+            market_potential_score: number | null;
+            impact_score: number | null;
+            need_comment: string | null;
+            novelty_comment: string | null;
+            feasibility_scalability_comment: string | null;
+            market_potential_comment: string | null;
+            impact_comment: string | null;
+            overall_comment: string | null;
+            total_score: number | null;
+            created_at: string;
+            reviewer?: { id: string; full_name: string | null };
           };
+          const evaluation = data.evaluation as EvaluationItem;
           if (
             evaluation.total_score === null ||
             evaluation.total_score === undefined
