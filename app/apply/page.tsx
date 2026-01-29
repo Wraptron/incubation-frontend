@@ -2153,7 +2153,9 @@ export default function ApplyPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="document1Link">Document 1 - Upload</Label>
+                <Label htmlFor="document1Link">If you have any documents related to your startup upload here
+                  <p className="text-sm text-zinc-500">(research paper, White document or others )		</p>
+                </Label>
                 <div className="space-y-2">
                   <Input
                     id="document1Link"
@@ -2204,7 +2206,9 @@ export default function ApplyPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="document2Link">Document 2 - Upload</Label>
+                <Label htmlFor="document2Link">If you have any documents related to your startup upload here
+                  <p className="text-sm text-zinc-500">(research paper, White document or others )</p>
+                </Label>
                 <div className="space-y-2">
                   <Input
                     id="document2Link"
