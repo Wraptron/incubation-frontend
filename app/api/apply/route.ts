@@ -285,6 +285,10 @@ export async function POST(request: NextRequest) {
 
     // Map ALL frontend fields to database fields matching the new_application schema
     const applicationData: Record<string, any> = {
+      // Applicant ID (if provided)
+      applicant_id: body.applicantId || null,
+      is_draft: false,
+      
       // Basic Information
       email: body.email,
       team_name: body.teamName || "N/A",
