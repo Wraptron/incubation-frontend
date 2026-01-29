@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import { uploadFileToS3 } from "@/lib/s3";
 
 /* =========================
    POST: Submit application
@@ -88,133 +89,131 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Handle file uploads to Supabase Storage
+    // Handle file uploads to AWS S3 (nirmaan-launchpad bucket)
     const fileUrls: Record<string, string> = {};
-    
+
     // Upload presentation file
-    if (presentationFile && presentationFile instanceof File) {
-      const file = presentationFile;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-presentation.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabaseServer
-        .storage
-        .from('application-files')
-        .upload(filePath, file);
-      
-      if (!uploadError && uploadData) {
-        const { data: { publicUrl } } = supabaseServer
-          .storage
-          .from('application-files')
-          .getPublicUrl(filePath);
-        fileUrls.presentation = publicUrl;
+    if (presentationFile && presentationFile instanceof File && presentationFile.size > 0) {
+      try {
+        console.log("Attempting to upload presentation file:", {
+          name: presentationFile.name,
+          size: presentationFile.size,
+          type: presentationFile.type,
+        });
+        const result = await uploadFileToS3(presentationFile, "presentation");
+        if (result) {
+          fileUrls.presentation = result.url;
+          console.log("Presentation file uploaded successfully:", result.url, "filename:", result.filename);
+        } else {
+          console.error("Presentation file upload returned null");
+        }
+      } catch (error) {
+        console.error("Exception uploading presentation file:", error);
       }
+    } else {
+      console.log("Presentation file not provided or invalid:", {
+        presentationFile,
+        isFile: presentationFile instanceof File,
+      });
     }
-    
+
     // Upload document files
-    if (document1File && document1File instanceof File) {
-      const file = document1File;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-doc1.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabaseServer
-        .storage
-        .from('application-files')
-        .upload(filePath, file);
-      
-      if (!uploadError && uploadData) {
-        const { data: { publicUrl } } = supabaseServer
-          .storage
-          .from('application-files')
-          .getPublicUrl(filePath);
-        fileUrls.document1 = publicUrl;
+    if (document1File && document1File instanceof File && document1File.size > 0) {
+      try {
+        console.log("Attempting to upload document1 file:", {
+          name: document1File.name,
+          size: document1File.size,
+          type: document1File.type,
+        });
+        const result = await uploadFileToS3(document1File, "doc1");
+        if (result) {
+          fileUrls.document1 = result.url;
+          console.log("Document1 file uploaded successfully:", result.url, "filename:", result.filename);
+        } else {
+          console.error("Document1 file upload returned null");
+        }
+      } catch (error) {
+        console.error("Exception uploading document1 file:", error);
       }
+    } else {
+      console.log("Document1 file not provided or invalid:", {
+        document1File,
+        isFile: document1File instanceof File,
+      });
     }
-    
-    if (document2File && document2File instanceof File) {
-      const file = document2File;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-doc2.${fileExt}`;
-      const filePath = `applications/${fileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabaseServer
-        .storage
-        .from('application-files')
-        .upload(filePath, file);
-      
-      if (!uploadError && uploadData) {
-        const { data: { publicUrl } } = supabaseServer
-          .storage
-          .from('application-files')
-          .getPublicUrl(filePath);
-        fileUrls.document2 = publicUrl;
+
+    if (document2File && document2File instanceof File && document2File.size > 0) {
+      try {
+        console.log("Attempting to upload document2 file:", {
+          name: document2File.name,
+          size: document2File.size,
+          type: document2File.type,
+        });
+        const result = await uploadFileToS3(document2File, "doc2");
+        if (result) {
+          fileUrls.document2 = result.url;
+          console.log("Document2 file uploaded successfully:", result.url, "filename:", result.filename);
+        } else {
+          console.error("Document2 file upload returned null");
+        }
+      } catch (error) {
+        console.error("Exception uploading document2 file:", error);
       }
+    } else {
+      console.log("Document2 file not provided or invalid:", {
+        document2File,
+        isFile: document2File instanceof File,
+      });
     }
 
     // Upload IP file
     if (ipFile && ipFile !== null && ipFile.size > 0) {
       try {
-        const file = ipFile as File;
-        const fileExt = file.name.split('.').pop() || 'pdf';
-        const fileName = `${Date.now()}-ip.${fileExt}`;
-        const filePath = `applications/${fileName}`;
-        
-        console.log("Attempting to upload IP file:", { name: file.name, size: file.size, type: file.type });
-        
-        const { data: uploadData, error: uploadError } = await supabaseServer
-          .storage
-          .from('application-files')
-          .upload(filePath, file);
-        
-        if (uploadError) {
-          console.error("Error uploading IP file:", uploadError);
-        } else if (uploadData) {
-          const { data: { publicUrl } } = supabaseServer
-            .storage
-            .from('application-files')
-            .getPublicUrl(filePath);
-          fileUrls.ipFile = publicUrl;
-          console.log("IP file uploaded successfully:", publicUrl);
+        console.log("Attempting to upload IP file:", {
+          name: (ipFile as File).name,
+          size: (ipFile as File).size,
+          type: (ipFile as File).type,
+        });
+        const result = await uploadFileToS3(ipFile as File, "ip");
+        if (result) {
+          fileUrls.ipFile = result.url;
+          console.log("IP file uploaded successfully:", result.url, "filename:", result.filename);
+        } else {
+          console.error("IP file upload returned null");
         }
       } catch (error) {
         console.error("Exception uploading IP file:", error);
       }
     } else {
-      console.log("IP file not provided or invalid:", { ipFile, isFile: ipFile instanceof File });
+      console.log("IP file not provided or invalid:", {
+        ipFile,
+        isFile: ipFile instanceof File,
+      });
     }
 
     // Upload potential IP file
     if (potentialIpFile && potentialIpFile !== null && potentialIpFile.size > 0) {
       try {
-        const file = potentialIpFile as File;
-        const fileExt = file.name.split('.').pop() || 'pdf';
-        const fileName = `${Date.now()}-potential-ip.${fileExt}`;
-        const filePath = `applications/${fileName}`;
-        
-        console.log("Attempting to upload potential IP file:", { name: file.name, size: file.size, type: file.type });
-        
-        const { data: uploadData, error: uploadError } = await supabaseServer
-          .storage
-          .from('application-files')
-          .upload(filePath, file);
-        
-        if (uploadError) {
-          console.error("Error uploading potential IP file:", uploadError);
-        } else if (uploadData) {
-          const { data: { publicUrl } } = supabaseServer
-            .storage
-            .from('application-files')
-            .getPublicUrl(filePath);
-          fileUrls.potentialIpFile = publicUrl;
-          console.log("Potential IP file uploaded successfully:", publicUrl);
+        console.log("Attempting to upload potential IP file:", {
+          name: (potentialIpFile as File).name,
+          size: (potentialIpFile as File).size,
+          type: (potentialIpFile as File).type,
+        });
+        const result = await uploadFileToS3(potentialIpFile as File, "potential-ip");
+        if (result) {
+          fileUrls.potentialIpFile = result.url;
+          console.log("Potential IP file uploaded successfully:", result.url, "filename:", result.filename);
+        } else {
+          console.error("Potential IP file upload returned null");
         }
       } catch (error) {
         console.error("Exception uploading potential IP file:", error);
       }
     } else {
-      console.log("Potential IP file not provided or invalid:", { potentialIpFile, isFile: potentialIpFile instanceof File });
+      console.log("Potential IP file not provided or invalid:", {
+        potentialIpFile,
+        isFile: potentialIpFile instanceof File,
+      });
     }
 
     // Parse JSONB fields if they're strings
@@ -347,7 +346,7 @@ export async function POST(request: NextRequest) {
       potential_ip_file_link: fileUrls.potentialIpFile || null,
 
       // Presentation & Proof
-      nirmaan_presentation_link: body.nirmaanPresentationLink || fileUrls.presentation || "N/A",
+      nirmaan_presentation_link: fileUrls.presentation || body.nirmaanPresentationLink || "N/A",
       has_proof_of_concept: body.hasProofOfConcept || "No",
       proof_of_concept_details: body.proofOfConceptDetails || null,
       has_patents_or_papers: body.hasPatentsOrPapers || "No",
@@ -356,8 +355,8 @@ export async function POST(request: NextRequest) {
       // Seed Fund & Pitch
       seed_fund_utilization_plan: body.seedFundUtilizationPlan || "N/A",
       pitch_video_link: body.pitchVideoLink || "N/A",
-      document1_link: body.document1Link || fileUrls.document1 || null,
-      document2_link: body.document2Link || fileUrls.document2 || null,
+      document1_link: fileUrls.document1 || body.document1Link || null,
+      document2_link: fileUrls.document2 || body.document2Link || null,
 
       // Status & Metadata
       status: "pending",
