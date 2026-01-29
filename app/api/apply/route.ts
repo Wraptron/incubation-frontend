@@ -1,6 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { uploadFileToS3 } from "@/lib/s3";
+import nodemailer from "nodemailer";
+
+/**
+ * Send application submission confirmation email to the applicant.
+ * Called only after successful insert so all successful applicants receive it.
+ */
+async function sendApplicationConfirmationEmail(
+  email: string,
+  applicantName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping confirmation email");
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: gmailUser,
+        pass: gmailPass,
+      },
+    });
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${applicantName},</p>
+            
+            <p>Thank you for submitting your application. We would like to confirm that we have received your application. Our team of expert evaluators will now review your application for the next round. You will receive an email update from our end on the status of your selection. Thank you for the time and consideration you have given to this application.</p>
+            
+            <p>Regard,<br>
+            Team Nirmaan</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const emailText = `
+Dear ${applicantName},
+
+Thank you for submitting your application. We would like to confirm that we have received your application. Our team of expert evaluators will now review your application for the next round. You will receive an email update from our end on the status of your selection. Thank you for the time and consideration you have given to this application.
+
+Regard,
+Team Nirmaan
+    `;
+
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      subject: "Thank you for applying!!!",
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Application confirmation email sent to", email);
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending application confirmation email:", err);
+    return { success: false, error: err.message };
+  }
+}
 
 /* =========================
    POST: Submit application
@@ -18,10 +93,10 @@ export async function POST(request: NextRequest) {
     const potentialIpFile = formData.get('potentialIpFile') as File | null;
     
     // Debug logging
-    console.log("Files received:", {
-      ipFile: ipFile ? { name: ipFile.name, size: ipFile.size, type: ipFile.type } : null,
-      potentialIpFile: potentialIpFile ? { name: potentialIpFile.name, size: potentialIpFile.size, type: potentialIpFile.type } : null,
-    });
+    // console.log("Files received:", {
+    //   ipFile: ipFile ? { name: ipFile.name, size: ipFile.size, type: ipFile.type } : null,
+    //   potentialIpFile: potentialIpFile ? { name: potentialIpFile.name, size: potentialIpFile.size, type: potentialIpFile.type } : null,
+    // });
     
     // Convert FormData to a regular object (excluding file fields)
     const body: Record<string, any> = {};
@@ -95,11 +170,11 @@ export async function POST(request: NextRequest) {
     // Upload presentation file
     if (presentationFile && presentationFile instanceof File && presentationFile.size > 0) {
       try {
-        console.log("Attempting to upload presentation file:", {
-          name: presentationFile.name,
-          size: presentationFile.size,
-          type: presentationFile.type,
-        });
+        // console.log("Attempting to upload presentation file:", {
+        //   name: presentationFile.name,
+        //   size: presentationFile.size,
+        //   type: presentationFile.type,
+        // });
         const result = await uploadFileToS3(presentationFile, "presentation");
         if (result) {
           fileUrls.presentation = result.url;
@@ -120,11 +195,11 @@ export async function POST(request: NextRequest) {
     // Upload document files
     if (document1File && document1File instanceof File && document1File.size > 0) {
       try {
-        console.log("Attempting to upload document1 file:", {
-          name: document1File.name,
-          size: document1File.size,
-          type: document1File.type,
-        });
+        // console.log("Attempting to upload document1 file:", {
+        //   name: document1File.name,
+        //   size: document1File.size,
+        //   type: document1File.type,
+        // });
         const result = await uploadFileToS3(document1File, "doc1");
         if (result) {
           fileUrls.document1 = result.url;
@@ -144,11 +219,11 @@ export async function POST(request: NextRequest) {
 
     if (document2File && document2File instanceof File && document2File.size > 0) {
       try {
-        console.log("Attempting to upload document2 file:", {
-          name: document2File.name,
-          size: document2File.size,
-          type: document2File.type,
-        });
+        // console.log("Attempting to upload document2 file:", {
+        //   name: document2File.name,
+        //   size: document2File.size,
+        //   type: document2File.type,
+        // });
         const result = await uploadFileToS3(document2File, "doc2");
         if (result) {
           fileUrls.document2 = result.url;
@@ -169,11 +244,11 @@ export async function POST(request: NextRequest) {
     // Upload IP file
     if (ipFile && ipFile !== null && ipFile.size > 0) {
       try {
-        console.log("Attempting to upload IP file:", {
-          name: (ipFile as File).name,
-          size: (ipFile as File).size,
-          type: (ipFile as File).type,
-        });
+        // console.log("Attempting to upload IP file:", {
+        //   name: (ipFile as File).name,
+        //   size: (ipFile as File).size,
+        //   type: (ipFile as File).type,
+        // });
         const result = await uploadFileToS3(ipFile as File, "ip");
         if (result) {
           fileUrls.ipFile = result.url;
@@ -194,11 +269,11 @@ export async function POST(request: NextRequest) {
     // Upload potential IP file
     if (potentialIpFile && potentialIpFile !== null && potentialIpFile.size > 0) {
       try {
-        console.log("Attempting to upload potential IP file:", {
-          name: (potentialIpFile as File).name,
-          size: (potentialIpFile as File).size,
-          type: (potentialIpFile as File).type,
-        });
+        // console.log("Attempting to upload potential IP file:", {
+        //   name: (potentialIpFile as File).name,
+        //   size: (potentialIpFile as File).size,
+        //   type: (potentialIpFile as File).type,
+        // });
         const result = await uploadFileToS3(potentialIpFile as File, "potential-ip");
         if (result) {
           fileUrls.potentialIpFile = result.url;
@@ -284,10 +359,6 @@ export async function POST(request: NextRequest) {
 
     // Map ALL frontend fields to database fields matching the new_application schema
     const applicationData: Record<string, any> = {
-      // Applicant ID (if provided)
-      applicant_id: body.applicantId || null,
-      is_draft: false,
-      
       // Basic Information
       email: body.email,
       team_name: body.teamName || "N/A",
@@ -362,18 +433,6 @@ export async function POST(request: NextRequest) {
       status: "pending",
     };
 
-    // Debug: Log file URLs and application data before insert
-    console.log("File URLs to be saved:", { 
-      ipFile: fileUrls.ipFile, 
-      potentialIpFile: fileUrls.potentialIpFile,
-      allFileUrls: fileUrls
-    });
-    console.log("IP fields in applicationData:", {
-      has_intellectual_property: applicationData.has_intellectual_property,
-      ip_file_link: applicationData.ip_file_link,
-      has_potential_intellectual_property: applicationData.has_potential_intellectual_property,
-      potential_ip_file_link: applicationData.potential_ip_file_link,
-    });
 
     const { data, error } = await supabaseServer
       .from("new_application")
@@ -403,12 +462,13 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Log successful insert with IP file links
-    console.log("Application inserted successfully:", {
-      id: data.id,
-      ip_file_link: data.ip_file_link,
-      potential_ip_file_link: data.potential_ip_file_link
-    });
+   
+
+    // Send confirmation email only after successful submission (all successful applicants receive it)
+    const emailResult = await sendApplicationConfirmationEmail(body.email, body.yourName);
+    if (!emailResult.success) {
+      console.warn("Application saved but confirmation email failed:", emailResult.error);
+    }
 
     return NextResponse.json(
       {
