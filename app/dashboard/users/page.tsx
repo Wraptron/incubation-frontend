@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserPlus, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import { UserPlus, Copy, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -73,6 +73,8 @@ export default function UsersPage() {
   const [createdUser, setCreatedUser] = useState<CreatedUserResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     checkUserAndFetchUsers();
@@ -100,6 +102,7 @@ export default function UsersPage() {
         return;
       }
 
+      setCurrentUserId(user.id);
       await fetchUsers();
     } catch (error) {
       console.error("Error:", error);
@@ -171,6 +174,35 @@ export default function UsersPage() {
     setError(null);
     setPasswordCopied(false);
     setNewUser({ email: "", fullName: "", role: "reviewer" });
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete "${userName || userId}"? This cannot be undone.`)) {
+      return;
+    }
+    setDeletingId(userId);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not logged in");
+      }
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+      await fetchUsers();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete user");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (isLoading) {
@@ -384,6 +416,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="w-[80px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -406,6 +439,28 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {currentUserId !== user.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                          disabled={deletingId === user.id}
+                          onClick={() =>
+                            handleDeleteUser(
+                              user.id,
+                              user.full_name || user.email_address
+                            )
+                          }
+                        >
+                          {deletingId === user.id ? (
+                            "Deleting..."
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
