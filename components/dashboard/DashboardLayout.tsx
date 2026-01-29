@@ -35,6 +35,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -110,7 +111,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     try {
       // Validate passwords
-      if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
         throw new Error("Please fill in all fields");
       }
 
@@ -122,6 +123,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         throw new Error("Passwords do not match");
       }
 
+      if (passwordData.oldPassword === passwordData.newPassword) {
+        throw new Error("New password must be different from old password");
+      }
+
       // Call API to change password
       const response = await fetch("/api/users/change-password", {
         method: "PUT",
@@ -130,6 +135,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         },
         body: JSON.stringify({
           userId: user?.id,
+          email: user?.email,
+          oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword,
         }),
       });
@@ -141,7 +148,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
 
       setPasswordSuccess(true);
-      setPasswordData({ newPassword: "", confirmPassword: "" });
+      setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
       
       // Close dialog after 2 seconds
       setTimeout(() => {
@@ -156,7 +163,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const resetPasswordDialog = () => {
-    setPasswordData({ newPassword: "", confirmPassword: "" });
+    setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
     setPasswordError(null);
     setPasswordSuccess(false);
   };
@@ -211,7 +218,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <DialogHeader>
                       <DialogTitle>Change Password</DialogTitle>
                       <DialogDescription>
-                        Enter your new password below. Password must be at least 8 characters long.
+                        Enter your current password and new password below. Password must be at least 8 characters long.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -222,6 +229,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           <AlertDescription>{passwordError}</AlertDescription>
                         </Alert>
                       )}
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="oldPassword">Current Password</Label>
+                        <Input
+                          id="oldPassword"
+                          type="password"
+                          placeholder="Enter current password"
+                          value={passwordData.oldPassword}
+                          onChange={(e) =>
+                            setPasswordData({ ...passwordData, oldPassword: e.target.value })
+                          }
+                          disabled={isChangingPassword}
+                        />
+                      </div>
 
                       <div className="grid gap-2">
                         <Label htmlFor="newPassword">New Password</Label>
@@ -264,6 +285,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         onClick={handleChangePassword}
                         disabled={
                           isChangingPassword ||
+                          !passwordData.oldPassword ||
                           !passwordData.newPassword ||
                           !passwordData.confirmPassword
                         }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,10 @@ export default function ApplyPage() {
   const router = useRouter();
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [toasts, setToasts] = useState<Array<ToastProps & { id: string }>>([]);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     teamName: "",
@@ -106,6 +111,7 @@ export default function ApplyPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
@@ -115,6 +121,8 @@ export default function ApplyPage() {
   const [document2File, setDocument2File] = useState<File | null>(null);
   const [ipFile, setIpFile] = useState<File | null>(null);
   const [potentialIpFile, setPotentialIpFile] = useState<File | null>(null);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [autoSaveIndicator, setAutoSaveIndicator] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -161,6 +169,263 @@ export default function ApplyPage() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
+  // Check authentication and load draft from server
+  useEffect(() => {
+    const checkAuthAndLoadDraft = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // Not authenticated, redirect to login
+          router.push("/applicant-login");
+          return;
+        }
+
+        // Check if user is an applicant
+        const { data: profile } = await supabase
+          .from("applicant_profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile) {
+          // Not an applicant, redirect to signup
+          await supabase.auth.signOut();
+          router.push("/applicant-signup");
+          return;
+        }
+
+        setUserId(user.id);
+
+        // Load draft from server
+        const { data: draftApp } = await supabase
+          .from("new_application")
+          .select("*")
+          .eq("applicant_id", user.id)
+          .eq("is_draft", true)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (draftApp) {
+          // Map database fields back to form data
+          setFormData({
+            email: draftApp.email || "",
+            teamName: draftApp.team_name || "",
+            yourName: draftApp.your_name || "",
+            isIITM: draftApp.is_iitm || "",
+            rollNumber: draftApp.roll_number || "",
+            rollNumberOther: draftApp.roll_number_other || "",
+            collegeName: draftApp.college_name || "",
+            currentOccupation: draftApp.current_occupation || "",
+            phoneNumber: draftApp.phone_number || "",
+            channel: draftApp.channel || "",
+            channelOther: draftApp.channel_other || "",
+            coFoundersCount: String(draftApp.co_founders_count || ""),
+            facultyInvolved: draftApp.faculty_involved === "NA" || !draftApp.faculty_involved ? [] : (Array.isArray(draftApp.faculty_involved) ? draftApp.faculty_involved : []),
+            priorEntrepreneurshipExperience: draftApp.prior_entrepreneurship_experience || "",
+            teamPriorEntrepreneurshipExperience: draftApp.team_prior_entrepreneurship_experience || "",
+            priorExperienceDetails: draftApp.prior_experience_details || "",
+            mcaRegistered: draftApp.mca_registered || "",
+            dpiitRegistered: draftApp.dpiit_registered || "",
+            dpiitDetails: draftApp.dpiit_details || "",
+            externalFunding: draftApp.external_funding || [],
+            currentlyIncubated: draftApp.currently_incubated || "",
+            teamMembers: draftApp.team_members || [],
+            nirmaanCanHelp: draftApp.nirmaan_can_help || "",
+            preIncubationReason: draftApp.pre_incubation_reason || "",
+            heardAboutStartups: draftApp.heard_about_startups || "",
+            heardAboutNirmaan: draftApp.heard_about_nirmaan || "",
+            problemSolving: draftApp.problem_solving || "",
+            yourSolution: draftApp.your_solution || "",
+            solutionType: draftApp.solution_type || "",
+            solutionTypeOther: draftApp.solution_type_other || "",
+            targetIndustry: draftApp.target_industry || "",
+            otherIndustries: draftApp.other_industries || [],
+            industryOther: draftApp.industry_other || "",
+            otherIndustriesOther: draftApp.other_industries_other || "",
+            technologiesUtilized: draftApp.technologies_utilized || [],
+            otherTechnologyDetails: draftApp.other_technology_details || "",
+            startupStage: draftApp.startup_stage || "",
+            hasIntellectualProperty: draftApp.has_intellectual_property || "",
+            hasPotentialIntellectualProperty: draftApp.has_potential_intellectual_property || "",
+            nirmaanPresentationLink: draftApp.nirmaan_presentation_link || "",
+            hasProofOfConcept: draftApp.has_proof_of_concept || "",
+            proofOfConceptDetails: draftApp.proof_of_concept_details || "",
+            hasPatentsOrPapers: draftApp.has_patents_or_papers || "",
+            patentsOrPapersDetails: draftApp.patents_or_papers_details || "",
+            seedFundUtilizationPlan: draftApp.seed_fund_utilization_plan || "",
+            pitchVideoLink: draftApp.pitch_video_link || "",
+            document1Link: draftApp.document1_link || "",
+            document2Link: draftApp.document2_link || "",
+          });
+          setDraftId(draftApp.id);
+          setDraftLoaded(true);
+          addToast({
+            variant: "default",
+            description: "Draft loaded successfully! Continue where you left off.",
+          });
+        }
+      } catch (error) {
+        console.error("Error checking auth or loading draft:", error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuthAndLoadDraft();
+  }, [router]);
+
+  // Auto-save draft to server every 30 seconds
+  useEffect(() => {
+    if (!userId) return;
+
+    const autoSaveInterval = setInterval(() => {
+      // Only auto-save if there's meaningful data
+      if (formData.email || formData.teamName || formData.yourName) {
+        handleSaveDraft(true); // true for silent save
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [formData, userId]);
+
+  // Save draft to server
+  const handleSaveDraft = async (silent = false) => {
+    if (!userId) {
+      addToast({
+        variant: "destructive",
+        description: "You must be logged in to save a draft.",
+      });
+      return;
+    }
+
+    try {
+      if (!silent) setIsSavingDraft(true);
+
+      // Parse array fields
+      let facultyInvolved = formData.facultyInvolved;
+      if (Array.isArray(facultyInvolved) && facultyInvolved.length === 0) {
+        facultyInvolved = "NA" as any;
+      }
+
+      let externalFunding = formData.externalFunding;
+      if (Array.isArray(externalFunding) && externalFunding.length === 0) {
+        externalFunding = null as any;
+      }
+
+      const draftData = {
+        applicant_id: userId,
+        is_draft: true,
+        email: formData.email,
+        team_name: formData.teamName,
+        your_name: formData.yourName,
+        is_iitm: formData.isIITM,
+        roll_number: formData.rollNumber,
+        roll_number_other: formData.rollNumberOther || null,
+        college_name: formData.collegeName || null,
+        current_occupation: formData.currentOccupation || null,
+        phone_number: formData.phoneNumber,
+        channel: formData.channel,
+        channel_other: formData.channelOther || null,
+        co_founders_count: parseInt(formData.coFoundersCount) || 0,
+        faculty_involved: facultyInvolved || "NA",
+        prior_entrepreneurship_experience: formData.priorEntrepreneurshipExperience,
+        team_prior_entrepreneurship_experience: formData.teamPriorEntrepreneurshipExperience,
+        prior_experience_details: formData.priorExperienceDetails || null,
+        mca_registered: formData.mcaRegistered,
+        dpiit_registered: formData.dpiitRegistered || null,
+        dpiit_details: formData.dpiitDetails || null,
+        external_funding: externalFunding || null,
+        currently_incubated: formData.currentlyIncubated || null,
+        team_members: formData.teamMembers,
+        nirmaan_can_help: formData.nirmaanCanHelp,
+        pre_incubation_reason: formData.preIncubationReason,
+        heard_about_startups: formData.heardAboutStartups,
+        heard_about_nirmaan: formData.heardAboutNirmaan,
+        problem_solving: formData.problemSolving,
+        your_solution: formData.yourSolution,
+        solution_type: formData.solutionType,
+        solution_type_other: formData.solutionTypeOther || null,
+        target_industry: formData.targetIndustry,
+        other_industries: formData.otherIndustries,
+        industry_other: formData.industryOther || null,
+        other_industries_other: formData.otherIndustriesOther || null,
+        technologies_utilized: formData.technologiesUtilized,
+        other_technology_details: formData.otherTechnologyDetails || null,
+        startup_stage: formData.startupStage,
+        has_intellectual_property: formData.hasIntellectualProperty,
+        has_potential_intellectual_property: formData.hasPotentialIntellectualProperty,
+        nirmaan_presentation_link: formData.nirmaanPresentationLink,
+        has_proof_of_concept: formData.hasProofOfConcept,
+        proof_of_concept_details: formData.proofOfConceptDetails || null,
+        has_patents_or_papers: formData.hasPatentsOrPapers,
+        patents_or_papers_details: formData.patentsOrPapersDetails || null,
+        seed_fund_utilization_plan: formData.seedFundUtilizationPlan,
+        pitch_video_link: formData.pitchVideoLink,
+        document1_link: formData.document1Link || null,
+        document2_link: formData.document2Link || null,
+        status: "draft",
+      };
+
+      if (draftId) {
+        // Update existing draft
+        const { error } = await supabase
+          .from("new_application")
+          .update(draftData)
+          .eq("id", draftId);
+
+        if (error) throw error;
+      } else {
+        // Create new draft
+        const { data, error } = await supabase
+          .from("new_application")
+          .insert(draftData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) setDraftId(data.id);
+      }
+
+      if (silent) {
+        setAutoSaveIndicator(true);
+        setTimeout(() => setAutoSaveIndicator(false), 2000);
+      } else {
+        setDraftSaved(true);
+        addToast({
+          variant: "default",
+          description: "Draft saved successfully!",
+        });
+        setTimeout(() => setDraftSaved(false), 3000);
+      }
+    } catch (error: any) {
+      console.error("Error saving draft:", error);
+      if (!silent) {
+        addToast({
+          variant: "destructive",
+          description: "Failed to save draft. Please try again.",
+        });
+      }
+    } finally {
+      if (!silent) setIsSavingDraft(false);
+    }
+  };
+
+  // Clear draft from server after successful submission
+  const clearDraft = async () => {
+    if (draftId) {
+      try {
+        await supabase
+          .from("new_application")
+          .delete()
+          .eq("id", draftId);
+      } catch (error) {
+        console.error("Error clearing draft:", error);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -203,6 +468,11 @@ export default function ApplyPage() {
     try {
       // Create FormData for file upload
       const formDataToSend = new FormData();
+
+      // Add applicant ID
+      if (userId) {
+        formDataToSend.append("applicantId", userId);
+      }
 
       // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
@@ -268,6 +538,9 @@ export default function ApplyPage() {
         setSubmitStatus("success");
         setShowSuccessDialog(true);
         
+        // Clear draft after successful submission
+        clearDraft();
+        
         // Redirect to home page after 3 seconds
         setTimeout(() => {
           router.push("/");
@@ -296,6 +569,18 @@ export default function ApplyPage() {
   const showOtherIndustriesOther = formData.otherIndustries.includes("Other");
   const showProofOfConceptDetails = formData.hasProofOfConcept === "Yes";
   const showPatentsOrPapersDetails = formData.hasPatentsOrPapers === "Yes";
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-600 dark:text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -360,14 +645,59 @@ export default function ApplyPage() {
                 <p className="text-primary font-semibold">IITM Pre-Incubation</p>
               </div>
             </div>
-            <h2 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
-              Pre-Incubation Application
-            </h2>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400">
-              Apply to join Nirmaan's pre-incubation program. Fill out the form below
-              and we'll get back to you soon.
-            </p>
+            <div className="flex items-center justify-between w-full max-w-4xl">
+              <div>
+                <h2 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
+                  Pre-Incubation Application
+                </h2>
+                <p className="text-lg text-zinc-600 dark:text-zinc-400">
+                  Apply to join Nirmaan's pre-incubation program. Fill out the form below
+                  and we'll get back to you soon.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.push("/applicant-login");
+                }}
+                className="ml-4"
+              >
+                Logout
+              </Button>
+            </div>
+            {autoSaveIndicator && (
+              <p className="text-sm text-green-600 dark:text-green-400 mt-2 animate-pulse">
+                ✓ Auto-saved
+              </p>
+            )}
           </div>
+
+          {draftLoaded && (
+            <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-blue-900 dark:text-blue-100">
+                  📝 Draft loaded! Your previous progress has been restored.
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to clear the draft and start over?")) {
+                      await clearDraft();
+                      setDraftLoaded(false);
+                      window.location.reload();
+                    }
+                  }}
+                  className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100"
+                >
+                  Clear Draft
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {submitStatus === "error" && (
             <Alert variant="destructive" className="mb-6">
@@ -2257,7 +2587,7 @@ export default function ApplyPage() {
           </Card>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-between items-center gap-4">
             <Button
               type="button"
               variant="outline"
@@ -2266,9 +2596,20 @@ export default function ApplyPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} variant="default">
-              {isSubmitting ? "Submitting..." : "Submit Application"}
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft || isSubmitting}
+                className="border-2 border-zinc-300 dark:border-zinc-600"
+              >
+                {isSavingDraft ? "Saving..." : draftSaved ? "Draft Saved ✓" : "Save Draft"}
+              </Button>
+              <Button type="submit" disabled={isSubmitting} variant="default">
+                {isSubmitting ? "Submitting..." : "Submit Application"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

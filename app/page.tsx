@@ -54,7 +54,7 @@ export default function Home() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 text-base font-medium mt-4">
           <Button asChild size="lg" className="text-base px-8 py-6 shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all">
-            <Link href="/apply">Apply Now</Link>
+            <Link href="/applicant-login">Apply Now</Link>
           </Button>
           <Button 
             asChild 
