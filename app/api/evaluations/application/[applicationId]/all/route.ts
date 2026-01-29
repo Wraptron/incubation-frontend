@@ -76,29 +76,66 @@ export async function GET(
     }
 
     // Call backend API
-    const response = await fetch(
-      `${backendUrl}/api/evaluations/application/${applicationId}/all`,
-      {
-        headers: {
-          Authorization: authHeader,
+    let response: Response;
+    try {
+      response = await fetch(
+        `${backendUrl}/api/evaluations/application/${applicationId}/all`,
+        {
+          headers: {
+            Authorization: authHeader,
+          },
+        }
+      );
+    } catch (fetchError: unknown) {
+      const msg =
+        fetchError instanceof Error ? fetchError.message : "Network error";
+      console.error("Backend unreachable when fetching evaluations:", fetchError);
+      return NextResponse.json(
+        {
+          error: "Failed to fetch evaluations",
+          details:
+            msg.includes("fetch") || msg.includes("ECONNREFUSED")
+              ? "Backend may be down. Check NEXT_PUBLIC_API_URL and that the backend is running."
+              : msg,
         },
-      }
-    );
+        { status: 502 }
+      );
+    }
 
-    const data = await response.json();
+    const text = await response.text();
+    let data: { error?: string; details?: string; evaluations?: unknown[] } = {};
+    try {
+      if (text) data = JSON.parse(text);
+    } catch (parseError) {
+      console.error("Backend response was not JSON:", text?.slice(0, 200));
+      return NextResponse.json(
+        {
+          error: "Failed to fetch evaluations",
+          details: response.status >= 500 ? "Server returned invalid response." : undefined,
+        },
+        { status: response.status >= 400 ? response.status : 502 }
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.error || "Failed to fetch evaluations" },
+        {
+          error: data.error || "Failed to fetch evaluations",
+          details: data.details,
+        },
         { status: response.status }
       );
     }
 
     return NextResponse.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching evaluations:", error);
+    const msg = error instanceof Error ? error.message : "Unexpected error";
     return NextResponse.json(
-      { error: "Failed to fetch evaluations" },
+      {
+        error: "Failed to fetch evaluations",
+        details: msg,
+      },
       { status: 500 }
     );
   }

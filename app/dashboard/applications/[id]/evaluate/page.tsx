@@ -191,11 +191,11 @@ export default function EvaluatePage() {
   const [error, setError] = useState<string>("");
 
   const [formData, setFormData] = useState({
-    needScore: "5",
-    noveltyScore: "5",
-    feasibilityScalabilityScore: "5",
-    marketPotentialScore: "5",
-    impactScore: "5",
+    needScore: "5.0",
+    noveltyScore: "5.0",
+    feasibilityScalabilityScore: "5.0",
+    marketPotentialScore: "5.0",
+    impactScore: "5.0",
     needComment: "",
     noveltyComment: "",
     feasibilityScalabilityComment: "",
@@ -344,14 +344,23 @@ export default function EvaluatePage() {
         const data = await response.json();
         if (data.evaluation) {
           setEvaluation(data.evaluation);
+          // Format scores for display (up to 2 decimals, no rounding)
+          const formatScore = (score: number | null | undefined): string => {
+            if (score == null) return "5.0";
+            const num = typeof score === "number" ? score : parseFloat(String(score));
+            if (isNaN(num)) return "5.0";
+            return num % 1 === 0 ? String(num) : num.toFixed(2).replace(/\.?0+$/, "") || String(num);
+          };
           setFormData({
-            needScore: data.evaluation.need_score?.toString() || "5",
-            noveltyScore: data.evaluation.novelty_score?.toString() || "5",
-            feasibilityScalabilityScore:
-              data.evaluation.feasibility_scalability_score?.toString() || "5",
-            marketPotentialScore:
-              data.evaluation.market_potential_score?.toString() || "5",
-            impactScore: data.evaluation.impact_score?.toString() || "5",
+            needScore: formatScore(data.evaluation.need_score),
+            noveltyScore: formatScore(data.evaluation.novelty_score),
+            feasibilityScalabilityScore: formatScore(
+              data.evaluation.feasibility_scalability_score
+            ),
+            marketPotentialScore: formatScore(
+              data.evaluation.market_potential_score
+            ),
+            impactScore: formatScore(data.evaluation.impact_score),
             needComment: data.evaluation.need_comment || "",
             noveltyComment: data.evaluation.novelty_comment || "",
             feasibilityScalabilityComment:
@@ -369,13 +378,31 @@ export default function EvaluatePage() {
   };
 
   const handleScoreChange = (key: string, value: string) => {
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 10) {
-      setFormData((prev) => ({
-        ...prev,
-        [key]: numValue.toString(),
-      }));
+    // Allow free typing - don't format immediately; allow up to 2 decimal places
+    const validPattern = /^$|^\.$|^\d+$|^\d+\.\d{0,2}$|^\.\d{0,2}$/;
+    if (validPattern.test(value)) {
+      setFormData((prev) => ({ ...prev, [key]: value }));
     }
+  };
+
+  const handleScoreBlur = (key: string, value: string) => {
+    if (value === "" || value === ".") {
+      setFormData((prev) => ({ ...prev, [key]: "5.0" }));
+      return;
+    }
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      setFormData((prev) => ({ ...prev, [key]: "5.0" }));
+      return;
+    }
+    // Clamp to 0-10 only; do not round - truncate to 2 decimals (7.536 -> 7.53)
+    const clamped = Math.max(0, Math.min(10, numValue));
+    const truncated = Math.floor(clamped * 100) / 100;
+    const display =
+      truncated % 1 === 0
+        ? String(Math.round(truncated))
+        : truncated.toFixed(2).replace(/\.?0+$/, "") || String(truncated);
+    setFormData((prev) => ({ ...prev, [key]: display }));
   };
 
   const handleCommentChange = (key: string, value: string) => {
@@ -387,13 +414,13 @@ export default function EvaluatePage() {
 
   const calculateTotalScore = () => {
     const scores = [
-      parseInt(formData.needScore) || 0,
-      parseInt(formData.noveltyScore) || 0,
-      parseInt(formData.feasibilityScalabilityScore) || 0,
-      parseInt(formData.marketPotentialScore) || 0,
-      parseInt(formData.impactScore) || 0,
+      parseFloat(formData.needScore) || 0,
+      parseFloat(formData.noveltyScore) || 0,
+      parseFloat(formData.feasibilityScalabilityScore) || 0,
+      parseFloat(formData.marketPotentialScore) || 0,
+      parseFloat(formData.impactScore) || 0,
     ];
-    return scores.reduce((sum, score) => sum + score, 0);
+    return scores.reduce((sum, score) => sum + score, 0).toFixed(1);
   };
 
   const handleSave = async (isDraft: boolean = false) => {
@@ -413,11 +440,15 @@ export default function EvaluatePage() {
     ];
 
     for (const scoreKey of requiredScores) {
-      if (
-        !formData[scoreKey as keyof typeof formData] ||
-        formData[scoreKey as keyof typeof formData].trim() === ""
-      ) {
-        setSaveMessage("Please provide scores for all criteria (0-10)");
+      const scoreValue = formData[scoreKey as keyof typeof formData];
+      if (!scoreValue || scoreValue.trim() === "") {
+        setSaveMessage("Please provide scores for all criteria (0.0-10.0)");
+        setTimeout(() => setSaveMessage(""), 3000);
+        return;
+      }
+      const numValue = parseFloat(scoreValue);
+      if (isNaN(numValue) || numValue < 0 || numValue > 10) {
+        setSaveMessage("All scores must be between 0 and 10 (inclusive). Values less than 0 or greater than 10 are not allowed.");
         setTimeout(() => setSaveMessage(""), 3000);
         return;
       }
@@ -445,7 +476,22 @@ export default function EvaluatePage() {
         return;
       }
 
-      console.log("Saving evaluation for application ID:", params.id);
+      const evaluationPayload = {
+        applicationId: params.id,
+        needScore: (formData.needScore || "0").trim(),
+        noveltyScore: (formData.noveltyScore || "0").trim(),
+        feasibilityScalabilityScore: (formData.feasibilityScalabilityScore || "0").trim(),
+        marketPotentialScore: (formData.marketPotentialScore || "0").trim(),
+        impactScore: (formData.impactScore || "0").trim(),
+        needComment: formData.needComment || null,
+        noveltyComment: formData.noveltyComment || null,
+        feasibilityScalabilityComment:
+          formData.feasibilityScalabilityComment || null,
+        marketPotentialComment: formData.marketPotentialComment || null,
+        impactComment: formData.impactComment || null,
+        overallComment: formData.overallComment || null,
+      };
+      console.log("[Frontend] Submitting evaluation data:", evaluationPayload);
       const response = await fetch(
         `/api/evaluations/application/${params.id}`,
         {
@@ -454,27 +500,17 @@ export default function EvaluatePage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            applicationId: params.id,
-            needScore: parseInt(formData.needScore),
-            noveltyScore: parseInt(formData.noveltyScore),
-            feasibilityScalabilityScore: parseInt(
-              formData.feasibilityScalabilityScore,
-            ),
-            marketPotentialScore: parseInt(formData.marketPotentialScore),
-            impactScore: parseInt(formData.impactScore),
-            needComment: formData.needComment || null,
-            noveltyComment: formData.noveltyComment || null,
-            feasibilityScalabilityComment:
-              formData.feasibilityScalabilityComment || null,
-            marketPotentialComment: formData.marketPotentialComment || null,
-            impactComment: formData.impactComment || null,
-            overallComment: formData.overallComment || null,
-          }),
+          body: JSON.stringify(evaluationPayload),
         },
       );
 
-      const data = await response.json();
+      const text = await response.text();
+      let data: { error?: string; details?: string; evaluation?: unknown } = {};
+      try {
+        if (text) data = JSON.parse(text);
+      } catch {
+        console.error("Evaluation save response was not JSON:", text?.slice(0, 200));
+      }
 
       if (response.ok) {
         setSaveMessage(
@@ -482,16 +518,27 @@ export default function EvaluatePage() {
             ? "Evaluation updated successfully"
             : "Evaluation saved successfully",
         );
-        setEvaluation(data.evaluation);
+        setEvaluation(data.evaluation as Evaluation | null);
         setTimeout(() => setSaveMessage(""), 3000);
       } else {
-        setSaveMessage(data.error || "Failed to save evaluation");
-        setTimeout(() => setSaveMessage(""), 3000);
+        const msg = data.details
+          ? `${data.error || "Failed to save evaluation"}: ${data.details}`
+          : data.error || "Failed to save evaluation";
+        setSaveMessage(msg);
+        setTimeout(() => setSaveMessage(""), 5000);
       }
     } catch (error) {
       console.error("Error saving evaluation:", error);
-      setSaveMessage("An error occurred while saving");
-      setTimeout(() => setSaveMessage(""), 3000);
+      const errMsg =
+        error instanceof Error ? error.message : "An error occurred while saving";
+      setSaveMessage(
+        errMsg.toLowerCase().includes("fetch") ||
+        errMsg.toLowerCase().includes("network") ||
+        errMsg.includes("ECONNREFUSED")
+          ? "Could not reach server. Check backend is running and NEXT_PUBLIC_API_URL is correct."
+          : errMsg,
+      );
+      setTimeout(() => setSaveMessage(""), 5000);
     } finally {
       setIsSaving(false);
     }
@@ -551,7 +598,7 @@ export default function EvaluatePage() {
             <div className="text-sm text-zinc-600 dark:text-zinc-400">
               Total Score:{" "}
               <span className="font-bold text-black dark:text-zinc-50">
-                {totalScore}/50
+                {totalScore}/50.0
               </span>
             </div>
             <Button
@@ -1394,43 +1441,32 @@ export default function EvaluatePage() {
 
                     <div className="space-y-3">
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm text-zinc-700 dark:text-zinc-300">
-                            Score (0-10) <span className="text-red-500">*</span>
-                          </Label>
-                          <span className="text-lg font-bold text-black dark:text-zinc-50 min-w-[2rem] text-right">
-                            {formData[criterion.scoreKey] || "5"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-zinc-500 dark:text-zinc-500 w-4">
-                            0
-                          </span>
-                          <input
-                            type="range"
-                            min="0"
-                            max="10"
-                            step="1"
-                            value={formData[criterion.scoreKey] || "5"}
-                            onChange={(e) =>
-                              handleScoreChange(
-                                criterion.scoreKey,
-                                e.target.value,
-                              )
-                            }
-                            className={`flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer 
-                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black [&::-webkit-slider-thumb]:dark:bg-zinc-50
-                            [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md
-                            [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full 
-                            [&::-moz-range-thumb]:bg-black [&::-moz-range-thumb]:dark:bg-zinc-50 [&::-moz-range-thumb]:border-0
-                            [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:shadow-md`}
-                            required
-                          />
-                          <span className="text-xs text-zinc-500 dark:text-zinc-500 w-6 text-right">
-                            10
-                          </span>
-                        </div>
+                        <Label className="text-sm text-zinc-700 dark:text-zinc-300 mb-2 block">
+                          Score (0.0 - 10.0) <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={formData[criterion.scoreKey] || "5.0"}
+                          onChange={(e) =>
+                            handleScoreChange(
+                              criterion.scoreKey,
+                              e.target.value,
+                            )
+                          }
+                          onBlur={(e) =>
+                            handleScoreBlur(
+                              criterion.scoreKey,
+                              e.target.value,
+                            )
+                          }
+                          placeholder="5.0"
+                          className="w-full"
+                          required
+                        />
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                          Type a score between 0.0 and 10.0 (1 decimal place allowed)
+                        </p>
                       </div>
 
                       <div>

@@ -188,6 +188,7 @@ export default function ApplicationDetailPage() {
     }>
   >([]);
   const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(false);
+  const [evaluationsError, setEvaluationsError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -290,12 +291,17 @@ export default function ApplicationDetailPage() {
     if (!user || user.role !== "manager") return;
 
     setIsLoadingEvaluations(true);
+    setEvaluationsError(null);
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) return;
+      if (!session) {
+        setEvaluationsError("Not signed in.");
+        setIsLoadingEvaluations(false);
+        return;
+      }
 
       const response = await fetch(
         `/api/evaluations/application/${params.id}/all`,
@@ -306,8 +312,25 @@ export default function ApplicationDetailPage() {
         },
       );
 
+      const text = await response.text();
+      let data: { error?: string; details?: string; evaluations?: unknown[] } = {};
+      try {
+        if (text) data = JSON.parse(text);
+      } catch {
+        console.error("Evaluations response was not JSON:", text?.slice(0, 200));
+        const errMsg =
+          response.status >= 500
+            ? "Server returned an invalid response."
+            : "Failed to load evaluations.";
+        setEvaluationsError(errMsg);
+        setUpdateMessage(errMsg);
+        setTimeout(() => setUpdateMessage(""), 5000);
+        setEvaluations([]);
+        setIsLoadingEvaluations(false);
+        return;
+      }
+
       if (response.ok) {
-        const data = await response.json();
         const evaluationsList = data.evaluations || [];
         console.log("Fetched evaluations:", evaluationsList.length);
         // Calculate total scores for evaluations that don't have them
@@ -342,18 +365,28 @@ export default function ApplicationDetailPage() {
         );
         setEvaluations(evaluationsWithScores);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(
-          "Failed to fetch evaluations:",
-          response.status,
-          errorData,
-        );
-        setUpdateMessage(errorData.error || "Failed to fetch evaluations");
+        const errMsg = data.details
+          ? `${data.error || "Failed to fetch evaluations"}: ${data.details}`
+          : data.error || "Failed to fetch evaluations";
+        console.error("Failed to fetch evaluations:", response.status, data);
+        setEvaluationsError(errMsg);
+        setUpdateMessage(errMsg);
         setTimeout(() => setUpdateMessage(""), 5000);
         setEvaluations([]);
       }
     } catch (error) {
+      const errMsg =
+        error instanceof Error ? error.message : "Failed to load evaluations.";
+      const friendlyMsg =
+        errMsg.toLowerCase().includes("fetch") ||
+        errMsg.includes("ECONNREFUSED") ||
+        errMsg.toLowerCase().includes("network")
+          ? "Could not reach server. Check your connection and that the backend is running."
+          : errMsg;
       console.error("Error fetching evaluations:", error);
+      setEvaluationsError(friendlyMsg);
+      setUpdateMessage(friendlyMsg);
+      setTimeout(() => setUpdateMessage(""), 5000);
       setEvaluations([]);
     } finally {
       setIsLoadingEvaluations(false);
@@ -364,12 +397,17 @@ export default function ApplicationDetailPage() {
     if (!user || user.role !== "reviewer") return;
 
     setIsLoadingEvaluations(true);
+    setEvaluationsError(null);
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) return;
+      if (!session) {
+        setEvaluationsError("Not signed in.");
+        setIsLoadingEvaluations(false);
+        return;
+      }
 
       const response = await fetch(
         `/api/evaluations/application/${params.id}`,
@@ -380,11 +418,36 @@ export default function ApplicationDetailPage() {
         },
       );
 
+      const text = await response.text();
+      let data: { error?: string; details?: string; evaluation?: unknown } = {};
+      try {
+        if (text) data = JSON.parse(text);
+      } catch {
+        console.error("Evaluation response was not JSON:", text?.slice(0, 200));
+        const errMsg =
+          response.status >= 500
+            ? "Server returned an invalid response."
+            : "Failed to load evaluation.";
+        setEvaluationsError(errMsg);
+        setUpdateMessage(errMsg);
+        setTimeout(() => setUpdateMessage(""), 5000);
+        setEvaluations([]);
+        setIsLoadingEvaluations(false);
+        return;
+      }
+
       if (response.ok) {
-        const data = await response.json();
         if (data.evaluation) {
           // Calculate total score if not present
-          const evaluation = data.evaluation;
+          const evaluation = data.evaluation as {
+            total_score?: number | null;
+            need_score?: number | null;
+            novelty_score?: number | null;
+            feasibility_scalability_score?: number | null;
+            market_potential_score?: number | null;
+            impact_score?: number | null;
+            [key: string]: unknown;
+          };
           if (
             evaluation.total_score === null ||
             evaluation.total_score === undefined
@@ -408,18 +471,28 @@ export default function ApplicationDetailPage() {
           setEvaluations([]);
         }
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(
-          "Failed to fetch evaluation:",
-          response.status,
-          errorData,
-        );
-        setUpdateMessage(errorData.error || "Failed to fetch evaluation");
+        const errMsg = data.details
+          ? `${data.error || "Failed to fetch evaluation"}: ${data.details}`
+          : data.error || "Failed to fetch evaluation";
+        console.error("Failed to fetch evaluation:", response.status, data);
+        setEvaluationsError(errMsg);
+        setUpdateMessage(errMsg);
         setTimeout(() => setUpdateMessage(""), 5000);
         setEvaluations([]);
       }
     } catch (error) {
+      const errMsg =
+        error instanceof Error ? error.message : "Failed to load evaluation.";
+      const friendlyMsg =
+        errMsg.toLowerCase().includes("fetch") ||
+        errMsg.includes("ECONNREFUSED") ||
+        errMsg.toLowerCase().includes("network")
+          ? "Could not reach server. Check your connection and that the backend is running."
+          : errMsg;
       console.error("Error fetching evaluation:", error);
+      setEvaluationsError(friendlyMsg);
+      setUpdateMessage(friendlyMsg);
+      setTimeout(() => setUpdateMessage(""), 5000);
       setEvaluations([]);
     } finally {
       setIsLoadingEvaluations(false);
@@ -1957,6 +2030,26 @@ export default function ApplicationDetailPage() {
                       <p className="text-zinc-600 dark:text-zinc-400">
                         Loading evaluations...
                       </p>
+                    </CardContent>
+                  </Card>
+                ) : evaluationsError ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-red-600 dark:text-red-400 mb-4">
+                        {evaluationsError}
+                      </p>
+                      <Button
+                        onClick={() => {
+                          if (user?.role === "manager") {
+                            fetchAllEvaluations();
+                          } else if (user?.role === "reviewer") {
+                            fetchReviewerEvaluation();
+                          }
+                        }}
+                        variant="default"
+                      >
+                        Retry
+                      </Button>
                     </CardContent>
                   </Card>
                 ) : evaluations.length === 0 ? (
