@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:staging": "NODE_ENV=staging next dev",
     "build": "next build",
+    "build:staging": "NODE_ENV=staging next build",
+    "build:production": "NODE_ENV=production next build",
     "start": "next start",
+    "start:staging": "NODE_ENV=staging next start",
     "lint": "eslint"
   },
   "dependencies": {

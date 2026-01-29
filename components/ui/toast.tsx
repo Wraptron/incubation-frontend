@@ -10,6 +10,7 @@ export interface ToastProps {
   description: string
   variant?: "default" | "destructive"
   onClose: () => void
+  className?: string
 }
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
