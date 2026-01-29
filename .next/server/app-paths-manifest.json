@@ -6,6 +6,7 @@
   "/api/apply/route": "app/api/apply/route.js",
   "/api/evaluations/application/[applicationId]/all/route": "app/api/evaluations/application/[applicationId]/all/route.js",
   "/api/evaluations/application/[applicationId]/route": "app/api/evaluations/application/[applicationId]/route.js",
+  "/api/users/[id]/route": "app/api/users/[id]/route.js",
   "/api/users/change-password/route": "app/api/users/change-password/route.js",
   "/api/users/route": "app/api/users/route.js",
   "/applicant-login/page": "app/applicant-login/page.js",
