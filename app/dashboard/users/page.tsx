@@ -34,17 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { UserPlus, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { UserPlus, Copy, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -82,9 +72,9 @@ export default function UsersPage() {
   });
   const [createdUser, setCreatedUser] = useState<CreatedUserResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [passwordCopied, setPasswordCopied] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     checkUserAndFetchUsers();
@@ -114,6 +104,7 @@ export default function UsersPage() {
         return;
       }
 
+      setCurrentUserId(user.id);
       await fetchUsers();
     } catch (error) {
       console.error("Error:", error);
@@ -178,25 +169,32 @@ export default function UsersPage() {
     setNewUser({ email: "", fullName: "", role: "reviewer" });
   };
 
-  const handleDeleteUser = async () => {
-    if (!userToDelete) return;
-    setIsDeleting(true);
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete "${userName || userId}"? This cannot be undone.`)) {
+      return;
+    }
+    setDeletingId(userId);
     setError(null);
     try {
-      const response = await fetch(`/api/users/${userToDelete.id}`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Not logged in");
+      }
+      const response = await fetch(`/api/users/${userId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete user");
       }
-      setUserToDelete(null);
       await fetchUsers();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete user");
-      console.error("Error deleting user:", err);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete user");
     } finally {
-      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
@@ -360,7 +358,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead className="w-[80px]">Actions</TableHead>
+                  <TableHead className="w-[80px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -384,54 +382,26 @@ export default function UsersPage() {
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      {user.id === currentUserId ? (
-                        <span className="text-xs text-zinc-500">(you)</span>
-                      ) : (
-                        <AlertDialog
-                          open={userToDelete?.id === user.id}
-                          onOpenChange={(open) =>
-                            !open && setUserToDelete(null)
+                    <TableCell className="text-right">
+                      {currentUserId !== user.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                          disabled={deletingId === user.id}
+                          onClick={() =>
+                            handleDeleteUser(
+                              user.id,
+                              user.full_name || user.email_address
+                            )
                           }
                         >
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete user?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently remove{" "}
-                                <strong>{user.full_name || user.email_address}</strong>{" "}
-                                from the system. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel
-                                disabled={isDeleting}
-                                onClick={() => setUserToDelete(null)}
-                              >
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleDeleteUser();
-                                }}
-                                className="bg-red-600 hover:bg-red-700"
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? "Deleting..." : "Delete"}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                            onClick={() => setUserToDelete(user)}
-                            disabled={isDeleting}
-                          >
+                          {deletingId === user.id ? (
+                            "Deleting..."
+                          ) : (
                             <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialog>
+                          )}
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>

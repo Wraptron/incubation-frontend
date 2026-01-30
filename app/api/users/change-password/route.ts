@@ -1,47 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendUrl } from "@/lib/config";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 /* =========================
-   PUT: Change user password
+   PUT: Change user password (Supabase direct)
 ========================= */
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const url = `${backendUrl}/api/users/change-password`;
+    const { userId, email, oldPassword, newPassword } = body;
 
-    console.log('Calling backend URL:', url);
-
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    console.log('Response status:', response.status);
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('Non-JSON response received:', text.substring(0, 200));
+    if (!userId || !email || !oldPassword || !newPassword) {
       return NextResponse.json(
-        { error: "Backend returned non-JSON response", details: text.substring(0, 200) },
-        { status: 502 }
+        {
+          error:
+            "Missing required fields: userId, email, oldPassword, and newPassword are required",
+        },
+        { status: 400 }
       );
     }
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+    if (newPassword.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(data);
-  } catch (error: any) {
-    console.error("Error in change-password PUT route:", error);
+    // Verify current password by attempting to sign in
+    const { data: signInData, error: signInError } =
+      await supabaseServer.auth.signInWithPassword({
+        email,
+        password: oldPassword,
+      });
+
+    if (signInError || !signInData.user) {
+      console.error("Current password verification failed:", signInError);
+      return NextResponse.json(
+        { error: "Current password is incorrect" },
+        { status: 401 }
+      );
+    }
+
+    if (signInData.user.id !== userId) {
+      return NextResponse.json(
+        { error: "Unauthorized to change this password" },
+        { status: 403 }
+      );
+    }
+
+    // Update password using admin API
+    const { error: updateError } = await supabaseServer.auth.admin.updateUserById(
+      userId,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      console.error("Password update error:", updateError);
+      return NextResponse.json(
+        { error: "Failed to update password", details: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Password updated successfully for user: ${userId}`);
+
+    return NextResponse.json({
+      message: "Password updated successfully",
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error in change-password PUT route:", err);
     return NextResponse.json(
-      { error: "Failed to change password", details: error.message },
+      { error: "Failed to change password", details: err.message },
       { status: 500 }
     );
   }
