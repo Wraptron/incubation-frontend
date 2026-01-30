@@ -80,6 +80,7 @@ export default function ApplyPage() {
       email: string;
       mailId: string;
       department: string;
+      college: string;
     }>,
     nirmaanCanHelp: "",
     preIncubationReason: "",
@@ -1478,6 +1479,9 @@ export default function ApplyPage() {
                           <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                             4. Department
                           </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                            5. College
+                          </th>
                           <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
                             Action
                           </th>
@@ -1579,6 +1583,26 @@ export default function ApplyPage() {
                                   required
                                 />
                               </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={member.college}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      college: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter College Name"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
                               <td className="px-3 py-2 text-center">
                                 <button
                                   type="button"
@@ -1618,6 +1642,7 @@ export default function ApplyPage() {
                               email: "",
                               mailId: "",
                               department: "",
+                              college: "",
                             },
                           ],
                         }));

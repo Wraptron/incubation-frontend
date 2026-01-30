@@ -1,6 +1,83 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { uploadFileToS3 } from "@/lib/s3";
+import nodemailer from "nodemailer";
+
+/**
+ * Send application submission confirmation email to the applicant.
+ * Called only after successful insert so all successful applicants receive it.
+ */
+
+async function sendApplicationConfirmationEmail(
+  email: string,
+  applicantName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping confirmation email");
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: gmailUser,
+        pass: gmailPass,
+      },
+    });
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${applicantName},</p>
+            
+            <p>Thank you for submitting your application. We would like to confirm that we have received your application. Our team of expert evaluators will now review your application for the next round. You will receive an email update from our end on the status of your selection. Thank you for the time and consideration you have given to this application.</p>
+            
+            <p>Regard,<br>
+            Team Nirmaan</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const emailText = `
+Dear ${applicantName},
+
+Thank you for submitting your application. We would like to confirm that we have received your application. Our team of expert evaluators will now review your application for the next round. You will receive an email update from our end on the status of your selection. Thank you for the time and consideration you have given to this application.
+
+Regard,
+Team Nirmaan
+    `;
+
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      subject: "Thank you for applying!!!",
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Application confirmation email sent to", email);
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending application confirmation email:", err);
+    return { success: false, error: err.message };
+  }
+}
+
 /* =========================
    POST: Submit application
 ========================= */
@@ -284,7 +361,6 @@ export async function POST(request: NextRequest) {
     // Map ALL frontend fields to database fields matching the new_application schema
     // Only include applicant_id if present (column may not exist in all DB setups; guest submissions have no applicant)
     const applicationData: Record<string, any> = {
-      is_draft: false,
       
       // Basic Information
       email: body.email,
@@ -403,6 +479,12 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+      // Send confirmation email only after successful submission (all successful applicants receive it)
+      const emailResult = await sendApplicationConfirmationEmail(body.email, body.yourName);
+      if (!emailResult.success) {
+        console.warn("Application saved but confirmation email failed:", emailResult.error);
+      }
     
     // Log successful insert with IP file links
     console.log("Application inserted successfully:", {
