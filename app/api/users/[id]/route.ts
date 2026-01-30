@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { backendUrl } from "@/lib/config";
+import { createClient } from "@supabase/supabase-js";
+import { supabaseServer } from "@/lib/supabaseServer";
 
-/* =========================
-   DELETE: Delete a user
-========================= */
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://dfzfmtthyvwltwwmntmd.supabase.co";
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmemZtdHRoeXZ3bHR3d21udG1kIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQwNDk0NiwiZXhwIjoyMDgzOTgwOTQ2fQ.m8DKbf04d5Awu99sYyTIpv15xvnkoXV3WTOlk4GP8HE";
+
+/**
+ * DELETE /api/users/[id]
+ * Delete a user. Only managers can call this. Requires Authorization: Bearer <token>.
+ * Does not depend on the Node backend - uses Supabase directly.
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,33 +27,72 @@ export async function DELETE(
       );
     }
 
-    const response = await fetch(`${backendUrl}/api/users/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "manager") {
       return NextResponse.json(
-        { error: "Backend returned non-JSON response", details: text.substring(0, 200) },
-        { status: 502 }
+        { error: "Forbidden - Only managers can delete users" },
+        { status: 403 }
       );
     }
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+    if (user.id === id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account" },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(data);
-  } catch (error: any) {
-    console.error("Error in users DELETE route:", error);
+    const { error: authError } = await supabaseServer.auth.admin.deleteUser(id);
+    if (authError) {
+      console.error("Auth delete error:", authError);
+      return NextResponse.json(
+        { error: "Failed to delete user from auth", details: authError.message },
+        { status: 500 }
+      );
+    }
+
+    const { error: profileError } = await supabaseServer
+      .from("user_profiles")
+      .delete()
+      .eq("id", id);
+
+    if (profileError) {
+      console.error("Profile delete error:", profileError);
+      return NextResponse.json(
+        { error: "Failed to delete user profile", details: profileError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "User deleted successfully" });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("DELETE /api/users/[id] error:", err);
     return NextResponse.json(
-      { error: "Failed to delete user", details: error.message },
+      { error: "Failed to delete user", details: err.message },
       { status: 500 }
     );
   }

@@ -15,7 +15,10 @@ async function sendApplicationConfirmationEmail(
     const gmailUser = process.env.GMAIL_USER;
     const gmailPass = process.env.GMAIL_APP_PASSWORD;
     if (!gmailUser || !gmailPass) {
-      console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping confirmation email");
+      console.error(
+        "[Apply] Confirmation email NOT sent: Set GMAIL_USER and GMAIL_APP_PASSWORD in .env.local. " +
+        "Use a Gmail App Password: https://myaccount.google.com/apppasswords"
+      );
       return { success: false, error: "Email not configured" };
     }
     const transporter = nodemailer.createTransport({
@@ -467,13 +470,13 @@ export async function POST(request: NextRequest) {
     // Send confirmation email only after successful submission (all successful applicants receive it)
     const emailResult = await sendApplicationConfirmationEmail(body.email, body.yourName);
     if (!emailResult.success) {
-      console.warn("Application saved but confirmation email failed:", emailResult.error);
+      console.error("Application saved but confirmation email failed:", emailResult.error);
     }
 
     return NextResponse.json(
       {
         message: "Application submitted successfully",
-        data: { id: data.id, status: data.status },
+        data: { id: data.id, status: data.status, emailSent: emailResult.success },
       },
       { status: 200 }
     );

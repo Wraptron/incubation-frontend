@@ -63,8 +63,16 @@ export async function uploadFileToS3(
       url: publicUrl,
       filename: file.name, // Return original filename for display
     };
-  } catch (err) {
+  } catch (err: any) {
+    // Check if it's a credentials error
+    if (err?.name === "CredentialsProviderError" || err?.message?.includes("credentials")) {
+      console.error(
+        "S3 upload error: AWS credentials not configured. " +
+        "Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file."
+      );
+    } else {
       console.error("S3 upload error:", err);
+    }
     return null;
   }
 }
