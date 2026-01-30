@@ -4,14 +4,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-<<<<<<< HEAD
-    "previewModeId": "47d15e6ece0a00729d677a799e2b90fc",
-    "previewModeSigningKey": "7264068964bc9de5a2ace1782837e150d9d062839aaecc91bb565b4526ea06c7",
-    "previewModeEncryptionKey": "cdec1b77ac68ebbd0f6aa96cebc3efb00025053f9bd79bfdb49712d2db220a92"
-=======
-    "previewModeId": "f733eea2f2fc6c245a6eed112aef4944",
-    "previewModeSigningKey": "5da9be1a6b661b0a6eed0d36e3b0d550f62e61f00ffa4dfc3a34a3359f778d50",
-    "previewModeEncryptionKey": "18464255e3ed03dbd7e7f6c9dc86daede94fd588b6c8432565e2e552e5a2b212"
->>>>>>> stage
+    "previewModeId": "8bedb25351a31fb8d86493ad2da5b589",
+    "previewModeSigningKey": "aa27b196e8d16f8bac6ea46da3a7b75ad0a441e31d4780e24defe4951b1b7803",
+    "previewModeEncryptionKey": "f39e7a36a5dcd9152df95761060d47f51424431d06ef36297c5c6275fbdcfafd"
   }
 }

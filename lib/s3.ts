@@ -24,6 +24,10 @@ export async function uploadFileToS3(
   suffix?: string
 ): Promise<{ url: string; filename: string } | null> {
   try {
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      console.warn("S3 upload skipped: AWS credentials not configured");
+      return null;
+    }
     // Sanitize filename: remove special characters, keep only alphanumeric, dots, hyphens, underscores
     const sanitizeFilename = (name: string): string => {
       return name.replace(/[^a-zA-Z0-9._-]/g, "_");

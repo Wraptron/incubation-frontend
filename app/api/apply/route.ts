@@ -282,9 +282,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Map ALL frontend fields to database fields matching the new_application schema
+    // Only include applicant_id if present (column may not exist in all DB setups; guest submissions have no applicant)
     const applicationData: Record<string, any> = {
-      // Applicant ID (if provided)
-      applicant_id: body.applicantId || null,
       is_draft: false,
       
       // Basic Information
@@ -360,6 +359,9 @@ export async function POST(request: NextRequest) {
       // Status & Metadata
       status: "pending",
     };
+    if (body.applicantId && String(body.applicantId).trim()) {
+      applicationData.applicant_id = body.applicantId;
+    }
 
     // Debug: Log file URLs and application data before insert
     console.log("File URLs to be saved:", { 
@@ -385,11 +387,11 @@ export async function POST(request: NextRequest) {
       console.error("Error details:", JSON.stringify(error, null, 2));
       console.error("Application data that failed to insert:", JSON.stringify(applicationData, null, 2));
       
-      // Check if error is related to missing columns
-      if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+      // Check if error is related to missing columns (e.g. applicant_id not in schema)
+      if (error.message && (error.message.includes('column') || error.code === 'PGRST204')) {
         return NextResponse.json(
           { 
-            error: "Database schema error. Please ensure ip_file_link and potential_ip_file_link columns exist in the new_application table.",
+            error: "Database schema error. Ensure new_application table has required columns (see SIMPLE_DATABASE_SETUP.sql).",
             details: error.message 
           },
           { status: 500 }

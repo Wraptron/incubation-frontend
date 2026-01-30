@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserPlus, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import { UserPlus, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -72,13 +72,10 @@ export default function UsersPage() {
   });
   const [createdUser, setCreatedUser] = useState<CreatedUserResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    checkUserAndFetchUsers();
-  }, []);
-
-  const checkUserAndFetchUsers = async () => {
+  const checkUserAndFetchUsers = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -102,7 +99,6 @@ export default function UsersPage() {
         return;
       }
 
-      setCurrentUserId(user.id);
       await fetchUsers();
     } catch (error) {
       console.error("Error:", error);
@@ -110,7 +106,11 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkUserAndFetchUsers();
+  }, [checkUserAndFetchUsers]);
 
   const fetchUsers = async () => {
     try {
@@ -135,10 +135,19 @@ export default function UsersPage() {
     setError(null);
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch("/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(newUser),
       });
@@ -152,19 +161,12 @@ export default function UsersPage() {
       setCreatedUser(data.data);
       setNewUser({ email: "", fullName: "", role: "reviewer" });
       await fetchUsers();
-    } catch (err: any) {
-      setError(err.message || "Failed to create user");
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || "Failed to create user");
       console.error("Error creating user:", err);
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const copyPassword = () => {
-    if (createdUser?.password) {
-      navigator.clipboard.writeText(createdUser.password);
-      setPasswordCopied(true);
-      setTimeout(() => setPasswordCopied(false), 2000);
     }
   };
 
@@ -172,8 +174,44 @@ export default function UsersPage() {
     setIsDialogOpen(false);
     setCreatedUser(null);
     setError(null);
-    setPasswordCopied(false);
     setNewUser({ email: "", fullName: "", role: "reviewer" });
+  };
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(userId);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete user");
+      }
+
+      await fetchUsers();
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || "Failed to delete user");
+      console.error("Error deleting user:", err);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (isLoading) {
@@ -305,67 +343,9 @@ export default function UsersPage() {
                       User Created Successfully
                     </DialogTitle>
                     <DialogDescription>
-                      The user account has been created. Please share the
-                      credentials below with the user.
+                      The user account has been created.
                     </DialogDescription>
                   </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    {!createdUser.emailSent && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Email notification could not be sent. Please share the
-                          credentials manually with the user.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="space-y-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 p-4">
-                      <div>
-                        <Label className="text-xs text-zinc-500">Name</Label>
-                        <p className="font-medium">{createdUser.fullName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">Email</Label>
-                        <p className="font-medium">{createdUser.email}</p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">Role</Label>
-                        <p className="font-medium capitalize">
-                          {createdUser.role}
-                        </p>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-zinc-500">
-                          Temporary Password
-                        </Label>
-                        <div className="flex items-center gap-2 mt-1">
-                          <code className="flex-1 bg-white dark:bg-zinc-800 px-3 py-2 rounded border font-mono text-sm">
-                            {createdUser.password}
-                          </code>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={copyPassword}
-                          >
-                            {passwordCopied ? (
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Alert>
-                      <AlertDescription className="text-sm">
-                        The user should change this password after their first
-                        login for security purposes.
-                      </AlertDescription>
-                    </Alert>
-                  </div>
 
                   <DialogFooter>
                     <Button onClick={resetDialog} className="w-full">

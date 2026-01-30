@@ -169,15 +169,14 @@ export default function ApplyPage() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // Check authentication and load draft from server
+  // Check authentication and load draft from server (form is always shown; draft only when logged in as applicant)
   useEffect(() => {
     const checkAuthAndLoadDraft = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          // Not authenticated, redirect to login
-          router.push("/applicant-login");
+          setIsCheckingAuth(false);
           return;
         }
 
@@ -189,9 +188,8 @@ export default function ApplyPage() {
           .single();
 
         if (!profile) {
-          // Not an applicant, redirect to signup
           await supabase.auth.signOut();
-          router.push("/applicant-signup");
+          setIsCheckingAuth(false);
           return;
         }
 
@@ -655,17 +653,19 @@ export default function ApplyPage() {
                   and we'll get back to you soon.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  router.push("/applicant-login");
-                }}
-                className="ml-4"
-              >
-                Logout
-              </Button>
+              {userId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    router.push("/");
+                  }}
+                  className="ml-4"
+                >
+                  Logout
+                </Button>
+              )}
             </div>
             {autoSaveIndicator && (
               <p className="text-sm text-green-600 dark:text-green-400 mt-2 animate-pulse">
@@ -1910,7 +1910,6 @@ export default function ApplyPage() {
                   />
                 </div>
               )}
-
               <div className="space-y-2">
                 <Label>
                   Which other industries would this most likely be applied to?

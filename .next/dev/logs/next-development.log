@@ -1,42 +1,8 @@
-<<<<<<< HEAD
-[00:00:00.728] Server  LOG     ✓ Ready in 561ms
-[00:00:10.198] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:10.199] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:10.199] Server  LOG     Params object: {}
-[00:00:10.744] Browser LOG     Fetched reviewer evaluation: {"application_id":"6080ed73-8916-40aa-8a33-290d692b33ea","created_at":"2026-01-29T17:07:11.753821+00:00","feasibility_scalability_comment":null,"feasibility_scalability_score":5,"id":"28704a81-c4ba-4a45-89df-cf9285d40bab","impact_comment":null,"impact_score":5,"market_potential_comment":null,"market_potential_score":5,"need_comment":null,"need_score":5,"novelty_comment":null,"novelty_score":5,"overall_comment":null,"reviewer":{"full_name":"Reviewer 1","id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb"},"reviewer_id":"19f33dd3-31a8-47b2-aead-de6f28d95ffb","total_score":25,"updated_at":"2026-01-29T17:35:42.585305+00:00"}
-[00:00:11.986] Browser LOG     === EvaluatePage Mount ===
-[00:00:11.986] Browser LOG     Params: {"id":"6080ed73-8916-40aa-8a33-290d692b33ea"}
-[00:00:11.986] Browser LOG     Params.id: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     Params.id type: string
-[00:00:11.986] Browser LOG     Valid params.id found: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m === EvaluatePage Mount ===
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params: {"id":"6080ed73-8916-40aa-8a33-290d692b33ea"}
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params.id: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Params.id type: string
-[00:00:11.986] Browser LOG     [2;38;2;124;124;124m%s[0m Valid params.id found: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.180] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:12.181] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:12.181] Server  LOG     Params object: {}
-[00:00:12.350] Browser LOG     Fetching application: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching evaluation for application ID: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching application: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.350] Browser LOG     Fetching evaluation for application ID: 6080ed73-8916-40aa-8a33-290d692b33ea
-[00:00:12.564] Server  LOG     === Frontend API Route - GET Evaluation ===
-[00:00:12.564] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:12.565] Server  LOG     Params object: {}
-[00:00:15.868] Server  LOG     === Frontend API Route - PUT Evaluation ===
-[00:00:15.869] Server  LOG     Application ID from params: "6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:00:15.869] Server  LOG     Params object: {}
-[00:00:15.956] Browser LOG     [Frontend] Submitting evaluation data: {"applicationId":"6080ed73-8916-40aa-8a33-290d692b33ea","feasibilityScalabilityComment":null,"feasibilityScalabilityScore":"5","impactComment":null,"impactScore":"5","marketPotentialComment":null,"marketPotentialScore":"5","needComment":null,"needScore":"5.4","noveltyComment":null,"noveltyScore":"5","overallComment":null}
-[00:00:16.027] Server  LOG     Reviewer ID: "19f33dd3-31a8-47b2-aead-de6f28d95ffb"
-[00:00:16.027] Server  LOG     Backend URL: "http://localhost:5001"
-[00:00:16.027] Server  LOG     Calling backend endpoint: "http://localhost:5001/api/evaluations/application/6080ed73-8916-40aa-8a33-290d692b33ea"
-[00:02:07.239] Server  LOG       Reload env: .env.local
-=======
-[00:00:03.449] Server  LOG     ✓ Ready in 2.8s
-[00:01:20.869] Server  LOG     ○ Compiling / ...
-[00:01:25.077] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:01:25.496] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:03.409] Server  LOG     ✓ Ready in 2.8s
+[00:00:05.042] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:00:07.253] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:00:08.787] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:10.023] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -71,132 +37,233 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:01:25.496] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:09:02.883] Browser LOG     Adding IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:09:02.883] Browser LOG     Adding potential IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:09:02.883] Browser LOG     FormData entries being sent:
-[00:09:02.883] Browser LOG       email: Kishore.madhavan@wraptronl.com
-[00:09:02.883] Browser LOG       teamName: Test
-[00:09:02.883] Browser LOG       yourName: Test
-[00:09:02.883] Browser LOG       isIITM: Yes
-[00:09:02.883] Browser LOG       rollNumber: 0000000
-[00:09:02.883] Browser LOG       rollNumberOther: 
-[00:09:02.883] Browser LOG       collegeName: 
-[00:09:02.883] Browser LOG       currentOccupation: 
-[00:09:02.883] Browser LOG       phoneNumber: 8807919181
-[00:09:02.883] Browser LOG       channel: I2I (Sustainability Venture Studio)
-[00:09:02.883] Browser LOG       channelOther: 
-[00:09:02.883] Browser LOG       coFoundersCount: 2
-[00:09:02.883] Browser LOG       facultyInvolved: [{"name":"Test","designation":"Test","department":"Test","university":"Test","roleInStartup":""}]
-[00:09:02.883] Browser LOG       priorEntrepreneurshipExperience: Yes
-[00:09:02.883] Browser LOG       teamPriorEntrepreneurshipExperience: Yes
-[00:09:02.883] Browser LOG       priorExperienceDetails: Test
-[00:09:02.883] Browser LOG       mcaRegistered: Yes
-[00:09:02.883] Browser LOG       dpiitRegistered: 
-[00:09:02.883] Browser LOG       dpiitDetails: DPIIT12121
-[00:09:02.883] Browser LOG       externalFunding: [{"funding":"Test","fundingType":"Test","amount":"22222","description":""}]
-[00:09:02.883] Browser LOG       currentlyIncubated: Test
-[00:09:02.883] Browser LOG       teamMembers: [{"name":"Test","rollNumber":"22222","email":"test@gmail.com","mailId":"","department":"Test"}]
-[00:09:02.883] Browser LOG       nirmaanCanHelp: Test
-[00:09:02.883] Browser LOG       preIncubationReason: Test
-[00:09:02.883] Browser LOG       heardAboutStartups: Test
-[00:09:02.883] Browser LOG       heardAboutNirmaan: Test
-[00:09:02.883] Browser LOG       problemSolving: Test
-[00:09:02.883] Browser LOG       yourSolution: Test
-[00:09:02.883] Browser LOG       solutionType: Service Oriented / Services Offered / Consultancy
-[00:09:02.883] Browser LOG       solutionTypeOther: 
-[00:09:02.883] Browser LOG       targetIndustry: 
-[00:09:02.883] Browser LOG       otherIndustries: ["Arts, Culture & Traditions"]
-[00:09:02.883] Browser LOG       industryOther: 
-[00:09:02.883] Browser LOG       otherIndustriesOther: 
-[00:09:02.883] Browser LOG       technologiesUtilized: ["Artificial Intelligence (AI) & Machine Learning (ML)"]
-[00:09:02.883] Browser LOG       otherTechnologyDetails: 
-[00:09:02.883] Browser LOG       startupStage: Test
-[00:09:02.883] Browser LOG       hasIntellectualProperty: Yes
-[00:09:02.883] Browser LOG       hasPotentialIntellectualProperty: Yes
-[00:09:02.883] Browser LOG       nirmaanPresentationLink: TKT_Logo.pdf
-[00:09:02.883] Browser LOG       hasProofOfConcept: Yes
-[00:09:02.883] Browser LOG       proofOfConceptDetails: Test
-[00:09:02.883] Browser LOG       hasPatentsOrPapers: Yes
-[00:09:02.883] Browser LOG       patentsOrPapersDetails: Test
-[00:09:02.883] Browser LOG       seedFundUtilizationPlan: Test
-[00:09:02.883] Browser LOG       pitchVideoLink: https://music.youtube.com/
-[00:09:02.883] Browser LOG       document1Link: TKT_Logo.pdf
-[00:09:02.883] Browser LOG       document2Link: TKT_Logo.pdf
-[00:09:02.883] Browser LOG       presentationFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:02.883] Browser LOG       document1File: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:02.883] Browser LOG       document2File: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:02.883] Browser LOG       ipFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:02.883] Browser LOG       potentialIpFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:31.673] Browser LOG     Adding IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:09:31.673] Browser LOG     Adding potential IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:09:31.673] Browser LOG     FormData entries being sent:
-[00:09:31.673] Browser LOG       email: Kishore.madhavan@wraptronl.com
-[00:09:31.673] Browser LOG       teamName: Test
-[00:09:31.673] Browser LOG       yourName: Test
-[00:09:31.673] Browser LOG       isIITM: Yes
-[00:09:31.673] Browser LOG       rollNumber: 0000000
-[00:09:31.673] Browser LOG       rollNumberOther: 
-[00:09:31.673] Browser LOG       collegeName: 
-[00:09:31.673] Browser LOG       currentOccupation: 
-[00:09:31.673] Browser LOG       phoneNumber: 8807919181
-[00:09:31.673] Browser LOG       channel: I2I (Sustainability Venture Studio)
-[00:09:31.673] Browser LOG       channelOther: 
-[00:09:31.673] Browser LOG       coFoundersCount: 2
-[00:09:31.673] Browser LOG       facultyInvolved: [{"name":"Test","designation":"Test","department":"Test","university":"Test","roleInStartup":""}]
-[00:09:31.673] Browser LOG       priorEntrepreneurshipExperience: Yes
-[00:09:31.673] Browser LOG       teamPriorEntrepreneurshipExperience: Yes
-[00:09:31.673] Browser LOG       priorExperienceDetails: Test
-[00:09:31.673] Browser LOG       mcaRegistered: Yes
-[00:09:31.673] Browser LOG       dpiitRegistered: 
-[00:09:31.673] Browser LOG       dpiitDetails: DPIIT12121
-[00:09:31.673] Browser LOG       externalFunding: [{"funding":"Test","fundingType":"Test","amount":"22222","description":""}]
-[00:09:31.673] Browser LOG       currentlyIncubated: Test
-[00:09:31.673] Browser LOG       teamMembers: [{"name":"Test","rollNumber":"22222","email":"test@gmail.com","mailId":"","department":"Test"}]
-[00:09:31.673] Browser LOG       nirmaanCanHelp: Test
-[00:09:31.673] Browser LOG       preIncubationReason: Test
-[00:09:31.673] Browser LOG       heardAboutStartups: Test
-[00:09:31.673] Browser LOG       heardAboutNirmaan: Test
-[00:09:31.673] Browser LOG       problemSolving: Test
-[00:09:31.673] Browser LOG       yourSolution: Test
-[00:09:31.673] Browser LOG       solutionType: Service Oriented / Services Offered / Consultancy
-[00:09:31.673] Browser LOG       solutionTypeOther: 
-[00:09:31.673] Browser LOG       targetIndustry: Apparels, Fashion & Personal Gadgets
-[00:09:31.673] Browser LOG       otherIndustries: ["Arts, Culture & Traditions"]
-[00:09:31.673] Browser LOG       industryOther: 
-[00:09:31.673] Browser LOG       otherIndustriesOther: 
-[00:09:31.673] Browser LOG       technologiesUtilized: ["Artificial Intelligence (AI) & Machine Learning (ML)"]
-[00:09:31.673] Browser LOG       otherTechnologyDetails: 
-[00:09:31.673] Browser LOG       startupStage: Test
-[00:09:31.673] Browser LOG       hasIntellectualProperty: Yes
-[00:09:31.673] Browser LOG       hasPotentialIntellectualProperty: Yes
-[00:09:31.673] Browser LOG       nirmaanPresentationLink: TKT_Logo.pdf
-[00:09:31.673] Browser LOG       hasProofOfConcept: Yes
-[00:09:31.673] Browser LOG       proofOfConceptDetails: Test
-[00:09:31.673] Browser LOG       hasPatentsOrPapers: Yes
-[00:09:31.673] Browser LOG       patentsOrPapersDetails: Test
-[00:09:31.674] Browser LOG       seedFundUtilizationPlan: Test
-[00:09:31.674] Browser LOG       pitchVideoLink: https://music.youtube.com/
-[00:09:31.674] Browser LOG       document1Link: TKT_Logo.pdf
-[00:09:31.674] Browser LOG       document2Link: TKT_Logo.pdf
-[00:09:31.674] Browser LOG       presentationFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:31.674] Browser LOG       document1File: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:31.674] Browser LOG       document2File: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:31.674] Browser LOG       ipFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:31.674] Browser LOG       potentialIpFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:09:33.849] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
-[00:09:33.850] Server  ERROR   Presentation file upload returned null
-[00:09:33.934] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
-[00:09:33.934] Server  ERROR   Document1 file upload returned null
-[00:09:34.016] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
-[00:09:34.016] Server  ERROR   Document2 file upload returned null
-[00:09:34.149] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
-[00:09:34.149] Server  ERROR   IP file upload returned null
-[00:09:34.234] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
-[00:09:34.235] Server  ERROR   Potential IP file upload returned null
-[00:09:38.842] Server  LOG     Application confirmation email sent to "Kishore.madhavan@wraptronl.com"
-[00:17:56.776] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:17:57.302] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:00:10.023] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:15.497] Server  ERROR   ⨯ ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:15.726] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:15.861] Server  WARN    ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[00:00:15.861] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:16.152] Server  ERROR   ⨯ ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:16.240] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:18.153] Server  LOG     ○ Compiling /_error ...
+[00:00:19.108] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:19.261] Server  ERROR   ⨯ ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:00:20.330] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+
+Caused by:
+    Syntax Error
+[00:00:20.428] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+[00:00:22.650] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+
+Caused by:
+    Syntax Error
+[00:00:22.751] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+[00:00:28.174] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+
+Caused by:
+    Syntax Error
+[00:00:28.276] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+[00:01:28.859] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:01:31.208] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:01:31.863] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:01:32.712] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:34.024] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -214,7 +281,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -231,9 +298,117 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:18:40.482] Server  ERROR   TypeError: fetch failed
-[00:18:50.074] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:18:50.334] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:01:34.024] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:01:56.011] Server  ERROR   ⨯ ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:01:56.141] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:01:56.875] Server  ERROR   ⨯ ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:01:56.902] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/applicant-signup/page.tsx
+[00:01:57.346] Browser ERROR   uncaughtError: ModuleBuildError: Module build failed (from ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js):
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+
+Caused by:
+    Syntax Error
+[00:01:57.452] Browser ERROR   ./app/applicant-signup/page.tsx
+Error:   × Expected '</', got 'className'
+     ╭─[/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend/app/applicant-signup/page.tsx:276:1]
+ 273 │             </Button>
+ 274 │           </form>
+ 275 │ 
+ 276 │           <div className="mt-4 text-center text-sm">
+     ·                ─────────
+ 277 │             <span className="text-zinc-600 dark:text-zinc-400">
+ 278 │               Already have an account?{" "}
+ 279 │             </span>
+     ╰────
+
+Caused by:
+    Syntax Error
+[00:01:58.620] Server  LOG     ○ Compiling /_not-found ...
+[00:02:31.732] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:02:32.389] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:02:32.519] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:02:33.423] Server  WARN    ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[00:02:34.344] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:34.344] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -251,7 +426,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/applicant..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -268,11 +443,8 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:19:08.233] Server  LOG     [Email] Sending welcome to kishore.madhavan@wraptron.com (login URL: http://localhost:3000/login)
-[00:19:12.303] Server  LOG     ✅ Email sent to kishore.madhavan@wraptron.com (Message ID: <5dbab62d-daab-e2cf-adc0-2fcdbb32308a@gmail.com>)
-[00:19:31.752] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:19:32.561] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:19:33.550] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:02:36.664] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:37.476] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -290,7 +462,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/applicant..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -307,10 +479,8 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:19:58.403] Server  LOG     ✅ Password updated successfully for user: 60b378b7-340d-42c9-925a-1abedc90d8a0
-[00:20:41.565] Server  LOG     ○ Compiling /dashboard/applications/[id] ...
-[00:21:08.936] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:21:09.227] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:02:38.610] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:39.254] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -328,7 +498,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/applicant..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -345,8 +515,8 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:21:09.880] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:21:10.549] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[00:03:12.520] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:03:12.776] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
 - A server/client branch `if (typeof window !== 'undefined')`.
 - Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
@@ -364,7 +534,7 @@ It can also happen if the client has a browser extension installed which messes 
         <ReplaySsrOnlyErrors>
         <DevRootHTTPAccessFallbackBoundary>
           <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
-            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+            <HTTPAccessFallbackErrorBoundary pathname="/apply" notFound={<NotAllowedRootHTTPFallbackError>} ...>
               <RedirectBoundary>
                 <RedirectErrorBoundary router={{...}}>
                   <Head>
@@ -381,75 +551,158 @@ It can also happen if the client has a browser extension installed which messes 
                           >
                   ...
 
-[00:22:00.766] Server  LOG     [Email] Sending welcome to charucharukash45@gmail.com (login URL: http://localhost:3000/login)
-[00:22:04.931] Server  LOG     ✅ Email sent to charucharukash45@gmail.com (Message ID: <7b11866e-c762-c8de-caf6-e5e031b0f154@gmail.com>)
-[00:22:26.173] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:26:12.131] Browser LOG     Adding IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:26:12.131] Browser LOG     Adding potential IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
-[00:26:12.131] Browser LOG     FormData entries being sent:
-[00:26:12.131] Browser LOG       email: krish21498@gmail.com
-[00:26:12.131] Browser LOG       teamName: Test
-[00:26:12.131] Browser LOG       yourName: Test
-[00:26:12.131] Browser LOG       isIITM: Yes
-[00:26:12.131] Browser LOG       rollNumber: 090909
-[00:26:12.131] Browser LOG       rollNumberOther: 
-[00:26:12.131] Browser LOG       collegeName: 
-[00:26:12.131] Browser LOG       currentOccupation: 
-[00:26:12.131] Browser LOG       phoneNumber: 8807919181
-[00:26:12.131] Browser LOG       channel: PALS
-[00:26:12.131] Browser LOG       channelOther: 
-[00:26:12.131] Browser LOG       coFoundersCount: 1
-[00:26:12.131] Browser LOG       facultyInvolved: [{"name":"Test","designation":"Test","department":"Test","university":"Test","roleInStartup":"Test"}]
-[00:26:12.131] Browser LOG       priorEntrepreneurshipExperience: Yes
-[00:26:12.131] Browser LOG       teamPriorEntrepreneurshipExperience: Yes
-[00:26:12.131] Browser LOG       priorExperienceDetails: Test
-[00:26:12.131] Browser LOG       mcaRegistered: Yes
-[00:26:12.131] Browser LOG       dpiitRegistered: 
-[00:26:12.131] Browser LOG       dpiitDetails: DPIIT12121
-[00:26:12.131] Browser LOG       externalFunding: [{"funding":"Test","fundingType":"Test","amount":"20000","description":"Test"}]
-[00:26:12.132] Browser LOG       currentlyIncubated: Test
-[00:26:12.132] Browser LOG       teamMembers: [{"name":"Test","rollNumber":"Test","email":"Test@gmail.com","mailId":"","department":"Test"}]
-[00:26:12.132] Browser LOG       nirmaanCanHelp: Test
-[00:26:12.132] Browser LOG       preIncubationReason: Test
-[00:26:12.132] Browser LOG       heardAboutStartups: Test
-[00:26:12.132] Browser LOG       heardAboutNirmaan: Test
-[00:26:12.132] Browser LOG       problemSolving: Test
-[00:26:12.132] Browser LOG       yourSolution: Test
-[00:26:12.132] Browser LOG       solutionType: Software Oriented / App / Analytics
-[00:26:12.132] Browser LOG       solutionTypeOther: 
-[00:26:12.132] Browser LOG       targetIndustry: Automobiles & Self-Driving Assistances
-[00:26:12.132] Browser LOG       otherIndustries: ["Banking, Finance Services & Insurance (BFSI)"]
-[00:26:12.132] Browser LOG       industryOther: 
-[00:26:12.132] Browser LOG       otherIndustriesOther: 
-[00:26:12.132] Browser LOG       technologiesUtilized: ["Artificial Intelligence (AI) & Machine Learning (ML)"]
-[00:26:12.132] Browser LOG       otherTechnologyDetails: 
-[00:26:12.132] Browser LOG       startupStage: Test
-[00:26:12.132] Browser LOG       hasIntellectualProperty: Yes
-[00:26:12.132] Browser LOG       hasPotentialIntellectualProperty: Yes
-[00:26:12.132] Browser LOG       nirmaanPresentationLink: TKT_Logo.pdf
-[00:26:12.132] Browser LOG       hasProofOfConcept: Yes
-[00:26:12.132] Browser LOG       proofOfConceptDetails: Test
-[00:26:12.132] Browser LOG       hasPatentsOrPapers: Yes
-[00:26:12.132] Browser LOG       patentsOrPapersDetails: Test
-[00:26:12.132] Browser LOG       seedFundUtilizationPlan: Test
-[00:26:12.132] Browser LOG       pitchVideoLink: https://music.youtube.com/
-[00:26:12.132] Browser LOG       document1Link: TKT_Logo.pdf
-[00:26:12.132] Browser LOG       document2Link: TKT_Logo.pdf
-[00:26:12.132] Browser LOG       presentationFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:26:12.132] Browser LOG       document1File: File(TKT_Logo.pdf, 396405 bytes)
-[00:26:12.132] Browser LOG       document2File: File(TKT_Logo.pdf, 396405 bytes)
-[00:26:12.132] Browser LOG       ipFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:26:12.132] Browser LOG       potentialIpFile: File(TKT_Logo.pdf, 396405 bytes)
-[00:26:15.980] Server  ERROR   S3 upload error: AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file.
-[00:26:15.980] Server  ERROR   Presentation file upload returned null
-[00:26:15.984] Server  ERROR   S3 upload error: AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file.
-[00:26:15.984] Server  ERROR   Document1 file upload returned null
-[00:26:15.986] Server  ERROR   S3 upload error: AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file.
-[00:26:15.987] Server  ERROR   Document2 file upload returned null
-[00:26:15.989] Server  ERROR   S3 upload error: AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file.
-[00:26:15.989] Server  ERROR   IP file upload returned null
-[00:26:15.991] Server  ERROR   S3 upload error: AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env.local file.
-[00:26:15.992] Server  ERROR   Potential IP file upload returned null
-[00:26:19.939] Server  LOG     Application confirmation email sent to "krish21498@gmail.com"
-[00:27:33.151] Server  LOG       Reload env: .env.local
->>>>>>> stage
+[00:03:13.384] Browser WARN    Image with src "/nirmaan logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:09:06.379] Browser LOG     Adding IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
+[00:09:06.379] Browser LOG     Adding potential IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
+[00:09:06.379] Browser LOG     FormData entries being sent:
+[00:09:06.379] Browser LOG       email: kishore.madhavan@wraptron.com
+[00:09:06.379] Browser LOG       teamName: Test
+[00:09:06.379] Browser LOG       yourName: Test
+[00:09:06.379] Browser LOG       isIITM: Yes
+[00:09:06.379] Browser LOG       rollNumber: 11111
+[00:09:06.379] Browser LOG       rollNumberOther: 
+[00:09:06.379] Browser LOG       collegeName: 
+[00:09:06.379] Browser LOG       currentOccupation: 
+[00:09:06.379] Browser LOG       phoneNumber: 8807919181
+[00:09:06.379] Browser LOG       channel: I2I (Sustainability Venture Studio)
+[00:09:06.379] Browser LOG       channelOther: 
+[00:09:06.379] Browser LOG       coFoundersCount: 1
+[00:09:06.379] Browser LOG       facultyInvolved: [{"name":"Test","designation":"Test","department":"Test","university":"Test","roleInStartup":"Test"}]
+[00:09:06.379] Browser LOG       priorEntrepreneurshipExperience: Yes
+[00:09:06.379] Browser LOG       teamPriorEntrepreneurshipExperience: Yes
+[00:09:06.379] Browser LOG       priorExperienceDetails: Test
+[00:09:06.379] Browser LOG       mcaRegistered: Yes
+[00:09:06.379] Browser LOG       dpiitRegistered: 
+[00:09:06.379] Browser LOG       dpiitDetails: DPIIT12121
+[00:09:06.379] Browser LOG       externalFunding: [{"funding":"Test","fundingType":"Test","amount":"22222","description":"Test"}]
+[00:09:06.379] Browser LOG       currentlyIncubated: Test
+[00:09:06.379] Browser LOG       teamMembers: [{"name":"Test","rollNumber":"Test","email":"Test@gmail.com","mailId":"","department":"Test"}]
+[00:09:06.379] Browser LOG       nirmaanCanHelp: Test
+[00:09:06.380] Browser LOG       preIncubationReason: Test
+[00:09:06.380] Browser LOG       heardAboutStartups: Test
+[00:09:06.380] Browser LOG       heardAboutNirmaan: Test
+[00:09:06.380] Browser LOG       problemSolving: Test
+[00:09:06.380] Browser LOG       yourSolution: Test
+[00:09:06.380] Browser LOG       solutionType: Hybrid - Hardware + Software / Embedded Analytics
+[00:09:06.380] Browser LOG       solutionTypeOther: 
+[00:09:06.380] Browser LOG       targetIndustry: Apparels, Fashion & Personal Gadgets
+[00:09:06.380] Browser LOG       otherIndustries: ["Arts, Culture & Traditions"]
+[00:09:06.380] Browser LOG       industryOther: 
+[00:09:06.380] Browser LOG       otherIndustriesOther: 
+[00:09:06.380] Browser LOG       technologiesUtilized: ["Artificial Intelligence (AI) & Machine Learning (ML)"]
+[00:09:06.380] Browser LOG       otherTechnologyDetails: 
+[00:09:06.380] Browser LOG       startupStage: Test
+[00:09:06.380] Browser LOG       hasIntellectualProperty: Yes
+[00:09:06.380] Browser LOG       hasPotentialIntellectualProperty: Yes
+[00:09:06.380] Browser LOG       nirmaanPresentationLink: TKT_Logo.pdf
+[00:09:06.380] Browser LOG       hasProofOfConcept: Yes
+[00:09:06.380] Browser LOG       proofOfConceptDetails: Test
+[00:09:06.380] Browser LOG       hasPatentsOrPapers: Yes
+[00:09:06.380] Browser LOG       patentsOrPapersDetails: Test
+[00:09:06.380] Browser LOG       seedFundUtilizationPlan: Test
+[00:09:06.380] Browser LOG       pitchVideoLink: https://music.youtube.com/
+[00:09:06.380] Browser LOG       document1Link: TKT_Logo.pdf
+[00:09:06.380] Browser LOG       document2Link: TKT_Logo.pdf
+[00:09:06.380] Browser LOG       presentationFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:09:06.380] Browser LOG       document1File: File(TKT_Logo.pdf, 396405 bytes)
+[00:09:06.380] Browser LOG       document2File: File(TKT_Logo.pdf, 396405 bytes)
+[00:09:06.380] Browser LOG       ipFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:09:06.380] Browser LOG       potentialIpFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:09:08.144] Server  LOG     Files received: {}
+[00:09:08.145] Server  LOG     Attempting to upload presentation file: {}
+[00:09:10.380] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
+[00:09:10.380] Server  ERROR   Presentation file upload returned null
+[00:09:10.381] Server  LOG     Attempting to upload document1 file: {}
+[00:09:10.464] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
+[00:09:10.464] Server  ERROR   Document1 file upload returned null
+[00:09:10.465] Server  LOG     Attempting to upload document2 file: {}
+[00:09:10.547] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
+[00:09:10.547] Server  ERROR   Document2 file upload returned null
+[00:09:10.547] Server  LOG     Attempting to upload IP file: {}
+[00:09:10.617] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
+[00:09:10.618] Server  ERROR   IP file upload returned null
+[00:09:10.618] Server  LOG     Attempting to upload potential IP file: {}
+[00:09:10.699] Server  ERROR   S3 upload error: CredentialsProviderError: Could not load credentials from any providers
+[00:09:10.700] Server  ERROR   Potential IP file upload returned null
+[00:09:10.700] Server  LOG     File URLs to be saved: {}
+[00:09:10.701] Server  LOG     IP fields in applicationData: {}
+[00:09:11.250] Server  ERROR   Supabase insert error: {}
+[00:09:11.251] Server  ERROR   Error details: "{\n  \"code\": \"PGRST204\",\n  \"details\": null,\n  \"hint\": null,\n  \"message\": \"Could not find the 'applicant_id' column of 'new_application' in the schema cache\"\n}"
+[00:09:11.251] Server  ERROR   Application data that failed to insert: "{\n  \"applicant_id\": null,\n  \"is_draft\": false,\n  \"email\": \"kishore.madhavan@wraptron.com\",\n  \"team_name\": \"Test\",\n  \"your_name\": \"Test\",\n  \"is_iitm\": \"Yes\",\n  \"roll_number\": \"11111\",\n  \"roll_number_other\": null,\n  \"college_name\": null,\n  \"current_occupation\": null,\n  \"phone_number\": \"8807919181\",\n  \"channel\": \"I2I (Sustainability Venture Studio)\",\n  \"channel_other\": null,\n  \"co_founders_count\": 1,\n  \"faculty_involved\": [\n    {\n      \"name\": \"Test\",\n      \"designation\": \"Test\",\n      \"department\": \"Test\",\n      \"university\": \"Test\",\n      \"roleInStartup\": \"Test\"\n    }\n  ],\n  \"prior_entrepreneurship_experience\": \"Yes\",\n  \"team_prior_entrepreneurship_experience\": \"Yes\",\n  \"prior_experience_details\": \"Test\",\n  \"mca_registered\": \"Yes\",\n  \"dpiit_registered\": null,\n  \"dpiit_details\": \"DPIIT12121\",\n  \"external_funding\": [\n    {\n      \"funding\": \"Test\",\n      \"fundingType\": \"Test\",\n      \"amount\": \"22222\",\n      \"description\": \"Test\"\n    }\n  ],\n  \"currently_incubated\": \"Test\",\n  \"team_members\": [\n    {\n      \"name\": \"Test\",\n      \"rollNumber\": \"Test\",\n      \"email\": \"Test@gmail.com\",\n      \"mailId\": \"\",\n      \"department\": \"Test\"\n    }\n  ],\n  \"nirmaan_can_help\": \"Test\",\n  \"pre_incubation_reason\": \"Test\",\n  \"heard_about_startups\": \"Test\",\n  \"heard_about_nirmaan\": \"Test\",\n  \"problem_solving\": \"Test\",\n  \"your_solution\": \"Test\",\n  \"solution_type\": \"Hybrid - Hardware + Software / Embedded Analytics\",\n  \"solution_type_other\": null,\n  \"target_industry\": \"Apparels, Fashion & Personal Gadgets\",\n  \"other_industries\": [\n    \"Arts, Culture & Traditions\"\n  ],\n  \"industry_other\": null,\n  \"other_industries_other\": null,\n  \"technologies_utilized\": [\n    \"Artificial Intelligence (AI) & Machine Learning (ML)\"\n  ],\n  \"other_technology_details\": null,\n  \"startup_stage\": \"Test\",\n  \"has_intellectual_property\": \"Yes\",\n  \"has_potential_intellectual_property\": \"Yes\",\n  \"ip_file_link\": null,\n  \"potential_ip_file_link\": null,\n  \"nirmaan_presentation_link\": \"TKT_Logo.pdf\",\n  \"has_proof_of_concept\": \"Yes\",\n  \"proof_of_concept_details\": \"Test\",\n  \"has_patents_or_papers\": \"Yes\",\n  \"patents_or_papers_details\": \"Test\",\n  \"seed_fund_utilization_plan\": \"Test\",\n  \"pitch_video_link\": \"https://music.youtube.com/\",\n  \"document1_link\": \"TKT_Logo.pdf\",\n  \"document2_link\": \"TKT_Logo.pdf\",\n  \"status\": \"pending\"\n}"
+[00:15:32.220] Browser LOG     Adding IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
+[00:15:32.220] Browser LOG     Adding potential IP file to FormData: {"name":"TKT_Logo.pdf","size":396405,"type":"application/pdf"}
+[00:15:32.220] Browser LOG     FormData entries being sent:
+[00:15:32.220] Browser LOG       email: kishore.madhavan@wraptron.com
+[00:15:32.220] Browser LOG       teamName: Test
+[00:15:32.220] Browser LOG       yourName: Test
+[00:15:32.220] Browser LOG       isIITM: Yes
+[00:15:32.220] Browser LOG       rollNumber: 11111
+[00:15:32.220] Browser LOG       rollNumberOther: 
+[00:15:32.220] Browser LOG       collegeName: 
+[00:15:32.220] Browser LOG       currentOccupation: 
+[00:15:32.220] Browser LOG       phoneNumber: 8807919181
+[00:15:32.220] Browser LOG       channel: I2I (Sustainability Venture Studio)
+[00:15:32.220] Browser LOG       channelOther: 
+[00:15:32.220] Browser LOG       coFoundersCount: 1
+[00:15:32.220] Browser LOG       facultyInvolved: [{"name":"Test","designation":"Test","department":"Test","university":"Test","roleInStartup":"Test"}]
+[00:15:32.220] Browser LOG       priorEntrepreneurshipExperience: Yes
+[00:15:32.220] Browser LOG       teamPriorEntrepreneurshipExperience: Yes
+[00:15:32.220] Browser LOG       priorExperienceDetails: Test
+[00:15:32.220] Browser LOG       mcaRegistered: Yes
+[00:15:32.220] Browser LOG       dpiitRegistered: 
+[00:15:32.220] Browser LOG       dpiitDetails: DPIIT12121
+[00:15:32.220] Browser LOG       externalFunding: [{"funding":"Test","fundingType":"Test","amount":"22222","description":"Test"}]
+[00:15:32.220] Browser LOG       currentlyIncubated: Test
+[00:15:32.220] Browser LOG       teamMembers: [{"name":"Test","rollNumber":"Test","email":"Test@gmail.com","mailId":"","department":"Test"}]
+[00:15:32.220] Browser LOG       nirmaanCanHelp: Test
+[00:15:32.220] Browser LOG       preIncubationReason: Test
+[00:15:32.220] Browser LOG       heardAboutStartups: Test
+[00:15:32.220] Browser LOG       heardAboutNirmaan: Test
+[00:15:32.220] Browser LOG       problemSolving: Test
+[00:15:32.220] Browser LOG       yourSolution: Test
+[00:15:32.220] Browser LOG       solutionType: Hybrid - Hardware + Software / Embedded Analytics
+[00:15:32.220] Browser LOG       solutionTypeOther: 
+[00:15:32.220] Browser LOG       targetIndustry: Apparels, Fashion & Personal Gadgets
+[00:15:32.220] Browser LOG       otherIndustries: ["Arts, Culture & Traditions"]
+[00:15:32.220] Browser LOG       industryOther: 
+[00:15:32.220] Browser LOG       otherIndustriesOther: 
+[00:15:32.220] Browser LOG       technologiesUtilized: ["Artificial Intelligence (AI) & Machine Learning (ML)"]
+[00:15:32.220] Browser LOG       otherTechnologyDetails: 
+[00:15:32.220] Browser LOG       startupStage: Test
+[00:15:32.220] Browser LOG       hasIntellectualProperty: Yes
+[00:15:32.220] Browser LOG       hasPotentialIntellectualProperty: Yes
+[00:15:32.220] Browser LOG       nirmaanPresentationLink: TKT_Logo.pdf
+[00:15:32.220] Browser LOG       hasProofOfConcept: Yes
+[00:15:32.220] Browser LOG       proofOfConceptDetails: Test
+[00:15:32.220] Browser LOG       hasPatentsOrPapers: Yes
+[00:15:32.220] Browser LOG       patentsOrPapersDetails: Test
+[00:15:32.220] Browser LOG       seedFundUtilizationPlan: Test
+[00:15:32.220] Browser LOG       pitchVideoLink: https://music.youtube.com/
+[00:15:32.220] Browser LOG       document1Link: TKT_Logo.pdf
+[00:15:32.220] Browser LOG       document2Link: TKT_Logo.pdf
+[00:15:32.220] Browser LOG       presentationFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:15:32.220] Browser LOG       document1File: File(TKT_Logo.pdf, 396405 bytes)
+[00:15:32.220] Browser LOG       document2File: File(TKT_Logo.pdf, 396405 bytes)
+[00:15:32.220] Browser LOG       ipFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:15:32.220] Browser LOG       potentialIpFile: File(TKT_Logo.pdf, 396405 bytes)
+[00:15:33.502] Server  LOG     Files received: {}
+[00:15:33.503] Server  LOG     Attempting to upload presentation file: {}
+[00:15:33.504] Server  WARN    S3 upload skipped: AWS credentials not configured
+[00:15:33.504] Server  ERROR   Presentation file upload returned null
+[00:15:33.504] Server  LOG     Attempting to upload document1 file: {}
+[00:15:33.505] Server  WARN    S3 upload skipped: AWS credentials not configured
+[00:15:33.505] Server  ERROR   Document1 file upload returned null
+[00:15:33.505] Server  LOG     Attempting to upload document2 file: {}
+[00:15:33.505] Server  WARN    S3 upload skipped: AWS credentials not configured
+[00:15:33.505] Server  ERROR   Document2 file upload returned null
+[00:15:33.506] Server  LOG     Attempting to upload IP file: {}
+[00:15:33.506] Server  WARN    S3 upload skipped: AWS credentials not configured
+[00:15:33.506] Server  ERROR   IP file upload returned null
+[00:15:33.506] Server  LOG     Attempting to upload potential IP file: {}
+[00:15:33.507] Server  WARN    S3 upload skipped: AWS credentials not configured
+[00:15:33.507] Server  ERROR   Potential IP file upload returned null
+[00:15:33.507] Server  LOG     File URLs to be saved: {}
+[00:15:33.507] Server  LOG     IP fields in applicationData: {}
+[00:15:34.499] Server  ERROR   Supabase insert error: {}
+[00:15:34.500] Server  ERROR   Error details: "{\n  \"code\": \"PGRST204\",\n  \"details\": null,\n  \"hint\": null,\n  \"message\": \"Could not find the 'is_draft' column of 'new_application' in the schema cache\"\n}"
+[00:15:34.500] Server  ERROR   Application data that failed to insert: "{\n  \"is_draft\": false,\n  \"email\": \"kishore.madhavan@wraptron.com\",\n  \"team_name\": \"Test\",\n  \"your_name\": \"Test\",\n  \"is_iitm\": \"Yes\",\n  \"roll_number\": \"11111\",\n  \"roll_number_other\": null,\n  \"college_name\": null,\n  \"current_occupation\": null,\n  \"phone_number\": \"8807919181\",\n  \"channel\": \"I2I (Sustainability Venture Studio)\",\n  \"channel_other\": null,\n  \"co_founders_count\": 1,\n  \"faculty_involved\": [\n    {\n      \"name\": \"Test\",\n      \"designation\": \"Test\",\n      \"department\": \"Test\",\n      \"university\": \"Test\",\n      \"roleInStartup\": \"Test\"\n    }\n  ],\n  \"prior_entrepreneurship_experience\": \"Yes\",\n  \"team_prior_entrepreneurship_experience\": \"Yes\",\n  \"prior_experience_details\": \"Test\",\n  \"mca_registered\": \"Yes\",\n  \"dpiit_registered\": null,\n  \"dpiit_details\": \"DPIIT12121\",\n  \"external_funding\": [\n    {\n      \"funding\": \"Test\",\n      \"fundingType\": \"Test\",\n      \"amount\": \"22222\",\n      \"description\": \"Test\"\n    }\n  ],\n  \"currently_incubated\": \"Test\",\n  \"team_members\": [\n    {\n      \"name\": \"Test\",\n      \"rollNumber\": \"Test\",\n      \"email\": \"Test@gmail.com\",\n      \"mailId\": \"\",\n      \"department\": \"Test\"\n    }\n  ],\n  \"nirmaan_can_help\": \"Test\",\n  \"pre_incubation_reason\": \"Test\",\n  \"heard_about_startups\": \"Test\",\n  \"heard_about_nirmaan\": \"Test\",\n  \"problem_solving\": \"Test\",\n  \"your_solution\": \"Test\",\n  \"solution_type\": \"Hybrid - Hardware + Software / Embedded Analytics\",\n  \"solution_type_other\": null,\n  \"target_industry\": \"Apparels, Fashion & Personal Gadgets\",\n  \"other_industries\": [\n    \"Arts, Culture & Traditions\"\n  ],\n  \"industry_other\": null,\n  \"other_industries_other\": null,\n  \"technologies_utilized\": [\n    \"Artificial Intelligence (AI) & Machine Learning (ML)\"\n  ],\n  \"other_technology_details\": null,\n  \"startup_stage\": \"Test\",\n  \"has_intellectual_property\": \"Yes\",\n  \"has_potential_intellectual_property\": \"Yes\",\n  \"ip_file_link\": null,\n  \"potential_ip_file_link\": null,\n  \"nirmaan_presentation_link\": \"TKT_Logo.pdf\",\n  \"has_proof_of_concept\": \"Yes\",\n  \"proof_of_concept_details\": \"Test\",\n  \"has_patents_or_papers\": \"Yes\",\n  \"patents_or_papers_details\": \"Test\",\n  \"seed_fund_utilization_plan\": \"Test\",\n  \"pitch_video_link\": \"https://music.youtube.com/\",\n  \"document1_link\": \"TKT_Logo.pdf\",\n  \"document2_link\": \"TKT_Logo.pdf\",\n  \"status\": \"pending\"\n}"

@@ -46,6 +46,14 @@
       "namedRegex": "^/api/evaluations/application/(?<nxtPapplicationId>[^/]+?)/all(?:/)?$"
     },
     {
+      "page": "/api/users/[id]",
+      "regex": "^/api/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/users/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/dashboard/applications/[id]",
       "regex": "^/dashboard/applications/([^/]+?)(?:/)?$",
       "routeKeys": {

@@ -1,16 +1,6 @@
 {
-<<<<<<< HEAD
-  "/api/applications/[id]/route": "app/api/applications/[id]/route.js",
-  "/api/applications/route": "app/api/applications/route.js",
-  "/api/evaluations/application/[applicationId]/route": "app/api/evaluations/application/[applicationId]/route.js",
-  "/dashboard/applications/[id]/evaluate/page": "app/dashboard/applications/[id]/evaluate/page.js",
-  "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-=======
+  "/api/apply/route": "app/api/apply/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/dashboard/applications/[id]/page": "app/dashboard/applications/[id]/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/apply/page": "app/apply/page.js",
->>>>>>> stage
-  "/dashboard/users/page": "app/dashboard/users/page.js"
+  "/apply/page": "app/apply/page.js"
 }
