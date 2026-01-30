@@ -54,6 +54,7 @@ yarn install
 pnpm install
 ```
 
+<<<<<<< HEAD
 3. Set up environment variables (create `.env.local`):
 
 ```env
@@ -61,6 +62,42 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
+=======
+3. Set up environment variables.
+
+   **Local:** create `.env.local` in the project root.
+
+   **Production:** set the same variables in your host’s dashboard (e.g. Vercel → Project → Settings → Environment Variables).
+
+```env
+# Required for auth and data
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Optional: app URL for emails/links (defaults: local → http://localhost:3000, Vercel → from VERCEL_URL)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Required for sending welcome emails when creating users (local + prod)
+GMAIL_USER=your@gmail.com
+GMAIL_APP_PASSWORD=your_16_char_app_password
+```
+
+**Why email might not send:** If welcome emails don’t go out, check that `GMAIL_USER` and `GMAIL_APP_PASSWORD` are set in the environment where the app runs (`.env.local` for local, host env for production). Use a [Gmail App Password](https://support.google.com/accounts/answer/185833), not your normal password.
+
+### Local and deployed (production)
+
+The same code runs in both environments; only env values change:
+
+| Use case | What to set |
+|----------|-------------|
+| **Local** | `.env.local` with the vars above. `NEXT_PUBLIC_APP_URL=http://localhost:3000` is optional (default). |
+| **Deployed (e.g. Vercel)** | Same vars in the host’s env. `NEXT_PUBLIC_APP_URL` can be your live URL, or omit it on Vercel (app URL is taken from `VERCEL_URL`). |
+| **Email (both)** | `GMAIL_USER` and `GMAIL_APP_PASSWORD` in the same env (local or prod) where the API runs. |
+
+Config is in `lib/config.ts`: `backendUrl` for the API, `appUrl` for links and emails.
+
+>>>>>>> stage
 ### Development
 
 Run the development server:

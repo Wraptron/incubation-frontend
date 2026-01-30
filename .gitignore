@@ -28,6 +28,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+<<<<<<< HEAD
 # env files (keep .env.example, ignore others)
 .env
 .env.local
@@ -36,6 +37,15 @@ yarn-error.log*
 .env.production
 .env.*.local
 !.env.example
+=======
+# env files (never commit secrets)
+.env
+.env.*
+
+.env.development.local
+.env.test.local
+.env.production.local
+>>>>>>> stage
 
 # vercel
 .vercel

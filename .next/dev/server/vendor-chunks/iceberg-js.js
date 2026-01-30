@@ -11,6 +11,7 @@ exports.id = "vendor-chunks/iceberg-js";
 exports.ids = ["vendor-chunks/iceberg-js"];
 exports.modules = {
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/iceberg-js/dist/index.mjs":
 /*!************************************************!*\
   !*** ./node_modules/iceberg-js/dist/index.mjs ***!
@@ -21,6 +22,8 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
+=======
+>>>>>>> stage
 /***/ "(ssr)/./node_modules/iceberg-js/dist/index.mjs":
 /*!************************************************!*\
   !*** ./node_modules/iceberg-js/dist/index.mjs ***!

@@ -11,6 +11,7 @@ exports.id = "vendor-chunks/tslib";
 exports.ids = ["vendor-chunks/tslib"];
 exports.modules = {
 
+<<<<<<< HEAD
 /***/ "(rsc)/./node_modules/tslib/tslib.es6.mjs":
 /*!******************************************!*\
   !*** ./node_modules/tslib/tslib.es6.mjs ***!
@@ -21,6 +22,8 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
+=======
+>>>>>>> stage
 /***/ "(ssr)/./node_modules/tslib/tslib.es6.mjs":
 /*!******************************************!*\
   !*** ./node_modules/tslib/tslib.es6.mjs ***!

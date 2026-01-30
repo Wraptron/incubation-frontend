@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 import { uploadFileToS3 } from "@/lib/s3";
-
 /* =========================
    POST: Submit application
 ========================= */

@@ -22,16 +22,33 @@ export default function LoginPage() {
     setIsLoading(true);
     setError("");
 
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Please enter both email and password.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Sign in with Supabase
       const { data, error: signInError } =
         await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: trimmedEmail,
+          password: trimmedPassword,
         });
 
       if (signInError) {
-        setError(signInError.message || "Invalid email or password");
+        // Supabase returns 400 for invalid credentials or unconfirmed email
+        const msg = signInError.message || "";
+        if (msg.toLowerCase().includes("email not confirmed") || msg.toLowerCase().includes("confirm your")) {
+          setError("Please check your email and confirm your account before signing in.");
+        } else if (msg.toLowerCase().includes("invalid login")) {
+          setError("Invalid email or password. Please try again.");
+        } else {
+          setError(msg || "Invalid email or password.");
+        }
         setIsLoading(false);
         return;
       }

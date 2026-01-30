@@ -89,6 +89,8 @@ export default function UsersPage() {
         return;
       }
 
+      setCurrentUserId(user.id);
+
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")
@@ -100,6 +102,7 @@ export default function UsersPage() {
         return;
       }
 
+      setCurrentUserId(user.id);
       await fetchUsers();
     } catch (error) {
       console.error("Error:", error);
@@ -375,6 +378,13 @@ export default function UsersPage() {
           </Dialog>
         </div>
 
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <Card>
           <div className="overflow-x-auto">
             <Table>
@@ -384,6 +394,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
+                  <TableHead className="w-[80px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -406,6 +417,28 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {currentUserId !== user.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                          disabled={deletingId === user.id}
+                          onClick={() =>
+                            handleDeleteUser(
+                              user.id,
+                              user.full_name || user.email_address
+                            )
+                          }
+                        >
+                          {deletingId === user.id ? (
+                            "Deleting..."
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
