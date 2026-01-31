@@ -102,6 +102,18 @@
       "namedRegex": "^/api/apply(?:/)?$"
     },
     {
+      "page": "/api/apply/draft",
+      "regex": "^/api/apply/draft(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/apply/draft(?:/)?$"
+    },
+    {
+      "page": "/api/apply/resume",
+      "regex": "^/api/apply/resume(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/apply/resume(?:/)?$"
+    },
+    {
       "page": "/api/users",
       "regex": "^/api/users(?:/)?$",
       "routeKeys": {},
@@ -114,22 +126,16 @@
       "namedRegex": "^/api/users/change\\-password(?:/)?$"
     },
     {
-      "page": "/applicant-login",
-      "regex": "^/applicant\\-login(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/applicant\\-login(?:/)?$"
-    },
-    {
-      "page": "/applicant-signup",
-      "regex": "^/applicant\\-signup(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/applicant\\-signup(?:/)?$"
-    },
-    {
       "page": "/apply",
       "regex": "^/apply(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/apply(?:/)?$"
+    },
+    {
+      "page": "/apply/resume",
+      "regex": "^/apply/resume(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/apply/resume(?:/)?$"
     },
     {
       "page": "/dashboard",

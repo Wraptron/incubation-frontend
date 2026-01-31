@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -178,6 +178,88 @@ export default function ApplyPage() {
   useEffect(() => {
     const checkAuthAndLoadDraft = async () => {
       try {
+        // Resume from link: draft loaded by token and stored in sessionStorage
+        const resumeDraftRaw = typeof window !== "undefined" ? sessionStorage.getItem("resumeDraft") : null;
+        if (resumeDraftRaw) {
+          try {
+            const draftApp = JSON.parse(resumeDraftRaw);
+            sessionStorage.removeItem("resumeDraft");
+            setFormData({
+              email: draftApp.email || "",
+              teamName: draftApp.team_name || "",
+              yourName: draftApp.your_name || "",
+              isIITM: draftApp.is_iitm || "",
+              rollNumber: draftApp.roll_number || "",
+              collegeName: draftApp.college_name || "",
+              currentOccupation: draftApp.current_occupation || "",
+              phoneNumber: draftApp.phone_number || "",
+              channel: draftApp.channel || "",
+              channelOther: draftApp.channel_other || "",
+              coFoundersCount: String(draftApp.co_founders_count || ""),
+              facultyInvolved: draftApp.faculty_involved === "NA" || !draftApp.faculty_involved ? [] : (Array.isArray(draftApp.faculty_involved) ? draftApp.faculty_involved : []),
+              priorEntrepreneurshipExperience: draftApp.prior_entrepreneurship_experience || "",
+              teamPriorEntrepreneurshipExperience: draftApp.team_prior_entrepreneurship_experience || "",
+              priorExperienceDetails: draftApp.prior_experience_details || "",
+              mcaRegistered: draftApp.mca_registered || "",
+              dpiitRegistered: draftApp.dpiit_registered || "",
+              dpiitDetails: draftApp.dpiit_details || "",
+              externalFunding: draftApp.external_funding || [],
+              currentlyIncubated: draftApp.currently_incubated || "",
+              teamMembers: (() => {
+                const raw = draftApp.team_members || [];
+                const coCount = Math.max(0, parseInt(String(draftApp.co_founders_count || "0"), 10) || 0);
+                return raw.map((m: Record<string, unknown>, i: number) => ({
+                  name: m.name ?? "",
+                  rollNumber: m.roll_number ?? (m as { rollNumber?: string }).rollNumber ?? "",
+                  email: m.email ?? (m as { mailId?: string }).mailId ?? "",
+                  mailId: (m as { mailId?: string }).mailId ?? m.email ?? "",
+                  department: m.department ?? "",
+                  college: m.college ?? "",
+                  role: m.role ?? (i < coCount ? "Co-founder" : ""),
+                  contactNumber: m.contact_number ?? (m as { contactNumber?: string }).contactNumber ?? "",
+                  isCoFounder: i < coCount,
+                }));
+              })(),
+              nirmaanCanHelp: draftApp.nirmaan_can_help || "",
+              preIncubationReason: draftApp.pre_incubation_reason || "",
+              heardAboutStartups: draftApp.heard_about_startups || "",
+              heardAboutNirmaan: draftApp.heard_about_nirmaan || "",
+              problemSolving: draftApp.problem_solving || "",
+              yourSolution: draftApp.your_solution || "",
+              solutionType: draftApp.solution_type || "",
+              solutionTypeOther: draftApp.solution_type_other || "",
+              targetIndustry: draftApp.target_industry || "",
+              otherIndustries: draftApp.other_industries || [],
+              industryOther: draftApp.industry_other || "",
+              otherIndustriesOther: draftApp.other_industries_other || "",
+              technologiesUtilized: draftApp.technologies_utilized || [],
+              otherTechnologyDetails: draftApp.other_technology_details || "",
+              startupStage: draftApp.startup_stage || "",
+              hasIntellectualProperty: draftApp.has_intellectual_property || "",
+              hasPotentialIntellectualProperty: draftApp.has_potential_intellectual_property || "",
+              nirmaanPresentationLink: draftApp.nirmaan_presentation_link || "",
+              hasProofOfConcept: draftApp.has_proof_of_concept || "",
+              proofOfConceptDetails: draftApp.proof_of_concept_details || "",
+              hasPatentsOrPapers: draftApp.has_patents_or_papers || "",
+              patentsOrPapersDetails: draftApp.patents_or_papers_details || "",
+              seedFundUtilizationPlan: draftApp.seed_fund_utilization_plan || "",
+              pitchVideoLink: draftApp.pitch_video_link || "",
+              document1Link: draftApp.document1_link || "",
+              document2Link: draftApp.document2_link || "",
+            });
+            setDraftId(draftApp.id);
+            setDraftLoaded(true);
+            addToast({
+              variant: "default",
+              description: "Draft loaded from resume link. Continue where you left off.",
+            });
+          } catch (e) {
+            console.error("Failed to load resume draft from sessionStorage:", e);
+          }
+          setIsCheckingAuth(false);
+          return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
@@ -205,7 +287,7 @@ export default function ApplyPage() {
           .from("new_application")
           .select("*")
           .eq("applicant_id", user.id)
-          .eq("is_draft", true)
+          .eq("status", "draft")
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
@@ -326,121 +408,109 @@ export default function ApplyPage() {
     }));
   }, [formData.coFoundersCount]);
 
-  // Auto-save draft to server every 30 seconds
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+  const saveDraftRef = useRef<(silent: boolean) => Promise<void>>(() => Promise.resolve());
+  const blurSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const BLUR_DEBOUNCE_MS = 2000;
+
+  // Auto-save draft every 60 seconds (calls latest handleSaveDraft via ref)
   useEffect(() => {
-    if (!userId) return;
+    if (!draftId && !userId) return;
+    const id = setInterval(() => {
+      const fd = formDataRef.current;
+      if (fd.email || fd.teamName || fd.yourName) saveDraftRef.current(true);
+    }, 60000);
+    return () => clearInterval(id);
+  }, [draftId, userId]);
 
-    const autoSaveInterval = setInterval(() => {
-      // Only auto-save if there's meaningful data
-      if (formData.email || formData.teamName || formData.yourName) {
-        handleSaveDraft(true); // true for silent save
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(autoSaveInterval);
-  }, [formData, userId]);
-
-  // Save draft to server
+  // Save draft via API (create or update); no required fields — save whatever the user has entered.
   const handleSaveDraft = async (silent = false) => {
-    if (!userId) {
-      addToast({
-        variant: "destructive",
-        description: "You must be logged in to save a draft.",
-      });
-      return;
-    }
-
     try {
       if (!silent) setIsSavingDraft(true);
 
-      // Parse array fields
-      let facultyInvolved = formData.facultyInvolved;
-      if (Array.isArray(facultyInvolved) && facultyInvolved.length === 0) {
-        facultyInvolved = "NA" as any;
-      }
-
-      let externalFunding = formData.externalFunding;
-      if (Array.isArray(externalFunding) && externalFunding.length === 0) {
-        externalFunding = null as any;
-      }
-
-      const draftData = {
-        applicant_id: userId,
-        is_draft: true,
+      const payload: Record<string, unknown> = {
+        applicationId: draftId || undefined,
+        applicantId: userId || undefined,
         email: formData.email,
-        team_name: formData.teamName,
-        your_name: formData.yourName,
-        is_iitm: formData.isIITM,
-        roll_number: formData.rollNumber,
-        college_name: formData.collegeName || null,
-        current_occupation: formData.currentOccupation || null,
-        phone_number: formData.phoneNumber,
+        teamName: formData.teamName,
+        yourName: formData.yourName,
+        isIITM: formData.isIITM,
+        rollNumber: formData.rollNumber,
+        collegeName: formData.collegeName || null,
+        currentOccupation: formData.currentOccupation || null,
+        phoneNumber: formData.phoneNumber,
         channel: formData.channel,
-        channel_other: formData.channelOther || null,
-        co_founders_count: parseInt(formData.coFoundersCount) || 0,
-        faculty_involved: facultyInvolved || "NA",
-        prior_entrepreneurship_experience: formData.priorEntrepreneurshipExperience,
-        team_prior_entrepreneurship_experience: formData.teamPriorEntrepreneurshipExperience,
-        prior_experience_details: formData.priorExperienceDetails || null,
-        mca_registered: formData.mcaRegistered,
-        dpiit_registered: formData.dpiitRegistered || null,
-        dpiit_details: formData.dpiitDetails || null,
-        external_funding: externalFunding || null,
-        currently_incubated: formData.currentlyIncubated || null,
-        team_members: formData.teamMembers,
-        nirmaan_can_help: formData.nirmaanCanHelp,
-        pre_incubation_reason: formData.preIncubationReason,
-        heard_about_startups: formData.heardAboutStartups,
-        heard_about_nirmaan: formData.heardAboutNirmaan,
-        problem_solving: formData.problemSolving,
-        your_solution: formData.yourSolution,
-        solution_type: formData.solutionType,
-        solution_type_other: formData.solutionTypeOther || null,
-        target_industry: formData.targetIndustry,
-        other_industries: formData.otherIndustries,
-        industry_other: formData.industryOther || null,
-        other_industries_other: formData.otherIndustriesOther || null,
-        technologies_utilized: formData.technologiesUtilized,
-        other_technology_details: formData.otherTechnologyDetails || null,
-        startup_stage: formData.startupStage,
-        has_intellectual_property: formData.hasIntellectualProperty,
-        has_potential_intellectual_property: formData.hasPotentialIntellectualProperty,
-        nirmaan_presentation_link: formData.nirmaanPresentationLink,
-        has_proof_of_concept: formData.hasProofOfConcept,
-        proof_of_concept_details: formData.proofOfConceptDetails || null,
-        has_patents_or_papers: formData.hasPatentsOrPapers,
-        patents_or_papers_details: formData.patentsOrPapersDetails || null,
-        seed_fund_utilization_plan: formData.seedFundUtilizationPlan,
-        pitch_video_link: formData.pitchVideoLink,
-        document1_link: formData.document1Link || null,
-        document2_link: formData.document2Link || null,
-        status: "draft",
+        channelOther: formData.channelOther || null,
+        coFoundersCount: formData.coFoundersCount,
+        facultyInvolved: formData.facultyInvolved,
+        priorEntrepreneurshipExperience: formData.priorEntrepreneurshipExperience,
+        teamPriorEntrepreneurshipExperience: formData.teamPriorEntrepreneurshipExperience,
+        priorExperienceDetails: formData.priorExperienceDetails || null,
+        mcaRegistered: formData.mcaRegistered,
+        dpiitRegistered: formData.dpiitRegistered || null,
+        dpiitDetails: formData.dpiitDetails || null,
+        externalFunding: formData.externalFunding,
+        currentlyIncubated: formData.currentlyIncubated || null,
+        teamMembers: formData.teamMembers,
+        nirmaanCanHelp: formData.nirmaanCanHelp,
+        preIncubationReason: formData.preIncubationReason,
+        heardAboutStartups: formData.heardAboutStartups,
+        heardAboutNirmaan: formData.heardAboutNirmaan,
+        problemSolving: formData.problemSolving,
+        yourSolution: formData.yourSolution,
+        solutionType: formData.solutionType,
+        solutionTypeOther: formData.solutionTypeOther || null,
+        targetIndustry: formData.targetIndustry,
+        otherIndustries: formData.otherIndustries,
+        industryOther: formData.industryOther || null,
+        otherIndustriesOther: formData.otherIndustriesOther || null,
+        technologiesUtilized: formData.technologiesUtilized,
+        otherTechnologyDetails: formData.otherTechnologyDetails || null,
+        startupStage: formData.startupStage,
+        hasIntellectualProperty: formData.hasIntellectualProperty,
+        hasPotentialIntellectualProperty: formData.hasPotentialIntellectualProperty,
+        nirmaanPresentationLink: formData.nirmaanPresentationLink,
+        hasProofOfConcept: formData.hasProofOfConcept,
+        proofOfConceptDetails: formData.proofOfConceptDetails || null,
+        hasPatentsOrPapers: formData.hasPatentsOrPapers,
+        patentsOrPapersDetails: formData.patentsOrPapersDetails || null,
+        seedFundUtilizationPlan: formData.seedFundUtilizationPlan,
+        pitchVideoLink: formData.pitchVideoLink,
+        document1Link: formData.document1Link || null,
+        document2Link: formData.document2Link || null,
       };
 
-      if (draftId) {
-        // Update existing draft
-        const { error } = await supabase
-          .from("new_application")
-          .update(draftData)
-          .eq("id", draftId);
+      const res = await fetch("/api/apply/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
 
-        if (error) throw error;
-      } else {
-        // Create new draft
-        const { data, error } = await supabase
-          .from("new_application")
-          .insert(draftData)
-          .select()
-          .single();
+      if (!res.ok) {
+        const msg =
+          res.status === 404
+            ? "Draft service is unavailable. Check that the backend is running and the API URL is correct."
+            : res.status === 503
+              ? "Could not reach the server. Please try again later."
+              : data.details || data.error || "Failed to save draft";
+        throw new Error(msg);
+      }
 
-        if (error) throw error;
-        if (data) setDraftId(data.id);
+      if (data.id && !draftId) setDraftId(data.id);
+      if (data.resumeToken && data.isNew) {
+        addToast({
+          variant: "default",
+          description: "Draft saved. Check your email for a resume link.",
+        });
       }
 
       if (silent) {
         setAutoSaveIndicator(true);
         setTimeout(() => setAutoSaveIndicator(false), 2000);
-      } else {
+      } else if (!data.resumeToken) {
         setDraftSaved(true);
         addToast({
           variant: "default",
@@ -448,18 +518,37 @@ export default function ApplyPage() {
         });
         setTimeout(() => setDraftSaved(false), 3000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to save draft. Please try again.";
       console.error("Error saving draft:", error);
-      if (!silent) {
-        addToast({
-          variant: "destructive",
-          description: "Failed to save draft. Please try again.",
-        });
-      }
+      addToast({
+        variant: "destructive",
+        description: message,
+      });
     } finally {
       if (!silent) setIsSavingDraft(false);
     }
   };
+  saveDraftRef.current = handleSaveDraft;
+
+  // Auto-save on blur: when focus leaves any form field, debounce 2s then save
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const onFocusOut = () => {
+      if (blurSaveTimeoutRef.current) clearTimeout(blurSaveTimeoutRef.current);
+      blurSaveTimeoutRef.current = setTimeout(() => {
+        blurSaveTimeoutRef.current = null;
+        const fd = formDataRef.current;
+        if (fd.email || fd.teamName || fd.yourName) saveDraftRef.current(true);
+      }, BLUR_DEBOUNCE_MS);
+    };
+    form.addEventListener("focusout", onFocusOut);
+    return () => {
+      form.removeEventListener("focusout", onFocusOut);
+      if (blurSaveTimeoutRef.current) clearTimeout(blurSaveTimeoutRef.current);
+    };
+  }, []);
 
   // Clear draft from server after successful submission
   const clearDraft = async () => {
@@ -832,7 +921,7 @@ export default function ApplyPage() {
             </Alert>
           )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <Card>
             <CardHeader>

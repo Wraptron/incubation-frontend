@@ -140,7 +140,7 @@ self.__SERVER_FILES_MANIFEST={
       "isExperimentalCompile": false
     }
   },
-  "appDir": "/Users/kishoremadhavan/Desktop/Lanchpad-Nirmaan/incubation-frontend",
+  "appDir": "/Users/brahmarishi/Repositories/full-stack/incubation-screen/frontend",
   "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",
