@@ -1,6 +1,95 @@
-[00:00:00.716] Server  LOG     ✓ Ready in 540ms
-[00:00:03.339] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:12.387] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:00:13.074] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:00:13.077] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:00:37.411] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:01.071] Server  LOG     ✓ Ready in 805ms
+[00:00:01.634] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.735] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:04.177] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:04.298] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:15.670] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:27.128] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[00:00:27.232] Browser ERROR   Error saving draft: {}
+[00:01:15.394] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:01:15.396] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:02:08.643] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:02:16.530] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:03:16.722] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:04:16.541] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:04:49.002] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:04:58.011] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:05:19.253] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:05:19.254] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:06:19.892] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:07:20.752] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:07:46.014] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:46.133] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:08:20.744] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:09:06.909] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:09:08.487] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:09:24.647] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:09:24.647] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:10:25.597] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:11:25.716] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:11:35.105] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:11:50.950] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:11:51.066] Browser ERROR   Error saving draft: {}
+[00:12:07.498] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:12:07.604] Browser ERROR   Error saving draft: {}
+[00:12:25.000] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:12:25.104] Browser ERROR   Error saving draft: {}
+[00:13:25.575] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:13:26.161] Browser ERROR   Error saving draft: {}
+[00:14:16.820] Server  LOG     ✓ Compiled in 391ms
+[00:14:25.491] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:14:26.161] Browser ERROR   Error saving draft: {}
+[00:15:02.461] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:15:02.566] Browser ERROR   Error saving draft: {}
+[00:15:18.584] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:15:18.690] Browser ERROR   Error saving draft: {}
+[00:15:25.869] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:15:32.864] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:15:32.865] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:16:33.591] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:17:33.701] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:17:48.942] Server  LOG     ✓ Compiled in 40ms
+[00:17:57.623] Server  LOG     ✓ Compiled in 27ms
+[00:18:00.224] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:18:00.747] Server  LOG     ✓ Compiled in 31ms
+[00:18:06.557] Server  LOG     ✓ Compiled in 26ms
+[00:18:11.994] Server  LOG     ✓ Compiled in 44ms
+[00:18:12.099] Browser ERROR   ./app/apply/page.tsx:494:11
+Ecmascript file had an error
+  492 |
+  493 |       // 404 = draft not found or already submitted: clear stale id and retry as new draft once
+> 494 |       let recoveredFrom404 = false;
+      |           ^^^^^^^^^^^^^^^^
+  495 |       if (res.status === 404 && payload.applicationId) {
+  496 |         setDraftId(null);
+  497 |         const newPayload = { ...payload, applicationId: undefined };
+
+the name `recoveredFrom404` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./app/apply/page.tsx [Client Component Browser]
+    ./app/apply/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/apply/page.tsx [Client Component SSR]
+    ./app/apply/page.tsx [Server Component]
+[00:18:33.294] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:19:33.498] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:20:33.218] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:20:34.092] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:20:59.888] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:21:00.112] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:21:00.113] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:22:01.675] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:23:01.386] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:24:01.745] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:25:01.700] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:26:01.682] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:27:01.546] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:28:10.421] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:28:11.696] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:28:42.776] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
+[00:28:46.592] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:29:46.965] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:30:47.131] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"

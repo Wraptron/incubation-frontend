@@ -1,61 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { backendUrl } from "@/lib/config";
 
-async function sendResumeLinkEmail(
-  email: string,
-  applicantName: string,
-  resumeToken: string,
-  baseUrl: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailPass = process.env.GMAIL_APP_PASSWORD;
-    if (!gmailUser || !gmailPass) {
-      console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email");
-      return { success: false, error: "Email not configured" };
-    }
-    const resumeLink = `${baseUrl.replace(/\/$/, "")}/apply/resume?token=${encodeURIComponent(resumeToken)}`;
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: gmailUser, pass: gmailPass },
-    });
-    const emailHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:0 auto;padding:20px;}.content{padding:20px;}.btn{display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;margin:16px 0;}</style></head>
-      <body>
-        <div class="container">
-          <div class="content">
-            <p>Dear ${applicantName || "Applicant"},</p>
-            <p>You have saved a draft of your application. Use the link below to resume and continue where you left off. This link is valid for 30 days.</p>
-            <p><a href="${resumeLink}" class="btn">Resume application</a></p>
-            <p>Or copy this link: ${resumeLink}</p>
-            <p>Regards,<br>Team Nirmaan</p>
-          </div>
-        </div>
-      </body>
-      </html>`;
-    const emailText = `Dear ${applicantName || "Applicant"},\n\nYou have saved a draft of your application. Use the link below to resume:\n${resumeLink}\n\nThis link is valid for 30 days.\n\nRegards,\nTeam Nirmaan`;
-    await transporter.sendMail({
-      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
-      to: email,
-      subject: "Resume your application – Nirmaan Pre-Incubation",
-      text: emailText,
-      html: emailHTML,
-    });
-    console.log("Resume link email sent to", email);
-    return { success: true };
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error("Error sending resume link email:", err);
-    return { success: false, error: err.message };
-  }
-}
-
 export async function POST(request: NextRequest) {
-  const backendDraftUrl = `${backendUrl}/api/applications/draft`;
-  console.log("[Frontend API] Draft POST received, calling backend:", backendDraftUrl);
+  const backendDraftUrl = `${backendUrl.replace(/\/$/, "")}/api/applications/draft`;
+  if (!process.env.API_URL && !process.env.NEXT_PUBLIC_API_URL) {
+    console.warn("[Frontend API] No API_URL or NEXT_PUBLIC_API_URL set; using default http://localhost:5001");
+  }
   try {
     const body = await request.json().catch(() => ({}));
     let res: Response;
@@ -71,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Draft service unavailable",
-          details: "Could not reach the server. Check that the backend is running and NEXT_PUBLIC_API_URL is correct.",
+          details: `Could not reach backend at ${backendDraftUrl}. Start the backend (run \`npm run dev\` in the backend folder) and ensure API_URL or NEXT_PUBLIC_API_URL is set in .env.development or .env.local (e.g. http://localhost:5001).`,
         },
         { status: 503 }
       );
@@ -99,18 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (data.resumeToken && data.isNew === true) {
-      const toEmail = (body.email as string)?.trim();
-      if (toEmail) {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-        await sendResumeLinkEmail(
-          toEmail,
-          (body.yourName as string) || (body.teamName as string) || "Applicant",
-          data.resumeToken,
-          baseUrl
-        );
-      }
-    }
+    // Resume link email is sent by the backend when a new draft is created (backend has Gmail config).
     return NextResponse.json(data);
   } catch (error) {
     console.error("Draft save error:", error);

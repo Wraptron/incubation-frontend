@@ -3,5 +3,6 @@
   "/api/apply/resume/route": "app/api/apply/resume/route.js",
   "/apply/page": "app/apply/page.js",
   "/apply/resume/page": "app/apply/resume/page.js",
+  "/login/page": "app/login/page.js",
   "/page": "app/page.js"
 }

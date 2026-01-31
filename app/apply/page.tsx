@@ -430,6 +430,7 @@ export default function ApplyPage() {
     try {
       if (!silent) setIsSavingDraft(true);
 
+      let recoveredFrom404 = false;
       const payload: Record<string, unknown> = {
         applicationId: draftId || undefined,
         applicantId: userId || undefined,
@@ -482,28 +483,47 @@ export default function ApplyPage() {
         document2Link: formData.document2Link || null,
       };
 
-      const res = await fetch("/api/apply/draft", {
+      let res = await fetch("/api/apply/draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({}));
+      let data = await res.json().catch(() => ({}));
+
+      // 404 = draft not found or already submitted: clear stale id and retry as new draft once
+      if (res.status === 404 && payload.applicationId) {
+        setDraftId(null);
+        const newPayload = { ...payload, applicationId: undefined };
+        res = await fetch("/api/apply/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newPayload),
+        });
+        data = await res.json().catch(() => ({}));
+        if (res.ok) recoveredFrom404 = true;
+      }
 
       if (!res.ok) {
         const msg =
-          res.status === 404
-            ? "Draft service is unavailable. Check that the backend is running and the API URL is correct."
-            : res.status === 503
-              ? "Could not reach the server. Please try again later."
+          res.status === 503
+            ? "Draft service is unavailable. Start the backend (e.g. run `npm run dev` in the backend folder) and ensure API_URL or NEXT_PUBLIC_API_URL is set in .env.development or .env.local (e.g. http://localhost:5001)."
+            : res.status === 404
+              ? data.details || data.error || "Draft not found or already submitted."
               : data.details || data.error || "Failed to save draft";
         throw new Error(msg);
       }
 
-      if (data.id && !draftId) setDraftId(data.id);
+      if (data.id) setDraftId(data.id);
       if (data.resumeToken && data.isNew) {
         addToast({
           variant: "default",
           description: "Draft saved. Check your email for a resume link.",
+        });
+      }
+      if (recoveredFrom404 && !silent) {
+        addToast({
+          variant: "default",
+          description: "Previous draft was not found; saved as a new draft.",
         });
       }
 

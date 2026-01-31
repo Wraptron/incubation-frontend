@@ -211,8 +211,9 @@ async function sendResumeLinkEmail(email, applicantName, resumeToken, baseUrl) {
     }
 }
 async function POST(request) {
-    const backendDraftUrl = `${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$config$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["backendUrl"]}/api/applications/draft`;
-    console.log("[Frontend API] Draft POST received, calling backend:", backendDraftUrl);
+    const backendDraftUrl = `${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$config$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["backendUrl"].replace(/\/$/, "")}/api/applications/draft`;
+    if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+    ;
     try {
         const body = await request.json().catch(()=>({}));
         let res;
@@ -229,7 +230,7 @@ async function POST(request) {
             console.error("[Frontend API] Draft save: backend unreachable", backendDraftUrl, fetchError);
             return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                 error: "Draft service unavailable",
-                details: "Could not reach the server. Check that the backend is running and NEXT_PUBLIC_API_URL is correct."
+                details: `Could not reach backend at ${backendDraftUrl}. Start the backend (run \`npm run dev\` in the backend folder) and ensure API_URL or NEXT_PUBLIC_API_URL is set in .env.development or .env.local (e.g. http://localhost:5001).`
             }, {
                 status: 503
             });
