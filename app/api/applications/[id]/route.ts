@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabaseServer";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const buildApplicationResponse = async (id: string) => {
+const buildApplicationResponse = async (
+  id: string,
+  /** When set (reviewer viewing), only this reviewer is included in reviewers array */
+  viewerReviewerId?: string
+) => {
   const { data: application, error } = await supabaseServer
     .from("new_application")
     .select("*")
@@ -15,29 +20,55 @@ const buildApplicationResponse = async (id: string) => {
     return { application: null, error };
   }
 
-  // Reviewer assignments
+  // Reviewer assignments (with invite status for manager/reviewer flow)
   const { data: reviewerAssignments } = await supabaseServer
     .from("application_reviewers")
-    .select("application_id, reviewer_id")
+    .select("application_id, reviewer_id, invite_status, invited_at, responded_at")
     .eq("application_id", id);
 
-  let reviewers: Array<{ id: string; full_name: string | null }> = [];
+  let reviewers: Array<{
+    id: string;
+    full_name: string | null;
+    email_address?: string | null;
+    invite_status?: string;
+    invited_at?: string | null;
+    responded_at?: string | null;
+  }> = [];
   if (reviewerAssignments?.length) {
-    const reviewerIds = [
-      ...new Set(reviewerAssignments.map((r: any) => r.reviewer_id)),
-    ];
-    const { data: reviewerProfiles } = await supabaseServer
-      .from("user_profiles")
-      .select("id, full_name")
-      .in("id", reviewerIds);
-
-    if (reviewerProfiles) {
-      const lookup = Object.fromEntries(
-        reviewerProfiles.map((r) => [r.id, r]),
+    let assignments = reviewerAssignments;
+    if (viewerReviewerId) {
+      assignments = reviewerAssignments.filter(
+        (a: any) => a.reviewer_id === viewerReviewerId
       );
-      reviewers = reviewerAssignments
-        .map((assignment) => lookup[assignment.reviewer_id])
-        .filter(Boolean);
+    }
+    const reviewerIds = [
+      ...new Set(assignments.map((r: any) => r.reviewer_id)),
+    ];
+    if (reviewerIds.length) {
+      const { data: reviewerProfiles } = await supabaseServer
+        .from("user_profiles")
+        .select("id, full_name, email_address")
+        .in("id", reviewerIds);
+
+      if (reviewerProfiles) {
+        const lookup = Object.fromEntries(
+          reviewerProfiles.map((r) => [r.id, r]),
+        );
+        reviewers = assignments
+          .map((assignment: any) => {
+            const profile = lookup[assignment.reviewer_id];
+            if (!profile) return null;
+            return {
+              id: profile.id,
+              full_name: profile.full_name,
+              email_address: profile.email_address ?? null,
+              invite_status: assignment.invite_status ?? "pending",
+              invited_at: assignment.invited_at ?? null,
+              responded_at: assignment.responded_at ?? null,
+            };
+          })
+          .filter((r): r is NonNullable<typeof r> => r != null);
+      }
     }
   }
 
@@ -47,7 +78,9 @@ const buildApplicationResponse = async (id: string) => {
     .select("id, reviewer_id")
     .eq("application_id", id);
 
-  const totalReviewers = reviewers.length;
+  const totalReviewers = viewerReviewerId
+    ? (reviewerAssignments?.length ?? 0)
+    : reviewers.length;
   const evaluationsCount = evaluations?.length ?? 0;
   const allEvaluationsComplete =
     totalReviewers > 0 && evaluationsCount >= totalReviewers;
@@ -89,9 +122,11 @@ const buildApplicationResponse = async (id: string) => {
 
 /* =========================
    GET: Single application
+   If Authorization Bearer is present and user is a reviewer, reviewers array
+   contains only that reviewer (so they cannot see other reviewers).
 ========================= */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -104,7 +139,56 @@ export async function GET(
       );
     }
 
-    const { application, error } = await buildApplicationResponse(id);
+    let viewerReviewerId: string | undefined;
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.replace(/^Bearer\s+/i, "");
+    if (token) {
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.SUPABASE_URL ||
+        "";
+      const supabaseAnonKey =
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        "";
+      if (supabaseUrl && supabaseAnonKey) {
+        const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+        const {
+          data: { user },
+          error: userError,
+        } = await supabaseAuth.auth.getUser(token);
+        if (!userError && user?.id) {
+          const { data: profile } = await supabaseServer
+            .from("user_profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+          if (profile?.role === "reviewer") {
+            viewerReviewerId = user.id;
+          }
+        }
+      }
+    }
+
+    if (viewerReviewerId) {
+      const { data: assignment } = await supabaseServer
+        .from("application_reviewers")
+        .select("id")
+        .eq("application_id", id)
+        .eq("reviewer_id", viewerReviewerId)
+        .maybeSingle();
+      if (!assignment) {
+        return NextResponse.json(
+          { error: "Application not found or you are not assigned to this application" },
+          { status: 404 },
+        );
+      }
+    }
+
+    const { application, error } = await buildApplicationResponse(
+      id,
+      viewerReviewerId
+    );
 
     if (error || !application) {
       return NextResponse.json(

@@ -49,8 +49,14 @@ export default function DashboardPage() {
   const fetchApplications = useCallback(async () => {
     try {
       const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
       const response = await fetch(`/api/applications${params}`, {
         cache: "no-store",
+        headers,
       });
 
       if (!response.ok) {
@@ -118,8 +124,10 @@ export default function DashboardPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
+      draft: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
       pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
       under_review: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      evaluated: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
       approved: "bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary font-semibold",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
       withdrawn: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
@@ -127,24 +135,27 @@ export default function DashboardPage() {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  const tabFilters =
+    user?.role === "reviewer"
+      ? ["all", "pending", "under_review", "evaluated", "rejected"]
+      : ["all", "draft", "pending", "under_review", "approved", "rejected"];
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
         <h2 className="text-2xl font-bold mb-4">Startup Applications</h2>
 
-        <div className="flex gap-2 mb-6">
-          {["all", "pending", "under_review", "approved", "rejected"].map(
-            (status) => (
-              <Button
-                key={status}
-                size="sm"
-                variant={filterStatus === status ? "default" : "ghost"}
-                onClick={() => setFilterStatus(status)}
-              >
-                {formatStatus(status)}
-              </Button>
-            ),
-          )}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {tabFilters.map((status) => (
+            <Button
+              key={status}
+              size="sm"
+              variant={filterStatus === status ? "default" : "ghost"}
+              onClick={() => setFilterStatus(status)}
+            >
+              {formatStatus(status)}
+            </Button>
+          ))}
         </div>
 
         <Card>

@@ -131,6 +131,10 @@ interface Application {
   reviewers?: Array<{
     id: string;
     full_name: string | null;
+    email_address?: string | null;
+    invite_status?: string;
+    invited_at?: string | null;
+    responded_at?: string | null;
   }>;
   reviewer?: {
     id: string;
@@ -161,6 +165,12 @@ export default function ApplicationDetailPage() {
     Array<{ id: string; full_name: string | null }>
   >([]);
   const [showAssignReviewer, setShowAssignReviewer] = useState(false);
+  const [selectedToInviteList, setSelectedToInviteList] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [inviteSentForId, setInviteSentForId] = useState<string | null>(null);
+  const [isInvitingId, setIsInvitingId] = useState<string | null>(null);
+  const [isResponding, setIsResponding] = useState(false);
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -264,8 +274,14 @@ export default function ApplicationDetailPage() {
 
   const fetchApplication = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
       const response = await fetch(
         `/api/applications/${params.id}`,
+        { headers }
       );
 
       if (response.ok) {
@@ -757,11 +773,12 @@ export default function ApplicationDetailPage() {
     );
   };
       
-  // Filter reviewers based on search query
+  // Filter reviewers: not already assigned, and match search
+  const assignedIds = (application?.reviewers ?? []).map((r) => r.id);
   const filteredReviewers = availableReviewers.filter(
     (reviewer) =>
-      !selectedReviewers.includes(reviewer.id) &&
-      (reviewer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      !assignedIds.includes(reviewer.id) &&
+      (reviewer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ??
         false)
   );
 
@@ -817,6 +834,109 @@ export default function ApplicationDetailPage() {
           </Alert>
         )}
 
+        {/* Reviewer: Accept or decline assignment */}
+        {user?.role === "reviewer" &&
+          application.reviewers?.some(
+            (r) => r.id === user.id && ((r as { invite_status?: string }).invite_status === "pending" || !(r as { invite_status?: string }).invite_status)
+          ) && (
+            <Alert className="mb-4 border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30">
+              <AlertDescription>
+                <p className="font-medium mb-2">You have been assigned to review this startup.</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">
+                  Please accept to submit your evaluation, or decline if you cannot review.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      setIsResponding(true);
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session?.access_token) {
+                          setUpdateMessage("Please log in again.");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                          return;
+                        }
+                        const r = await fetch(
+                          `/api/applications/${params.id}/reviewer-respond`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${session.access_token}`,
+                            },
+                            body: JSON.stringify({ accept: true }),
+                          }
+                        );
+                        const data = await r.json().catch(() => ({}));
+                        if (r.ok) {
+                          setUpdateMessage("You have accepted the assignment.");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                          fetchApplication();
+                          fetchReviewerEvaluation();
+                        } else {
+                          setUpdateMessage(data.error || "Failed to accept");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                        }
+                      } catch (e) {
+                        setUpdateMessage("Failed to respond");
+                        setTimeout(() => setUpdateMessage(""), 3000);
+                      } finally {
+                        setIsResponding(false);
+                      }
+                    }}
+                    disabled={isResponding}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setIsResponding(true);
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session?.access_token) {
+                          setUpdateMessage("Please log in again.");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                          return;
+                        }
+                        const r = await fetch(
+                          `/api/applications/${params.id}/reviewer-respond`,
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${session.access_token}`,
+                            },
+                            body: JSON.stringify({ accept: false }),
+                          }
+                        );
+                        const data = await r.json().catch(() => ({}));
+                        if (r.ok) {
+                          setUpdateMessage("You have declined the assignment.");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                          fetchApplication();
+                        } else {
+                          setUpdateMessage(data.error || "Failed to decline");
+                          setTimeout(() => setUpdateMessage(""), 3000);
+                        }
+                      } catch (e) {
+                        setUpdateMessage("Failed to respond");
+                        setTimeout(() => setUpdateMessage(""), 3000);
+                      } finally {
+                        setIsResponding(false);
+                      }
+                    }}
+                    disabled={isResponding}
+                  >
+                    Decline
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
         <Card className="mb-6">
           <CardHeader>
             <div className="flex justify-between items-start">
@@ -841,8 +961,10 @@ export default function ApplicationDetailPage() {
                       </AlertDescription>
                     </Alert>
                   )}
-                {(application.reviewers && application.reviewers.length > 0) ||
-                application.reviewer_id ? (
+                {/* Only managers see the list of assigned reviewers; reviewers cannot see other reviewers */}
+                {user?.role === "manager" &&
+                  ((application.reviewers && application.reviewers.length > 0) ||
+                    application.reviewer_id) ? (
                   <div className="mt-2">
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">
                       Assigned Reviewer
@@ -853,16 +975,59 @@ export default function ApplicationDetailPage() {
                     </span>
                     {application.reviewers &&
                     application.reviewers.length > 0 ? (
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {application.reviewers.map((reviewer) => (
-                          <Badge
-                            key={reviewer.id}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {reviewer.full_name || "Unknown"}
-                          </Badge>
-                        ))}
+                      <div className="mt-1 flex flex-wrap gap-2 items-center">
+                        {application.reviewers.map((reviewer) => {
+                          const status = (reviewer as { invite_status?: string }).invite_status ?? "pending";
+                          const name = reviewer.full_name || "Unknown";
+                          return (
+                            <div
+                              key={reviewer.id}
+                              className="flex items-center gap-1 flex-wrap"
+                            >
+                              {status === "accepted" ? (
+                                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                  {name} <span className="font-normal">(Accepted)</span>
+                                </span>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">
+                                  {name}
+                                  {status === "rejected" && " ✗ Rejected"}
+                                  {status === "pending" && " (Pending)"}
+                                </Badge>
+                              )}
+                              {status === "rejected" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
+                                  onClick={async () => {
+                                    try {
+                                      const r = await fetch(
+                                        `/api/applications/${params.id}/reviewers/${reviewer.id}`,
+                                        { method: "DELETE" }
+                                      );
+                                      if (r.ok) {
+                                        setUpdateMessage("Reviewer removed. You can invite a new one.");
+                                        setTimeout(() => setUpdateMessage(""), 3000);
+                                        fetchApplication();
+                                        fetchAllEvaluations();
+                                      } else {
+                                        const d = await r.json();
+                                        setUpdateMessage(d.error || "Failed to remove reviewer");
+                                        setTimeout(() => setUpdateMessage(""), 3000);
+                                      }
+                                    } catch (e) {
+                                      setUpdateMessage("Failed to remove reviewer");
+                                      setTimeout(() => setUpdateMessage(""), 3000);
+                                    }
+                                  }}
+                                >
+                                  Reassign
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <span className="font-medium text-black dark:text-zinc-50">
@@ -870,45 +1035,48 @@ export default function ApplicationDetailPage() {
                       </span>
                     )}
                   </div>
-                ) : (
+                ) : user?.role === "manager" ? (
                   <div className="mt-2">
                     <span className="text-sm text-zinc-600 dark:text-zinc-400">
                       No reviewers assigned
                     </span>
                   </div>
-                )}
+                ) : null}
               </div>
               <div className="flex gap-2 flex-wrap">
-                {/* Manager actions in pending phase */}
+                {/* Manager: Assign/Manage Reviewers (pending + under_review for reassign) */}
                 {user?.role === "manager" &&
-                  application.status === "pending" && (
+                  (application.status === "pending" ||
+                    application.status === "under_review") && (
                     <>
                       <Button
                         onClick={() => {
                           setShowAssignReviewer(!showAssignReviewer);
-                          // Initialize selected reviewers when opening
-                          if (!showAssignReviewer && application.reviewers) {
-                            setSelectedReviewers(
-                              application.reviewers.map((r) => r.id),
-                            );
+                          if (!showAssignReviewer) {
+                            setSelectedToInviteList([]);
+                            setInviteSentForId(null);
+                            setSearchQuery("");
+                            setShowDropdown(false);
                           }
                         }}
                         variant={!showAssignReviewer ? "default" : "outline"}
                         className={!showAssignReviewer ? "" : "border-2 border-primary text-primary hover:bg-primary hover:text-white"}
                       >
                         {showAssignReviewer
-                          ? "Cancel"
+                          ? "Close"
                           : application.reviewers &&
                               application.reviewers.length > 0
                             ? "Manage Reviewers"
                             : "Assign Reviewers"}
                       </Button>
-                      <Button
-                        onClick={() => setShowRejectModal(true)}
-                        variant="default"
-                      >
-                        Reject
-                      </Button>
+                      {application.status === "pending" && (
+                        <Button
+                          onClick={() => setShowRejectModal(true)}
+                          variant="default"
+                        >
+                          Reject
+                        </Button>
+                      )}
                     </>
                   )}
 
@@ -926,11 +1094,16 @@ export default function ApplicationDetailPage() {
                       )}
                     </div>
                   )}
-                {/* Reviewer evaluate button */}
+                {/* Reviewer evaluate button: only when assignment accepted */}
                 {user?.role === "reviewer" &&
                   (application.status === "pending" ||
                     application.status === "under_review") &&
-                  (application.reviewers?.some((r) => r.id === user.id) ||
+                  (application.reviewers?.some(
+                    (r) =>
+                      r.id === user.id &&
+                      ((r as { invite_status?: string }).invite_status === "accepted" ||
+                        !(r as { invite_status?: string }).invite_status)
+                  ) ||
                     application.reviewer_id === user.id) && (
                     <Button
                       onClick={() =>
@@ -969,141 +1142,232 @@ export default function ApplicationDetailPage() {
           </CardHeader>
         </Card>
 
-        {/* Assign Reviewers Section */}
+        {/* Manage Reviewers panel: Rejected list + Selected list with Invite/Clear */}
         {showAssignReviewer && user?.role === "manager" && (
-          <div className="space-y-4 w-full max-w-md">
-            <h3 className="font-semibold">
-              Assign Reviewers (minimum 2, maximum 5)
-            </h3>
-            <p>
-              Select at least 2 reviewers. Currently selected:{" "}
-              {selectedReviewers.length}
-            </p>
-
-            {availableReviewers.length === 0 ? (
-              <p className="text-red-500">
-                No reviewers available. Please create reviewer accounts first.
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Manage Reviewers</CardTitle>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Invite at least 2 reviewers. Select from dropdown to add to the list, then click Invite (email will be sent). Rejected reviewers can be cancelled and replaced.
               </p>
-            ) : (
-              <>
-                {/* Selected Reviewers */}
-                {selectedReviewers.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {getSelectedReviewerNames().map((name, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-1 bg-zinc-200 dark:bg-zinc-700 px-2 py-1 rounded-full text-sm"
-                      >
-                        {name}
-                        <button
-                          onClick={() =>
-                            removeReviewer(selectedReviewers[index])
-                          }
-                          className="hover:text-red-500"
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Rejected reviewers: Cancel and Reassign */}
+              {application?.reviewers?.filter(
+                (r) => (r as { invite_status?: string }).invite_status === "rejected"
+              ).length ? (
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Rejected reviewers</h4>
+                  <ul className="space-y-2">
+                    {application.reviewers
+                      .filter((r) => (r as { invite_status?: string }).invite_status === "rejected")
+                      .map((reviewer) => (
+                        <li
+                          key={reviewer.id}
+                          className="flex items-center gap-2 flex-wrap"
                         >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Searchable Dropdown */}
-                <div className="relative" ref={dropdownRef}>
-                  <input
-                    type="text"
-                    placeholder="Search and add reviewers"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setShowDropdown(true)}
-                    className="w-full pl-3 pr-10 py-2 border rounded-md focus:outline-none focus:ring"
-                  />
-
-                  {/* Dropdown */}
-                  {showDropdown && (
-                    <ul className="absolute z-50 w-full max-h-30 overflow-y-auto border rounded-md bg-white dark:bg-zinc-800 mt-2 shadow-lg">
-                      {filteredReviewers.length === 0 ? (
-                        <li className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                          No reviewers found
-                        </li>
-                      ) : (
-                        filteredReviewers.map((reviewer) => {
-                          const isSelected = selectedReviewers.includes(
-                            reviewer.id,
-                          );
-                          const isDisabled =
-                            selectedReviewers.length >= 5 && !isSelected;
-
-                          return (
-                            <li
-                              key={reviewer.id}
-                              onClick={() => {
-                                if (!isDisabled) {
-                                  handleReviewerToggle(reviewer.id);
-                                  setShowDropdown(false);
-                                  setSearchQuery("");
+                          <span className="text-sm text-red-600 dark:text-red-400">
+                            {reviewer.full_name || "Unknown"} (Rejected)
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              try {
+                                const r = await fetch(
+                                  `/api/applications/${params.id}/reviewers/${reviewer.id}`,
+                                  { method: "DELETE" }
+                                );
+                                if (r.ok) {
+                                  setUpdateMessage("Reviewer removed. Invite a new reviewer below.");
+                                  setTimeout(() => setUpdateMessage(""), 3000);
+                                  fetchApplication();
+                                  fetchAllEvaluations();
+                                } else {
+                                  const d = await r.json();
+                                  setUpdateMessage(d.error || "Failed to remove");
+                                  setTimeout(() => setUpdateMessage(""), 3000);
                                 }
-                              }}
-                              className={`flex justify-between px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors ${
-                                isDisabled
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                            >
-                              <span>
-                                {reviewer.full_name || "Unnamed Reviewer"}
-                              </span>
-                              {isSelected && (
-                                <span className="text-green-500">✓</span>
-                              )}
-                            </li>
-                          );
-                        })
-                      )}
-                    </ul>
-                  )}
+                              } catch (e) {
+                                setUpdateMessage("Failed to remove reviewer");
+                                setTimeout(() => setUpdateMessage(""), 3000);
+                              }
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={async () => {
+                              try {
+                                const r = await fetch(
+                                  `/api/applications/${params.id}/reviewers/${reviewer.id}`,
+                                  { method: "DELETE" }
+                                );
+                                if (r.ok) {
+                                  fetchApplication();
+                                  setUpdateMessage("Reviewer removed. Select and invite a new reviewer below.");
+                                  setTimeout(() => setUpdateMessage(""), 3000);
+                                  fetchAllEvaluations();
+                                }
+                              } catch (e) {
+                                setUpdateMessage("Failed to remove reviewer");
+                                setTimeout(() => setUpdateMessage(""), 3000);
+                              }
+                            }}
+                          >
+                            Reassign
+                          </Button>
+                        </li>
+                      ))}
+                  </ul>
                 </div>
+              ) : null}
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
-                    onClick={() => {
-                      setShowAssignReviewer(false);
-                      setSearchQuery("");
-                      setShowDropdown(false);
-                      // Reset selection
-                      if (application?.reviewers) {
-                        setSelectedReviewers(
-                          application.reviewers.map((r) => r.id),
-                        );
-                      } else {
-                        setSelectedReviewers([]);
-                      }
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className={selectedReviewers.length < 2 ? "opacity-50 cursor-not-allowed" : ""}
-                    variant="default"
-                    disabled={selectedReviewers.length < 2}
-                    onClick={() => assignReviewers()}
-                  >
-                    Assign {selectedReviewers.length} Reviewer
-                    {selectedReviewers.length !== 1 && "s"}
-                  </Button>
-                </div>
-
-                {selectedReviewers.length < 2 && (
-                  <p className="text-red-500 mt-1">
-                    ⚠️ Please select at least 2 reviewers to proceed
+              {/* Add reviewer: dropdown + selected list with Invite / Clear */}
+              <div>
+                <h4 className="font-medium text-sm mb-2">Add reviewer</h4>
+                {availableReviewers.length === 0 ? (
+                  <p className="text-red-500 text-sm">
+                    No reviewers available. Create reviewer accounts first.
                   </p>
+                ) : (
+                  <>
+                    <div className="relative mb-3" ref={dropdownRef}>
+                      <input
+                        type="text"
+                        placeholder="Search and select a reviewer"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => setShowDropdown(true)}
+                        className="w-full pl-3 pr-10 py-2 border rounded-md focus:outline-none focus:ring"
+                      />
+                      {showDropdown && (
+                        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto border rounded-md bg-white dark:bg-zinc-800 mt-2 shadow-lg">
+                          {filteredReviewers.length === 0 ? (
+                            <li className="px-4 py-2 text-gray-500 dark:text-gray-400 text-sm">
+                              No reviewers found or all already assigned
+                            </li>
+                          ) : (
+                            filteredReviewers.map((reviewer) => {
+                              const alreadyInList = selectedToInviteList.some((s) => s.id === reviewer.id);
+                              if (alreadyInList) return null;
+                              return (
+                                <li
+                                  key={reviewer.id}
+                                  onClick={() => {
+                                    setSelectedToInviteList((prev) => {
+                                      if (prev.some((s) => s.id === reviewer.id)) return prev;
+                                      return [
+                                        ...prev,
+                                        {
+                                          id: reviewer.id,
+                                          name: reviewer.full_name || "Unnamed Reviewer",
+                                        },
+                                      ];
+                                    });
+                                    setShowDropdown(false);
+                                    setSearchQuery("");
+                                  }}
+                                  className="flex justify-between px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm"
+                                >
+                                  {reviewer.full_name || "Unnamed Reviewer"}
+                                </li>
+                              );
+                            })
+                          )}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Selected list: "Selected: Name" [Invite] [Clear] */}
+                    {selectedToInviteList.length > 0 && (
+                      <ul className="space-y-2">
+                        {selectedToInviteList.map((item) => (
+                          <li
+                            key={item.id}
+                            className="flex items-center gap-2 flex-wrap text-sm"
+                          >
+                            <span className="text-zinc-700 dark:text-zinc-300">
+                              Selected: <strong>{item.name}</strong>
+                            </span>
+                            {inviteSentForId === item.id ? (
+                              <span className="text-green-600 dark:text-green-400 font-medium">
+                                Invite sent
+                              </span>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  disabled={isInvitingId !== null}
+                                  onClick={async () => {
+                                    setIsInvitingId(item.id);
+                                    setInviteSentForId(null);
+                                    try {
+                                      const r = await fetch(
+                                        `/api/applications/${params.id}/invite-reviewer`,
+                                        {
+                                          method: "POST",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ reviewerId: item.id }),
+                                        }
+                                      );
+                                      const data = await r.json().catch(() => ({}));
+                                      if (r.ok) {
+                                        setInviteSentForId(item.id);
+                                        setUpdateMessage(
+                                          data.emailSent
+                                            ? "Invite sent. Email has been sent to the reviewer."
+                                            : "Reviewer invited. (Email not sent – set GMAIL_USER and GMAIL_APP_PASSWORD on server.)"
+                                        );
+                                        setTimeout(() => setUpdateMessage(""), 4000);
+                                        fetchApplication();
+                                        fetchAllEvaluations();
+                                        setTimeout(() => {
+                                          setSelectedToInviteList((prev) => prev.filter((p) => p.id !== item.id));
+                                          setInviteSentForId(null);
+                                        }, 1500);
+                                      } else {
+                                        setUpdateMessage(data.error || "Failed to invite reviewer");
+                                        setTimeout(() => setUpdateMessage(""), 3000);
+                                      }
+                                    } catch (e) {
+                                      setUpdateMessage("Failed to invite reviewer");
+                                      setTimeout(() => setUpdateMessage(""), 3000);
+                                    } finally {
+                                      setIsInvitingId(null);
+                                    }
+                                  }}
+                                >
+                                  {isInvitingId === item.id ? "Sending…" : "Invite"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedToInviteList((prev) => prev.filter((p) => p.id !== item.id));
+                                  }}
+                                >
+                                  Clear
+                                </Button>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {(application?.reviewers?.length ?? 0) < 2 && (
+                      <p className="text-amber-600 dark:text-amber-400 text-sm mt-2">
+                        ⚠️ Invite at least 2 reviewers for this application.
+                      </p>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Reject Modal */}
@@ -2083,7 +2347,12 @@ export default function ApplicationDetailPage() {
                       {user?.role === "reviewer" &&
                         (application.status === "pending" ||
                           application.status === "under_review") &&
-                        (application.reviewers?.some((r) => r.id === user.id) ||
+                        (application.reviewers?.some(
+                          (r) =>
+                            r.id === user.id &&
+                            ((r as { invite_status?: string }).invite_status === "accepted" ||
+                              !(r as { invite_status?: string }).invite_status)
+                        ) ||
                           application.reviewer_id === user.id) && (
                           <Button
                             onClick={() =>
