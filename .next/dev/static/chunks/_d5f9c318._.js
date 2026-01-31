@@ -15,14 +15,14 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 const RESUME_STORAGE_KEY = "resumeDraft";
-function ResumePage() {
+function ResumePageContent() {
     _s();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     const searchParams = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"])();
     const [status, setStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("loading");
     const [message, setMessage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "ResumePage.useEffect": ()=>{
+        "ResumePageContent.useEffect": ()=>{
             const token = searchParams.get("token")?.trim();
             if (!token) {
                 setStatus("error");
@@ -31,12 +31,12 @@ function ResumePage() {
             }
             let cancelled = false;
             ({
-                "ResumePage.useEffect": async ()=>{
+                "ResumePageContent.useEffect": async ()=>{
                     try {
                         const res = await fetch(`/api/apply/resume?token=${encodeURIComponent(token)}`);
                         const data = await res.json().catch({
-                            "ResumePage.useEffect": ()=>({})
-                        }["ResumePage.useEffect"]);
+                            "ResumePageContent.useEffect": ()=>({})
+                        }["ResumePageContent.useEffect"]);
                         if (cancelled) return;
                         if (!res.ok) {
                             setStatus("error");
@@ -61,14 +61,14 @@ function ResumePage() {
                         }
                     }
                 }
-            })["ResumePage.useEffect"]();
+            })["ResumePageContent.useEffect"]();
             return ({
-                "ResumePage.useEffect": ()=>{
+                "ResumePageContent.useEffect": ()=>{
                     cancelled = true;
                 }
-            })["ResumePage.useEffect"];
+            })["ResumePageContent.useEffect"];
         }
-    }["ResumePage.useEffect"], [
+    }["ResumePageContent.useEffect"], [
         searchParams,
         router
     ]);
@@ -138,15 +138,61 @@ function ResumePage() {
         columnNumber: 5
     }, this);
 }
-_s(ResumePage, "VAovyvf6nhraxY4mYbF0iXKKdD4=", false, function() {
+_s(ResumePageContent, "VAovyvf6nhraxY4mYbF0iXKKdD4=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"]
     ];
 });
-_c = ResumePage;
-var _c;
-__turbopack_context__.k.register(_c, "ResumePage");
+_c = ResumePageContent;
+function ResumeFallback() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950",
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "text-center",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-zinc-600 dark:text-zinc-400",
+                children: "Loading your draft..."
+            }, void 0, false, {
+                fileName: "[project]/app/apply/resume/page.tsx",
+                lineNumber: 99,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/app/apply/resume/page.tsx",
+            lineNumber: 98,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/app/apply/resume/page.tsx",
+        lineNumber: 97,
+        columnNumber: 5
+    }, this);
+}
+_c1 = ResumeFallback;
+function ResumePage() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Suspense"], {
+        fallback: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ResumeFallback, {}, void 0, false, {
+            fileName: "[project]/app/apply/resume/page.tsx",
+            lineNumber: 107,
+            columnNumber: 25
+        }, void 0),
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ResumePageContent, {}, void 0, false, {
+            fileName: "[project]/app/apply/resume/page.tsx",
+            lineNumber: 108,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/app/apply/resume/page.tsx",
+        lineNumber: 107,
+        columnNumber: 5
+    }, this);
+}
+_c2 = ResumePage;
+var _c, _c1, _c2;
+__turbopack_context__.k.register(_c, "ResumePageContent");
+__turbopack_context__.k.register(_c1, "ResumeFallback");
+__turbopack_context__.k.register(_c2, "ResumePage");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
