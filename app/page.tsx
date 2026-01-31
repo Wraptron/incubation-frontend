@@ -32,7 +32,7 @@ export default function Home() {
           </div>
           <div>
             <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">
-              NIRMAAN
+              TRAKTOR
             </h1>
             <p className="text-base sm:text-lg text-primary font-semibold">IITM Pre-Incubation Center</p>
           </div>
