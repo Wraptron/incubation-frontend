@@ -10,13 +10,15 @@ import nodemailer from "nodemailer";
 
 async function sendApplicationConfirmationEmail(
   email: string,
-  applicantName: string
+  applicantName: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const gmailUser = process.env.GMAIL_USER;
     const gmailPass = process.env.GMAIL_APP_PASSWORD;
     if (!gmailUser || !gmailPass) {
-      console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping confirmation email");
+      console.warn(
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping confirmation email",
+      );
       return { success: false, error: "Email not configured" };
     }
     const transporter = nodemailer.createTransport({
@@ -85,25 +87,33 @@ export async function POST(request: NextRequest) {
   try {
     // Parse FormData instead of JSON (for file uploads)
     const formData = await request.formData();
-    
+
     // Extract files directly from FormData (before converting to object)
-    const presentationFile = formData.get('presentationFile') as File | null;
-    const document1File = formData.get('document1File') as File | null;
-    const document2File = formData.get('document2File') as File | null;
-    const ipFile = formData.get('ipFile') as File | null;
-    const potentialIpFile = formData.get('potentialIpFile') as File | null;
-    
+    const presentationFile = formData.get("presentationFile") as File | null;
+    const document1File = formData.get("document1File") as File | null;
+    const document2File = formData.get("document2File") as File | null;
+    const ipFile = formData.get("ipFile") as File | null;
+    const potentialIpFile = formData.get("potentialIpFile") as File | null;
+
     // Debug logging
     console.log("Files received:", {
-      ipFile: ipFile ? { name: ipFile.name, size: ipFile.size, type: ipFile.type } : null,
-      potentialIpFile: potentialIpFile ? { name: potentialIpFile.name, size: potentialIpFile.size, type: potentialIpFile.type } : null,
+      ipFile: ipFile
+        ? { name: ipFile.name, size: ipFile.size, type: ipFile.type }
+        : null,
+      potentialIpFile: potentialIpFile
+        ? {
+            name: potentialIpFile.name,
+            size: potentialIpFile.size,
+            type: potentialIpFile.type,
+          }
+        : null,
     });
-    
+
     // Convert FormData to a regular object (excluding file fields)
     const body: Record<string, any> = {};
     formData.forEach((value, key) => {
       // Skip file fields - we handle them separately above
-      if (!key.endsWith('File')) {
+      if (!key.endsWith("File")) {
         body[key] = value.toString();
       }
     });
@@ -142,9 +152,9 @@ export async function POST(request: NextRequest) {
 
     for (const field of requiredFields) {
       // Special handling for array fields
-      if (field === 'teamMembers') {
+      if (field === "teamMembers") {
         let teamMembersValue = body[field];
-        if (typeof teamMembersValue === 'string') {
+        if (typeof teamMembersValue === "string") {
           try {
             teamMembersValue = JSON.parse(teamMembersValue);
           } catch {
@@ -153,14 +163,16 @@ export async function POST(request: NextRequest) {
         }
         if (!Array.isArray(teamMembersValue) || teamMembersValue.length === 0) {
           return NextResponse.json(
-            { error: `Missing required field: ${field}. At least one team member is required.` },
-            { status: 400 }
+            {
+              error: `Missing required field: ${field}. At least one team member is required.`,
+            },
+            { status: 400 },
           );
         }
       } else if (!body[field] || String(body[field]).trim() === "") {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -169,7 +181,11 @@ export async function POST(request: NextRequest) {
     const fileUrls: Record<string, string> = {};
 
     // Upload presentation file
-    if (presentationFile && presentationFile instanceof File && presentationFile.size > 0) {
+    if (
+      presentationFile &&
+      presentationFile instanceof File &&
+      presentationFile.size > 0
+    ) {
       try {
         console.log("Attempting to upload presentation file:", {
           name: presentationFile.name,
@@ -179,7 +195,12 @@ export async function POST(request: NextRequest) {
         const result = await uploadFileToS3(presentationFile, "presentation");
         if (result) {
           fileUrls.presentation = result.url;
-          console.log("Presentation file uploaded successfully:", result.url, "filename:", result.filename);
+          console.log(
+            "Presentation file uploaded successfully:",
+            result.url,
+            "filename:",
+            result.filename,
+          );
         } else {
           console.error("Presentation file upload returned null");
         }
@@ -194,7 +215,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload document files
-    if (document1File && document1File instanceof File && document1File.size > 0) {
+    if (
+      document1File &&
+      document1File instanceof File &&
+      document1File.size > 0
+    ) {
       try {
         console.log("Attempting to upload document1 file:", {
           name: document1File.name,
@@ -204,7 +229,12 @@ export async function POST(request: NextRequest) {
         const result = await uploadFileToS3(document1File, "doc1");
         if (result) {
           fileUrls.document1 = result.url;
-          console.log("Document1 file uploaded successfully:", result.url, "filename:", result.filename);
+          console.log(
+            "Document1 file uploaded successfully:",
+            result.url,
+            "filename:",
+            result.filename,
+          );
         } else {
           console.error("Document1 file upload returned null");
         }
@@ -218,7 +248,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (document2File && document2File instanceof File && document2File.size > 0) {
+    if (
+      document2File &&
+      document2File instanceof File &&
+      document2File.size > 0
+    ) {
       try {
         console.log("Attempting to upload document2 file:", {
           name: document2File.name,
@@ -228,7 +262,12 @@ export async function POST(request: NextRequest) {
         const result = await uploadFileToS3(document2File, "doc2");
         if (result) {
           fileUrls.document2 = result.url;
-          console.log("Document2 file uploaded successfully:", result.url, "filename:", result.filename);
+          console.log(
+            "Document2 file uploaded successfully:",
+            result.url,
+            "filename:",
+            result.filename,
+          );
         } else {
           console.error("Document2 file upload returned null");
         }
@@ -253,7 +292,12 @@ export async function POST(request: NextRequest) {
         const result = await uploadFileToS3(ipFile as File, "ip");
         if (result) {
           fileUrls.ipFile = result.url;
-          console.log("IP file uploaded successfully:", result.url, "filename:", result.filename);
+          console.log(
+            "IP file uploaded successfully:",
+            result.url,
+            "filename:",
+            result.filename,
+          );
         } else {
           console.error("IP file upload returned null");
         }
@@ -268,17 +312,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload potential IP file
-    if (potentialIpFile && potentialIpFile !== null && potentialIpFile.size > 0) {
+    if (
+      potentialIpFile &&
+      potentialIpFile !== null &&
+      potentialIpFile.size > 0
+    ) {
       try {
         console.log("Attempting to upload potential IP file:", {
           name: (potentialIpFile as File).name,
           size: (potentialIpFile as File).size,
           type: (potentialIpFile as File).type,
         });
-        const result = await uploadFileToS3(potentialIpFile as File, "potential-ip");
+        const result = await uploadFileToS3(
+          potentialIpFile as File,
+          "potential-ip",
+        );
         if (result) {
           fileUrls.potentialIpFile = result.url;
-          console.log("Potential IP file uploaded successfully:", result.url, "filename:", result.filename);
+          console.log(
+            "Potential IP file uploaded successfully:",
+            result.url,
+            "filename:",
+            result.filename,
+          );
         } else {
           console.error("Potential IP file upload returned null");
         }
@@ -294,16 +350,16 @@ export async function POST(request: NextRequest) {
 
     // Parse JSONB fields if they're strings
     let otherIndustries = body.otherIndustries;
-    if (typeof otherIndustries === 'string') {
+    if (typeof otherIndustries === "string") {
       try {
         otherIndustries = JSON.parse(otherIndustries);
       } catch {
         otherIndustries = [];
       }
     }
-    
+
     let technologiesUtilized = body.technologiesUtilized;
-    if (typeof technologiesUtilized === 'string') {
+    if (typeof technologiesUtilized === "string") {
       try {
         technologiesUtilized = JSON.parse(technologiesUtilized);
       } catch {
@@ -312,7 +368,7 @@ export async function POST(request: NextRequest) {
     }
 
     let facultyInvolved = body.facultyInvolved;
-    if (typeof facultyInvolved === 'string') {
+    if (typeof facultyInvolved === "string") {
       try {
         facultyInvolved = JSON.parse(facultyInvolved);
         // If empty array, set to "NA" string as per requirement
@@ -329,7 +385,7 @@ export async function POST(request: NextRequest) {
     }
 
     let teamMembers = body.teamMembers;
-    if (typeof teamMembers === 'string') {
+    if (typeof teamMembers === "string") {
       try {
         teamMembers = JSON.parse(teamMembers);
       } catch {
@@ -342,7 +398,7 @@ export async function POST(request: NextRequest) {
     }
 
     let externalFunding = body.externalFunding;
-    if (typeof externalFunding === 'string') {
+    if (typeof externalFunding === "string") {
       try {
         externalFunding = JSON.parse(externalFunding);
       } catch {
@@ -361,14 +417,12 @@ export async function POST(request: NextRequest) {
     // Map ALL frontend fields to database fields matching the new_application schema
     // Only include applicant_id if present (column may not exist in all DB setups; guest submissions have no applicant)
     const applicationData: Record<string, any> = {
-      
       // Basic Information
       email: body.email,
       team_name: body.teamName || "N/A",
       your_name: body.yourName || "N/A",
       is_iitm: body.isIITM || "No",
       roll_number: body.rollNumber || "N/A",
-      roll_number_other: body.rollNumberOther || null,
       college_name: body.collegeName || null,
       current_occupation: body.currentOccupation || null,
       phone_number: body.phoneNumber || "N/A",
@@ -378,13 +432,14 @@ export async function POST(request: NextRequest) {
       faculty_involved: facultyInvolved || "NA",
 
       // Entrepreneurship Experience
-      prior_entrepreneurship_experience: body.priorEntrepreneurshipExperience || "No",
-      team_prior_entrepreneurship_experience: body.teamPriorEntrepreneurshipExperience || "No",
+      prior_entrepreneurship_experience:
+        body.priorEntrepreneurshipExperience || "No",
+      team_prior_entrepreneurship_experience:
+        body.teamPriorEntrepreneurshipExperience || "No",
       prior_experience_details: body.priorExperienceDetails || null,
 
       // Startup Registration & Funding
       mca_registered: body.mcaRegistered || "No",
-      dpiit_registered: body.dpiitRegistered || null,
       dpiit_details: body.dpiitDetails || null,
       external_funding: externalFunding || null,
       currently_incubated: body.currentlyIncubated || null,
@@ -412,18 +467,20 @@ export async function POST(request: NextRequest) {
       technologies_utilized: technologiesUtilized || [],
       other_technology_details: body.otherTechnologyDetails || null,
 
-      // Startup Stage & IP
+      // Startup Stage & IP (valid_has_ip constraint requires exactly Yes or No)
       startup_stage: body.startupStage || "N/A",
-      has_intellectual_property: body.hasIntellectualProperty || "No",
-      has_potential_intellectual_property: body.hasPotentialIntellectualProperty || "No",
+      has_intellectual_property: body.hasIntellectualProperty === "Yes" ? "Yes" : "No",
+      has_potential_intellectual_property:
+        body.hasPotentialIntellectualProperty === "Yes" ? "Yes" : "No",
       ip_file_link: fileUrls.ipFile || null,
       potential_ip_file_link: fileUrls.potentialIpFile || null,
 
       // Presentation & Proof
-      nirmaan_presentation_link: fileUrls.presentation || body.nirmaanPresentationLink || "N/A",
+      nirmaan_presentation_link:
+        fileUrls.presentation || body.nirmaanPresentationLink || "N/A",
       has_proof_of_concept: body.hasProofOfConcept || "No",
       proof_of_concept_details: body.proofOfConceptDetails || null,
-      has_patents_or_papers: body.hasPatentsOrPapers || "No",
+      has_patents_or_papers: body.hasPatentsOrPapers === "Yes" ? "Yes" : "No",
       patents_or_papers_details: body.patentsOrPapersDetails || null,
 
       // Seed Fund & Pitch
@@ -440,15 +497,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Debug: Log file URLs and application data before insert
-    console.log("File URLs to be saved:", { 
-      ipFile: fileUrls.ipFile, 
+    console.log("File URLs to be saved:", {
+      ipFile: fileUrls.ipFile,
       potentialIpFile: fileUrls.potentialIpFile,
-      allFileUrls: fileUrls
+      allFileUrls: fileUrls,
     });
     console.log("IP fields in applicationData:", {
       has_intellectual_property: applicationData.has_intellectual_property,
       ip_file_link: applicationData.ip_file_link,
-      has_potential_intellectual_property: applicationData.has_potential_intellectual_property,
+      has_potential_intellectual_property:
+        applicationData.has_potential_intellectual_property,
       potential_ip_file_link: applicationData.potential_ip_file_link,
     });
 
@@ -461,36 +519,49 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Supabase insert error:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
-      console.error("Application data that failed to insert:", JSON.stringify(applicationData, null, 2));
-      
+      console.error(
+        "Application data that failed to insert:",
+        JSON.stringify(applicationData, null, 2),
+      );
+
       // Check if error is related to missing columns (e.g. applicant_id not in schema)
-      if (error.message && (error.message.includes('column') || error.code === 'PGRST204')) {
+      if (
+        error.message &&
+        (error.message.includes("column") || error.code === "PGRST204")
+      ) {
         return NextResponse.json(
-          { 
-            error: "Database schema error. Ensure new_application table has required columns (see SIMPLE_DATABASE_SETUP.sql).",
-            details: error.message 
+          {
+            error:
+              "Database schema error. Ensure new_application table has required columns (see SIMPLE_DATABASE_SETUP.sql).",
+            details: error.message,
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
-      
+
       return NextResponse.json(
         { error: "Failed to submit application", details: error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-      // Send confirmation email only after successful submission (all successful applicants receive it)
-      const emailResult = await sendApplicationConfirmationEmail(body.email, body.yourName);
-      if (!emailResult.success) {
-        console.warn("Application saved but confirmation email failed:", emailResult.error);
-      }
-    
+    // Send confirmation email only after successful submission (all successful applicants receive it)
+    const emailResult = await sendApplicationConfirmationEmail(
+      body.email,
+      body.yourName,
+    );
+    if (!emailResult.success) {
+      console.warn(
+        "Application saved but confirmation email failed:",
+        emailResult.error,
+      );
+    }
+
     // Log successful insert with IP file links
     console.log("Application inserted successfully:", {
       id: data.id,
       ip_file_link: data.ip_file_link,
-      potential_ip_file_link: data.potential_ip_file_link
+      potential_ip_file_link: data.potential_ip_file_link,
     });
 
     return NextResponse.json(
@@ -498,13 +569,13 @@ export async function POST(request: NextRequest) {
         message: "Application submitted successfully",
         data: { id: data.id, status: data.status },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("POST error:", error);
     return NextResponse.json(
       { error: "Failed to process application" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -523,7 +594,7 @@ export async function GET() {
       console.error("Supabase fetch error:", error);
       return NextResponse.json(
         { error: "Failed to fetch applications", details: error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -532,13 +603,13 @@ export async function GET() {
         applications: data || [],
         pagination: { total: count || 0 },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("GET error:", error);
     return NextResponse.json(
       { error: "Failed to fetch applications" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

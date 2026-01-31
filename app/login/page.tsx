@@ -93,19 +93,26 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="flex flex-col items-center mb-8">
-          <img
-            src="/nirmaan logo.png"
-            alt="Nirmaan logo"
-            className="w-24 h-24 rounded-2xl shadow-lg mb-4"
-          />
+          <div className="flex items-center justify-center gap-6 mb-4">
+            <img
+              src="/iitm-sie-logo.png"
+              alt="School of Innovation & Entrepreneurship IIT Madras"
+              className="h-20 w-auto object-contain"
+            />
+            <img
+              src="/nirmaan logo.png"
+              alt="Nirmaan logo"
+              className="w-24 h-24 rounded-2xl shadow-lg object-contain"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
             NIRMAAN
           </h1>
-          <p className="text-primary font-semibold">LaunchPad Admin</p>
+          <p className="text-primary font-semibold">LaunchPad</p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
+            <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>
               Sign in to access the management dashboard
             </CardDescription>

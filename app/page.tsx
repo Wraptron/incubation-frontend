@@ -12,14 +12,24 @@ export default function Home() {
       <main className="relative flex flex-col items-center justify-center gap-12 px-6 py-12 max-w-4xl mx-auto text-center">
         {/* Logo and Brand */}
         <div className="flex flex-col items-center gap-6">
-          <Image
-            src="/nirmaan logo.png"
-            alt="Nirmaan logo"
-            width={100}
-            height={100}
-            priority
-            className="rounded-2xl shadow-2xl shadow-primary/20"
-          />
+          <div className="flex items-center justify-center gap-8 flex-wrap">
+            <Image
+              src="/iitm-sie-logo.png"
+              alt="School of Innovation & Entrepreneurship IIT Madras"
+              width={180}
+              height={80}
+              priority
+              className="h-20 w-auto object-contain"
+            />
+            <Image
+              src="/nirmaan logo.png"
+              alt="Nirmaan logo"
+              width={100}
+              height={100}
+              priority
+              className="rounded-2xl shadow-2xl shadow-primary/20 object-contain"
+            />
+          </div>
           <div>
             <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">
               NIRMAAN
@@ -62,7 +72,7 @@ export default function Home() {
             size="lg" 
             className="text-base px-8 py-6 border-2 border-zinc-700 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:border-primary hover:text-white transition-all"
           >
-            <Link href="/login">Admin Login</Link>
+            <Link href="/login">Login</Link>
           </Button>
         </div>
       </main>

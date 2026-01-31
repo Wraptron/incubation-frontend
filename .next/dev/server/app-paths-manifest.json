@@ -1,6 +1,10 @@
 {
-  "/api/apply/route": "app/api/apply/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/apply/page": "app/apply/page.js"
+  "/api/applications/route": "app/api/applications/route.js",
+  "/api/apply/draft/route": "app/api/apply/draft/route.js",
+  "/api/apply/resume/route": "app/api/apply/resume/route.js",
+  "/apply/page": "app/apply/page.js",
+  "/apply/resume/page": "app/apply/resume/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js"
 }

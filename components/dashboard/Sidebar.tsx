@@ -145,9 +145,9 @@ export default function Sidebar({ userRole }: SidebarProps) {
             />
             <div>
               <h2 className="text-lg font-bold text-black dark:text-zinc-50">
-                NIRMAAN
+                TRAKTOR
               </h2>
-              <p className="text-xs text-primary font-semibold">LaunchPad</p>
+              {/* <p className="text-xs text-primary font-semibold">LaunchPad</p> */}
             </div>
           </div>
         )}
