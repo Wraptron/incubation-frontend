@@ -1,46 +1,6 @@
-[00:00:00.631] Server  LOG     ✓ Ready in 462ms
-[00:00:17.628] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://65.1.107.13:5001/api/applications/draft"
-[00:00:17.701] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:00:17.856] Browser ERROR   Error saving draft: {}
-[00:00:51.616] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:01:36.409] Server  LOG       Reload env: .env.local
-[00:01:36.486] Server  LOG     ✓ Compiled in 28ms
-[00:01:36.490] Server  WARN    ⚠ Fast Refresh had to perform a full reload when ./node_modules/next/dist/client/image-component.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
-[00:01:36.572] Server  LOG     ✓ Compiled in 0ms
-[00:02:27.641] Server  LOG       Reload env: .env.local
-[00:02:40.246] Server  LOG       Reload env: .env.local
-[00:04:03.113] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:04:03.789] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:04:03.976] Browser ERROR   Error saving draft: {}
-[00:05:54.000] Server  LOG     ✓ Compiled in 37ms
-[00:08:37.936] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:08:38.573] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:08:38.712] Browser ERROR   Error saving draft: {}
-[00:10:14.253] Server  LOG     ✓ Compiled in 33ms
-[00:12:33.253] Server  LOG     ✓ Compiled in 47ms
-[00:12:55.299] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:12:56.183] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:12:56.304] Browser ERROR   Error saving draft: {}
-[00:16:53.418] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:16:53.939] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:16:54.108] Browser ERROR   Error saving draft: {}
-[00:17:47.034] Server  LOG     ✓ Compiled in 42ms
-[00:18:50.467] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:18:51.221] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:18:51.353] Browser ERROR   Error saving draft: {}
-[00:20:40.816] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:20:41.522] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:20:41.693] Browser ERROR   Error saving draft: {}
-[00:22:13.755] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:22:14.199] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:22:14.354] Browser ERROR   Error saving draft: {}
-[00:23:31.882] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:23:32.320] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
-[00:23:32.481] Browser ERROR   Error saving draft: {}
-[00:24:57.915] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:24:58.309] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:25:01.981] Server  LOG     Resume link email sent to "sbr@wraptron.com"
-[00:25:31.865] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:25:32.244] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:26:02.418] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
-[00:26:02.791] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:00:00.716] Server  LOG     ✓ Ready in 540ms
+[00:00:03.339] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:12.387] Server  LOG     [Frontend API] Draft POST received, calling backend: "http://localhost:5001/api/applications/draft"
+[00:00:13.074] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:00:13.077] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
+[00:00:37.411] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
