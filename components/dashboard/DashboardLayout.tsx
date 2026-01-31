@@ -189,7 +189,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              NIRMAAN Dashboard
+              TRAKTOR Dashboard
             </span>
           </div>
           <div className="flex items-center gap-4">

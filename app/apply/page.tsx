@@ -844,18 +844,23 @@ export default function ApplyPage() {
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-4 mb-6">
+            <img
+              src="/iitm-sie-logo.png"
+              alt="School of Innovation & Entrepreneurship IIT Madras"
+              className="h-20 w-auto object-contain"
+            />
               <img
                 src="/nirmaan logo.png"
                 alt="Nirmaan logo"
                 className="w-20 h-20 rounded-2xl shadow-lg"
               />
-              <div className="text-left">
+              </div>
+              <div className="text-center">
                 <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
-                  NIRMAAN
+                  TRAKTOR
                 </h1>
                 <p className="text-primary font-semibold">IITM Pre-Incubation</p>
               </div>
-            </div>
             <div className="flex items-center justify-between w-full max-w-4xl">
               <div>
                 <h2 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
