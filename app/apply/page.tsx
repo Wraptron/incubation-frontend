@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
 import { ToastContainer, ToastProps } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
 export default function ApplyPage() {
   const router = useRouter();
@@ -47,7 +48,6 @@ export default function ApplyPage() {
     yourName: "",
     isIITM: "",
     rollNumber: "",
-    rollNumberOther: "",
     collegeName: "",
     currentOccupation: "",
     phoneNumber: "",
@@ -81,6 +81,9 @@ export default function ApplyPage() {
       mailId: string;
       department: string;
       college: string;
+      role: string;
+      contactNumber: string;
+      isCoFounder?: boolean;
     }>,
     nirmaanCanHelp: "",
     preIncubationReason: "",
@@ -124,6 +127,7 @@ export default function ApplyPage() {
   const [potentialIpFile, setPotentialIpFile] = useState<File | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [autoSaveIndicator, setAutoSaveIndicator] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -214,7 +218,6 @@ export default function ApplyPage() {
             yourName: draftApp.your_name || "",
             isIITM: draftApp.is_iitm || "",
             rollNumber: draftApp.roll_number || "",
-            rollNumberOther: draftApp.roll_number_other || "",
             collegeName: draftApp.college_name || "",
             currentOccupation: draftApp.current_occupation || "",
             phoneNumber: draftApp.phone_number || "",
@@ -230,7 +233,21 @@ export default function ApplyPage() {
             dpiitDetails: draftApp.dpiit_details || "",
             externalFunding: draftApp.external_funding || [],
             currentlyIncubated: draftApp.currently_incubated || "",
-            teamMembers: draftApp.team_members || [],
+            teamMembers: (() => {
+              const raw = draftApp.team_members || [];
+              const coCount = Math.max(0, parseInt(String(draftApp.co_founders_count || "0"), 10) || 0);
+              return raw.map((m: Record<string, unknown>, i: number) => ({
+                name: m.name ?? "",
+                rollNumber: m.roll_number ?? m.rollNumber ?? "",
+                email: m.email ?? m.mailId ?? "",
+                mailId: m.mailId ?? m.email ?? "",
+                department: m.department ?? "",
+                college: m.college ?? "",
+                role: m.role ?? (i < coCount ? "Co-founder" : ""),
+                contactNumber: m.contact_number ?? m.contactNumber ?? "",
+                isCoFounder: i < coCount,
+              }));
+            })(),
             nirmaanCanHelp: draftApp.nirmaan_can_help || "",
             preIncubationReason: draftApp.pre_incubation_reason || "",
             heardAboutStartups: draftApp.heard_about_startups || "",
@@ -274,6 +291,40 @@ export default function ApplyPage() {
 
     checkAuthAndLoadDraft();
   }, [router]);
+
+  // Sync co-founder rows when "How many co-founders" changes
+  useEffect(() => {
+    const n = Math.max(0, parseInt(formData.coFoundersCount, 10) || 0);
+    const current = formData.teamMembers;
+    const coFounders = current.filter((m) => m.isCoFounder);
+    const others = current.filter((m) => !m.isCoFounder);
+
+    if (n === coFounders.length) return;
+
+    let newCoFounders = coFounders;
+    if (n > coFounders.length) {
+      const toAdd = n - coFounders.length;
+      const newRows = Array.from({ length: toAdd }, () => ({
+        name: "",
+        rollNumber: "",
+        email: "",
+        mailId: "",
+        department: "",
+        college: "",
+        role: "Co-founder",
+        contactNumber: "",
+        isCoFounder: true as const,
+      }));
+      newCoFounders = [...newRows, ...coFounders];
+    } else {
+      newCoFounders = coFounders.slice(0, n);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      teamMembers: [...newCoFounders, ...others],
+    }));
+  }, [formData.coFoundersCount]);
 
   // Auto-save draft to server every 30 seconds
   useEffect(() => {
@@ -321,7 +372,6 @@ export default function ApplyPage() {
         your_name: formData.yourName,
         is_iitm: formData.isIITM,
         roll_number: formData.rollNumber,
-        roll_number_other: formData.rollNumberOther || null,
         college_name: formData.collegeName || null,
         current_occupation: formData.currentOccupation || null,
         phone_number: formData.phoneNumber,
@@ -430,6 +480,76 @@ export default function ApplyPage() {
     setIsSubmitting(true);
     setSubmitStatus("idle");
     setErrorMessage("");
+    setFieldErrors({});
+
+    const newErrors: Record<string, string> = {};
+
+    // Phone: exactly 10 digits only
+    const phoneDigits = (formData.phoneNumber || "").replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      newErrors.phoneNumber = "Contact number must be exactly 10 digits (numbers only).";
+    }
+
+    // Email: required and must end with .com or .in
+    const email = (formData.email || "").trim().toLowerCase();
+    if (!email) {
+      newErrors.email = "Email is required.";
+    } else if (!/\.(com|in)$/.test(email)) {
+      newErrors.email = "Email must end with .com or .in";
+    }
+
+    // Required dropdowns
+    if (!formData.channel?.trim()) {
+      newErrors.channel = "Please select a channel.";
+    }
+    if (showNonIITMFields && !formData.currentOccupation?.trim()) {
+      newErrors.currentOccupation = "Please select your occupation.";
+    }
+    if (!formData.solutionType?.trim()) {
+      newErrors.solutionType = "Please select a solution type.";
+    }
+    if (!formData.targetIndustry?.trim()) {
+      newErrors.targetIndustry = "Please select main industry.";
+    }
+
+    // Fund table: amount must be numbers only
+    formData.externalFunding.forEach((entry, index) => {
+      if (entry.amount.trim() !== "" && !/^\d+$/.test(entry.amount.replace(/,/g, ""))) {
+        newErrors[`fundAmount_${index}`] = "Amount must contain only numbers.";
+      }
+    });
+
+    // Team members: email must end with .com or .in when provided
+    formData.teamMembers.forEach((member, index) => {
+      const teamEmail = (member.email || "").trim().toLowerCase();
+      if (teamEmail && !/\.(com|in)$/.test(teamEmail)) {
+        newErrors[`teamEmail_${index}`] = "Team member email must end with .com or .in";
+      }
+    });
+
+    // Team members: contact number 10 digits only when provided
+    formData.teamMembers.forEach((member, index) => {
+      if (member.contactNumber?.trim()) {
+        const digits = (member.contactNumber || "").replace(/\D/g, "");
+        if (digits.length !== 10) {
+          newErrors[`teamContact_${index}`] = "Contact number must be exactly 10 digits.";
+        }
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setFieldErrors(newErrors);
+      setIsSubmitting(false);
+      const errorMessages = [...new Set(Object.values(newErrors))];
+      const description = errorMessages.length === 1
+        ? errorMessages[0]
+        : `Please fix the following: ${errorMessages.map((msg, i) => `${i + 1}. ${msg}`).join(" ")}`;
+      addToast({
+        variant: "destructive",
+        description,
+      });
+      return;
+    }
 
     // Validate required radio button fields
     const requiredRadioFields = [
@@ -452,14 +572,13 @@ export default function ApplyPage() {
 
     if (missingFields.length > 0) {
       setIsSubmitting(false);
-      // Show toasts one by one with a delay
-      missingFields.forEach((field, index) => {
-        setTimeout(() => {
-          addToast({
-            variant: "destructive",
-            description: `Please select an option for: ${field}`,
-          });
-        }, index * 500); // 500ms delay between each toast
+      const radioErrorMessages = missingFields.map((label) => `Please select an option for: ${label}`);
+      const description = radioErrorMessages.length === 1
+        ? radioErrorMessages[0]
+        : `Please fix the following: ${radioErrorMessages.map((msg, i) => `${i + 1}. ${msg}`).join(" ")}`;
+      addToast({
+        variant: "destructive",
+        description,
       });
       return;
     }
@@ -546,12 +665,16 @@ export default function ApplyPage() {
         }, 3000);
       } else {
         setSubmitStatus("error");
-        setErrorMessage(data.error || "Failed to submit application");
+        const msg = data.error || "Failed to submit application";
+        setErrorMessage(msg);
+        addToast({ variant: "destructive", description: msg });
       }
     } catch (error) {
       console.error("Error submitting application:", error);
       setSubmitStatus("error");
-      setErrorMessage("An unexpected error occurred. Please try again.");
+      const msg = "An unexpected error occurred. Please try again.";
+      setErrorMessage(msg);
+      addToast({ variant: "destructive", description: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -729,9 +852,16 @@ export default function ApplyPage() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (fieldErrors.email) setFieldErrors((prev) => { const next = { ...prev }; delete next.email; return next; });
+                  }}
                   placeholder="your@email.com"
+                  className={cn(fieldErrors.email && "border-red-500")}
                 />
+                {fieldErrors.email && (
+                  <p className="text-sm text-red-500">{fieldErrors.email}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -778,7 +908,6 @@ export default function ApplyPage() {
                       // Clear college name and occupation if switching to IITM
                       // Clear roll number when switching
                       rollNumber: "",
-                      rollNumberOther: "",
                       ...(value === "Yes" && {
                         collegeName: "",
                         currentOccupation: "",
@@ -834,15 +963,13 @@ export default function ApplyPage() {
                     </Label>
                     <Select
                       value={formData.currentOccupation}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          currentOccupation: value,
-                        }))
-                      }
+                      onValueChange={(value) => {
+                        setFormData((prev) => ({ ...prev, currentOccupation: value }));
+                        if (fieldErrors.currentOccupation) setFieldErrors((prev) => { const next = { ...prev }; delete next.currentOccupation; return next; });
+                      }}
                       required={showNonIITMFields}
                     >
-                      <SelectTrigger id="currentOccupation">
+                      <SelectTrigger id="currentOccupation" className={cn(fieldErrors.currentOccupation && "border-red-500")}>
                         <SelectValue placeholder="Select your occupation" />
                       </SelectTrigger>
                       <SelectContent>
@@ -850,6 +977,9 @@ export default function ApplyPage() {
                         <SelectItem value="Employed">Employed</SelectItem>
                       </SelectContent>
                     </Select>
+                    {fieldErrors.currentOccupation && (
+                      <p className="text-sm text-red-500">{fieldErrors.currentOccupation}</p>
+                    )}
                   </div>
                 </>
               )}
@@ -862,11 +992,21 @@ export default function ApplyPage() {
                   id="phoneNumber"
                   name="phoneNumber"
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   required
                   value={formData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="+91 XXXXXXXXXX"
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    setFormData((prev) => ({ ...prev, phoneNumber: v }));
+                    if (fieldErrors.phoneNumber) setFieldErrors((prev) => { const next = { ...prev }; delete next.phoneNumber; return next; });
+                  }}
+                  placeholder="10 digit number"
+                  className={cn(fieldErrors.phoneNumber && "border-red-500")}
                 />
+                {fieldErrors.phoneNumber && (
+                  <p className="text-sm text-red-500">{fieldErrors.phoneNumber}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -876,16 +1016,13 @@ export default function ApplyPage() {
                 </Label>
                 <Select
                   value={formData.channel}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      channel: value,
-                      channelOther: "",
-                    }))
-                  }
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, channel: value, channelOther: "" }));
+                    if (fieldErrors.channel) setFieldErrors((prev) => { const next = { ...prev }; delete next.channel; return next; });
+                  }}
                   required
                 >
-                  <SelectTrigger id="channel">
+                  <SelectTrigger id="channel" className={cn(fieldErrors.channel && "border-red-500")}>
                     <SelectValue placeholder="Select a channel" />
                   </SelectTrigger>
                   <SelectContent>
@@ -902,6 +1039,9 @@ export default function ApplyPage() {
                     <SelectItem value="Others">Others</SelectItem>
                   </SelectContent>
                 </Select>
+                {fieldErrors.channel && (
+                  <p className="text-sm text-red-500">{fieldErrors.channel}</p>
+                )}
               </div>
 
               {showChannelOther && (
@@ -929,11 +1069,14 @@ export default function ApplyPage() {
                 <Input
                   id="coFoundersCount"
                   name="coFoundersCount"
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
                   required
                   value={formData.coFoundersCount}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    setFormData((prev) => ({ ...prev, coFoundersCount: v }));
+                  }}
                   placeholder="0"
                 />
               </div>
@@ -1342,23 +1485,25 @@ export default function ApplyPage() {
                                 />
                               </td>
                               <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                <Input
-                                  type="text"
-                                  value={funding.amount}
-                                  onChange={(e) => {
-                                    const updated = [...formData.externalFunding];
-                                    updated[index] = {
-                                      ...updated[index],
-                                      amount: e.target.value,
-                                    };
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      externalFunding: updated,
-                                    }));
-                                  }}
-                                  placeholder="Ex. 200000"
-                                  className="w-full"
-                                />
+                                <div>
+                                  <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={funding.amount}
+                                    onChange={(e) => {
+                                      const v = e.target.value.replace(/\D/g, "");
+                                      const updated = [...formData.externalFunding];
+                                      updated[index] = { ...updated[index], amount: v };
+                                      setFormData((prev) => ({ ...prev, externalFunding: updated }));
+                                      if (fieldErrors[`fundAmount_${index}`]) setFieldErrors((prev) => { const next = { ...prev }; delete next[`fundAmount_${index}`]; return next; });
+                                    }}
+                                    placeholder="Ex. 200000"
+                                    className={cn("w-full", fieldErrors[`fundAmount_${index}`] && "border-red-500")}
+                                  />
+                                  {fieldErrors[`fundAmount_${index}`] && (
+                                    <p className="text-xs text-red-500 mt-0.5">{fieldErrors[`fundAmount_${index}`]}</p>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-3 py-2">
                                 <Input
@@ -1463,7 +1608,7 @@ export default function ApplyPage() {
                 </Label>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[1200px]">
                       <thead className="bg-zinc-100 dark:bg-zinc-800">
                         <tr>
                           <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
@@ -1476,11 +1621,17 @@ export default function ApplyPage() {
                             3. Email
                           </th>
                          
-                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
                             4. Department
                           </th>
-                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
                             5. College
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            6. Role
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            7. Contact Number
                           </th>
                           <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
                             Action
@@ -1491,7 +1642,7 @@ export default function ApplyPage() {
                         {formData.teamMembers.length === 0 ? (
                           <tr>
                             <td
-                              colSpan={6}
+                              colSpan={8}
                               className="px-3 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400"
                             >
                               No team members added. Click the Add button below to add one.
@@ -1544,24 +1695,30 @@ export default function ApplyPage() {
                                 />
                               </td>
                               <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                <Input
-                                  type="email"
-                                  value={member.email}
-                                  onChange={(e) => {
-                                    const updated = [...formData.teamMembers];
-                                    updated[index] = {
-                                      ...updated[index],
-                                      email: e.target.value,
-                                    };
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      teamMembers: updated,
-                                    }));
-                                  }}
-                                  placeholder="Enter email"
-                                  className="w-full"
-                                  required
-                                />
+                                <div>
+                                  <Input
+                                    type="email"
+                                    value={member.email}
+                                    onChange={(e) => {
+                                      const updated = [...formData.teamMembers];
+                                      updated[index] = {
+                                        ...updated[index],
+                                        email: e.target.value,
+                                      };
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        teamMembers: updated,
+                                      }));
+                                      if (fieldErrors[`teamEmail_${index}`]) setFieldErrors((prev) => { const next = { ...prev }; delete next[`teamEmail_${index}`]; return next; });
+                                    }}
+                                    placeholder="e.g. name@domain.com or .in"
+                                    className={cn("w-full", fieldErrors[`teamEmail_${index}`] && "border-red-500")}
+                                    required
+                                  />
+                                  {fieldErrors[`teamEmail_${index}`] && (
+                                    <p className="text-xs text-red-500 mt-0.5">{fieldErrors[`teamEmail_${index}`]}</p>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-3 py-2">
                                 <Input
@@ -1583,7 +1740,7 @@ export default function ApplyPage() {
                                   required
                                 />
                               </td>
-                              <td className="px-3 py-2">
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
                                 <Input
                                   type="text"
                                   value={member.college}
@@ -1603,10 +1760,58 @@ export default function ApplyPage() {
                                   required
                                 />
                               </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                {member.isCoFounder ? (
+                                  <span className="text-sm text-zinc-700 dark:text-zinc-300 px-2 py-1.5 block bg-zinc-100 dark:bg-zinc-800 rounded">
+                                    Co-founder
+                                  </span>
+                                ) : (
+                                  <Input
+                                    type="text"
+                                    value={member.role ?? ""}
+                                    onChange={(e) => {
+                                      const updated = [...formData.teamMembers];
+                                      updated[index] = {
+                                        ...updated[index],
+                                        role: e.target.value,
+                                      };
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        teamMembers: updated,
+                                      }));
+                                    }}
+                                    placeholder="Enter role"
+                                    className="w-full"
+                                  />
+                                )}
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <div>
+                                  <Input
+                                    type="tel"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                    value={member.contactNumber ?? ""}
+                                    onChange={(e) => {
+                                      const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                      const updated = [...formData.teamMembers];
+                                      updated[index] = { ...updated[index], contactNumber: v };
+                                      setFormData((prev) => ({ ...prev, teamMembers: updated }));
+                                      if (fieldErrors[`teamContact_${index}`]) setFieldErrors((prev) => { const next = { ...prev }; delete next[`teamContact_${index}`]; return next; });
+                                    }}
+                                    placeholder="10 digit number"
+                                    className={cn("w-full", fieldErrors[`teamContact_${index}`] && "border-red-500")}
+                                  />
+                                  {fieldErrors[`teamContact_${index}`] && (
+                                    <p className="text-xs text-red-500 mt-0.5">{fieldErrors[`teamContact_${index}`]}</p>
+                                  )}
+                                </div>
+                              </td>
                               <td className="px-3 py-2 text-center">
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    if (member.isCoFounder) return;
                                     const updated = formData.teamMembers.filter(
                                       (_, i) => i !== index
                                     );
@@ -1615,7 +1820,8 @@ export default function ApplyPage() {
                                       teamMembers: updated,
                                     }));
                                   }}
-                                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors"
+                                  disabled={member.isCoFounder}
+                                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   aria-label="Remove team member"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -1643,6 +1849,9 @@ export default function ApplyPage() {
                               mailId: "",
                               department: "",
                               college: "",
+                              role: "",
+                              contactNumber: "",
+                              isCoFounder: false,
                             },
                           ],
                         }));
@@ -1784,16 +1993,13 @@ export default function ApplyPage() {
                 </Label>
                 <Select
                   value={formData.solutionType}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      solutionType: value,
-                      solutionTypeOther: "",
-                    }))
-                  }
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, solutionType: value, solutionTypeOther: "" }));
+                    if (fieldErrors.solutionType) setFieldErrors((prev) => { const next = { ...prev }; delete next.solutionType; return next; });
+                  }}
                   required
                 >
-                  <SelectTrigger id="solutionType">
+                  <SelectTrigger id="solutionType" className={cn(fieldErrors.solutionType && "border-red-500")}>
                     <SelectValue placeholder="Select solution type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1814,6 +2020,9 @@ export default function ApplyPage() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+                {fieldErrors.solutionType && (
+                  <p className="text-sm text-red-500">{fieldErrors.solutionType}</p>
+                )}
               </div>
 
               {showSolutionTypeOther && (
@@ -1852,17 +2061,17 @@ export default function ApplyPage() {
                 </Label>
                 <Select
                   value={formData.targetIndustry}
-                  onValueChange={(value) =>
+                  onValueChange={(value) => {
                     setFormData((prev) => ({
                       ...prev,
                       targetIndustry: value,
-                      industryOther:
-                        value === "Other" ? prev.industryOther : "",
-                    }))
-                  }
+                      industryOther: value === "Other" ? prev.industryOther : "",
+                    }));
+                    if (fieldErrors.targetIndustry) setFieldErrors((prev) => { const next = { ...prev }; delete next.targetIndustry; return next; });
+                  }}
                   required
                 >
-                  <SelectTrigger id="targetIndustry">
+                  <SelectTrigger id="targetIndustry" className={cn(fieldErrors.targetIndustry && "border-red-500")}>
                     <SelectValue placeholder="Select main industry" />
                   </SelectTrigger>
                   <SelectContent className=" max-h-[250px] overflow-y-auto">
@@ -1917,6 +2126,9 @@ export default function ApplyPage() {
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {fieldErrors.targetIndustry && (
+                  <p className="text-sm text-red-500">{fieldErrors.targetIndustry}</p>
+                )}
               </div>
 
               {showIndustryOther && (

@@ -368,7 +368,6 @@ export async function POST(request: NextRequest) {
       your_name: body.yourName || "N/A",
       is_iitm: body.isIITM || "No",
       roll_number: body.rollNumber || "N/A",
-      roll_number_other: body.rollNumberOther || null,
       college_name: body.collegeName || null,
       current_occupation: body.currentOccupation || null,
       phone_number: body.phoneNumber || "N/A",
