@@ -30,6 +30,31 @@
       "namedRegex": "^/api/applications/(?<nxtPid>[^/]+?)(?:/)?$"
     },
     {
+      "page": "/api/applications/[id]/invite-reviewer",
+      "regex": "^/api/applications/([^/]+?)/invite\\-reviewer(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/applications/(?<nxtPid>[^/]+?)/invite\\-reviewer(?:/)?$"
+    },
+    {
+      "page": "/api/applications/[id]/reviewer-respond",
+      "regex": "^/api/applications/([^/]+?)/reviewer\\-respond(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/applications/(?<nxtPid>[^/]+?)/reviewer\\-respond(?:/)?$"
+    },
+    {
+      "page": "/api/applications/[id]/reviewers/[reviewerId]",
+      "regex": "^/api/applications/([^/]+?)/reviewers/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPreviewerId": "nxtPreviewerId"
+      },
+      "namedRegex": "^/api/applications/(?<nxtPid>[^/]+?)/reviewers/(?<nxtPreviewerId>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/evaluations/application/[applicationId]",
       "regex": "^/api/evaluations/application/([^/]+?)(?:/)?$",
       "routeKeys": {

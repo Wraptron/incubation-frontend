@@ -1,95 +1,159 @@
-[00:00:01.071] Server  LOG     ✓ Ready in 805ms
-[00:00:01.634] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:01.735] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:04.177] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:04.298] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:15.670] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:27.128] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
-[00:00:27.232] Browser ERROR   Error saving draft: {}
-[00:01:15.394] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:01:15.396] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:02:08.643] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:02:16.530] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:03:16.722] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:04:16.541] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:04:49.002] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:04:58.011] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:05:19.253] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:05:19.254] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:06:19.892] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:07:20.752] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:07:46.014] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:07:46.133] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:08:20.744] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:09:06.909] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:09:08.487] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:09:24.647] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:09:24.647] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:10:25.597] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:11:25.716] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:11:35.105] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:11:50.950] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:11:51.066] Browser ERROR   Error saving draft: {}
-[00:12:07.498] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:12:07.604] Browser ERROR   Error saving draft: {}
-[00:12:25.000] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:12:25.104] Browser ERROR   Error saving draft: {}
-[00:13:25.575] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:13:26.161] Browser ERROR   Error saving draft: {}
-[00:14:16.820] Server  LOG     ✓ Compiled in 391ms
-[00:14:25.491] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:14:26.161] Browser ERROR   Error saving draft: {}
-[00:15:02.461] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:15:02.566] Browser ERROR   Error saving draft: {}
-[00:15:18.584] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:15:18.690] Browser ERROR   Error saving draft: {}
-[00:15:25.869] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:15:32.864] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:15:32.865] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:16:33.591] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:17:33.701] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:17:48.942] Server  LOG     ✓ Compiled in 40ms
-[00:17:57.623] Server  LOG     ✓ Compiled in 27ms
-[00:18:00.224] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:18:00.747] Server  LOG     ✓ Compiled in 31ms
-[00:18:06.557] Server  LOG     ✓ Compiled in 26ms
-[00:18:11.994] Server  LOG     ✓ Compiled in 44ms
-[00:18:12.099] Browser ERROR   ./app/apply/page.tsx:494:11
-Ecmascript file had an error
-  492 |
-  493 |       // 404 = draft not found or already submitted: clear stale id and retry as new draft once
-> 494 |       let recoveredFrom404 = false;
-      |           ^^^^^^^^^^^^^^^^
-  495 |       if (res.status === 404 && payload.applicationId) {
-  496 |         setDraftId(null);
-  497 |         const newPayload = { ...payload, applicationId: undefined };
-
-the name `recoveredFrom404` is defined multiple times
-
-Import traces:
-  Client Component Browser:
-    ./app/apply/page.tsx [Client Component Browser]
-    ./app/apply/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./app/apply/page.tsx [Client Component SSR]
-    ./app/apply/page.tsx [Server Component]
-[00:18:33.294] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:19:33.498] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:20:33.218] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:20:34.092] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:20:59.888] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:21:00.112] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:21:00.113] Server  WARN    GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping resume link email
-[00:22:01.675] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:23:01.386] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:24:01.745] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:25:01.700] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:26:01.682] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:27:01.546] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:28:10.421] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:28:11.696] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:28:42.776] Server  LOG     [Frontend API] Backend draft response status: 404 "Not Found"
-[00:28:46.592] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:29:46.965] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
-[00:30:47.131] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:00:01.127] Server  LOG     ✓ Ready in 858ms
+[00:00:01.658] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.761] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:01:03.746] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:01:46.415] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[00:01:46.527] Browser ERROR   Error saving draft: {}
+[00:02:01.406] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:03:02.541] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:04:02.847] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[00:05:02.478] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:30:03.791] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[04:30:26.039] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:31:26.515] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:31:41.072] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:32:27.682] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:32:41.365] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:33:26.573] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:33:41.086] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:34:25.801] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:34:26.509] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:34:41.591] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:35:01.645] Server  LOG     ✓ Compiled in 492ms
+[04:35:26.678] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:35:26.785] Browser ERROR   Error saving draft: {}
+[04:35:41.182] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:36:26.792] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:36:26.897] Browser ERROR   Error saving draft: {}
+[04:36:41.308] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:37:26.685] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:37:27.250] Browser ERROR   Error saving draft: {}
+[04:37:41.212] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:38:28.075] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:38:28.244] Browser ERROR   Error saving draft: {}
+[04:38:41.482] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:39:27.818] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:39:28.249] Browser ERROR   Error saving draft: {}
+[04:39:40.969] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:40:27.876] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:40:28.244] Browser ERROR   Error saving draft: {}
+[04:40:41.190] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:41:27.756] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:41:28.245] Browser ERROR   Error saving draft: {}
+[04:41:41.047] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:42:27.859] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:42:28.247] Browser ERROR   Error saving draft: {}
+[04:42:41.020] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:43:27.831] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:43:28.245] Browser ERROR   Error saving draft: {}
+[04:43:41.302] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:44:27.710] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:44:28.245] Browser ERROR   Error saving draft: {}
+[04:44:41.036] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:45:28.008] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:45:28.245] Browser ERROR   Error saving draft: {}
+[04:45:41.335] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:46:27.704] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:46:28.246] Browser ERROR   Error saving draft: {}
+[04:46:41.102] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[04:47:28.079] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[04:47:28.244] Browser ERROR   Error saving draft: {}
+[04:47:41.233] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:03:52.806] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:03:53.778] Browser ERROR   Error saving draft: {}
+[05:24:56.277] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:24:56.380] Browser ERROR   Error saving draft: {}
+[05:25:42.869] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:25:43.850] Browser ERROR   Error saving draft: {}
+[05:25:56.281] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:25:56.385] Browser ERROR   Error saving draft: {}
+[05:26:36.217] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:26:36.351] Browser ERROR   Error saving draft: {}
+[05:26:56.291] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:26:56.396] Browser ERROR   Error saving draft: {}
+[05:28:00.669] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:28:56.680] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:29:56.899] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:30:56.560] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:31:56.998] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:32:56.626] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:33:56.635] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:34:56.528] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:35:56.623] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:36:56.536] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:37:56.666] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:38:56.508] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:39:56.582] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:40:56.525] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:41:57.063] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:42:56.529] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:43:57.305] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:44:56.723] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:46:07.689] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:46:56.288] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:46:56.395] Browser ERROR   Error saving draft: {}
+[05:47:57.229] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:49:11.771] Server  LOG     [Frontend API] Backend draft response status: 500 "Internal Server Error"
+[05:49:11.876] Browser ERROR   Error saving draft: {}
+[05:49:56.633] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:50:59.339] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:52:01.084] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:52:56.530] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:53:56.706] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:54:56.622] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:55:57.177] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:56:56.418] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[05:56:56.522] Browser ERROR   Error saving draft: {}
+[05:57:56.332] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[05:57:56.437] Browser ERROR   Error saving draft: {}
+[05:58:56.696] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[05:59:56.712] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:00:56.645] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:01:56.565] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:02:56.619] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:03:56.592] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:05:14.333] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:05:56.850] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:06:56.579] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:07:56.724] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:08:57.040] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:09:58.794] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:10:41.662] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[06:10:48.992] Browser WARN    Image with src "/iitm-sie-logo.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[06:10:56.719] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:11:00.611] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:11:56.962] Server  LOG     [Frontend API] Backend draft response status: 200 "OK"
+[06:12:00.767] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:12:00.876] Browser ERROR   Error saving draft: {}
+[06:12:56.342] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:12:56.447] Browser ERROR   Error saving draft: {}
+[06:13:00.758] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:13:00.862] Browser ERROR   Error saving draft: {}
+[06:13:56.325] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:13:56.430] Browser ERROR   Error saving draft: {}
+[06:14:00.925] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:14:01.855] Browser ERROR   Error saving draft: {}
+[06:14:56.330] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:14:56.433] Browser ERROR   Error saving draft: {}
+[06:15:00.926] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:15:01.851] Browser ERROR   Error saving draft: {}
+[06:15:56.334] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:15:56.438] Browser ERROR   Error saving draft: {}
+[06:16:00.918] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:16:01.850] Browser ERROR   Error saving draft: {}
+[06:16:56.334] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:16:56.439] Browser ERROR   Error saving draft: {}
+[06:17:00.921] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:17:01.851] Browser ERROR   Error saving draft: {}
+[06:17:56.335] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:17:56.441] Browser ERROR   Error saving draft: {}
+[06:18:42.919] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:18:43.850] Browser ERROR   Error saving draft: {}
+[06:18:56.336] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:18:56.440] Browser ERROR   Error saving draft: {}
+[06:19:42.925] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:24:48.395] Browser ERROR   Error saving draft: {}
+[06:25:00.893] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:25:00.995] Browser ERROR   Error saving draft: {}
+[06:25:10.657] Server  ERROR   [Frontend API] Draft save: backend unreachable "http://localhost:5001/api/applications/draft" TypeError: fetch failed
+[06:25:10.760] Browser ERROR   Error saving draft: {}

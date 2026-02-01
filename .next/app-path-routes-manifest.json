@@ -1,6 +1,9 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/applications/[id]/invite-reviewer/route": "/api/applications/[id]/invite-reviewer",
+  "/api/applications/[id]/reviewer-respond/route": "/api/applications/[id]/reviewer-respond",
+  "/api/applications/[id]/reviewers/[reviewerId]/route": "/api/applications/[id]/reviewers/[reviewerId]",
   "/api/applications/[id]/route": "/api/applications/[id]",
   "/api/applications/route": "/api/applications",
   "/api/apply/draft/route": "/api/apply/draft",

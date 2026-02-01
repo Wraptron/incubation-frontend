@@ -1,6 +1,9 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/applications/[id]/invite-reviewer/route": "app/api/applications/[id]/invite-reviewer/route.js",
+  "/api/applications/[id]/reviewer-respond/route": "app/api/applications/[id]/reviewer-respond/route.js",
+  "/api/applications/[id]/reviewers/[reviewerId]/route": "app/api/applications/[id]/reviewers/[reviewerId]/route.js",
   "/api/applications/[id]/route": "app/api/applications/[id]/route.js",
   "/api/applications/route": "app/api/applications/route.js",
   "/api/apply/draft/route": "app/api/apply/draft/route.js",
