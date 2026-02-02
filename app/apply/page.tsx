@@ -78,9 +78,10 @@ export default function ApplyPage() {
       name: string;
       rollNumber: string;
       email: string;
-      mailId: string;
+      degree: string;
       department: string;
       college: string;
+      yearOfGraduation: string;
       role: string;
       contactNumber: string;
       isCoFounder?: boolean;
@@ -212,9 +213,10 @@ export default function ApplyPage() {
                   name: m.name ?? "",
                   rollNumber: m.roll_number ?? (m as { rollNumber?: string }).rollNumber ?? "",
                   email: m.email ?? (m as { mailId?: string }).mailId ?? "",
-                  mailId: (m as { mailId?: string }).mailId ?? m.email ?? "",
+                  degree: m.degree ?? "",
                   department: m.department ?? "",
                   college: m.college ?? "",
+                  yearOfGraduation: m.year_of_graduation ?? "",
                   role: m.role ?? (i < coCount ? "Co-founder" : ""),
                   contactNumber: m.contact_number ?? (m as { contactNumber?: string }).contactNumber ?? "",
                   isCoFounder: i < coCount,
@@ -322,9 +324,10 @@ export default function ApplyPage() {
                 name: m.name ?? "",
                 rollNumber: m.roll_number ?? m.rollNumber ?? "",
                 email: m.email ?? m.mailId ?? "",
-                mailId: m.mailId ?? m.email ?? "",
+                degree: m.degree ?? "",
                 department: m.department ?? "",
                 college: m.college ?? "",
+                yearOfGraduation: m.year_of_graduation ?? "",
                 role: m.role ?? (i < coCount ? "Co-founder" : ""),
                 contactNumber: m.contact_number ?? m.contactNumber ?? "",
                 isCoFounder: i < coCount,
@@ -390,9 +393,10 @@ export default function ApplyPage() {
         name: "",
         rollNumber: "",
         email: "",
-        mailId: "",
+        degree: "",
         department: "",
         college: "",
+        yearOfGraduation: "",
         role: "Co-founder",
         contactNumber: "",
         isCoFounder: true as const,
@@ -940,6 +944,7 @@ export default function ApplyPage() {
                 <Label htmlFor="email">
                   Email Address <span className="text-red-500">*</span>
                 </Label>
+                <p className="text-sm text-zinc-500">Please use your personal email address.</p>
                 <Input
                   id="email"
                   name="email"
@@ -1672,7 +1677,7 @@ export default function ApplyPage() {
               <div className="space-y-2">
                 <Label htmlFor="currentlyIncubated">
                   Is the startup currently incubated anywhere? (If yes write the
-                  name or else write no)
+                  name or else write `No`)
                 </Label>
                 <Input
                   id="currentlyIncubated"
@@ -1680,7 +1685,7 @@ export default function ApplyPage() {
                   type="text"
                   value={formData.currentlyIncubated}
                   onChange={handleChange}
-                  placeholder="Enter incubation name or 'no'"
+                  placeholder="Enter incubation name or 'No'"
                 />
               </div>
             </CardContent>
@@ -1700,6 +1705,7 @@ export default function ApplyPage() {
                   Enter the team members names with their roll numbers below{" "}
                   <span className="text-red-500">*</span>
                 </Label>
+                <p className="text-sm text-zinc-500">Please fill founder,co-founder and other team members details.</p>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1200px]">
@@ -1817,6 +1823,26 @@ export default function ApplyPage() {
                               <td className="px-3 py-2">
                                 <Input
                                   type="text"
+                                  value={member.degree}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      degree: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter degree"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
                                   value={member.department}
                                   onChange={(e) => {
                                     const updated = [...formData.teamMembers];
@@ -1850,6 +1876,26 @@ export default function ApplyPage() {
                                     }));
                                   }}
                                   placeholder="Enter College Name"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.yearOfGraduation}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      yearOfGraduation: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter Year of Graduation"
                                   className="w-full"
                                   required
                                 />
@@ -1940,9 +1986,10 @@ export default function ApplyPage() {
                               name: "",
                               rollNumber: "",
                               email: "",
-                              mailId: "",
+                              degree: "",
                               department: "",
                               college: "",
+                              yearOfGraduation: "",
                               role: "",
                               contactNumber: "",
                               isCoFounder: false,
@@ -2786,14 +2833,6 @@ export default function ApplyPage() {
                   onChange={handleChange}
                   placeholder="Describe how you plan to utilize the seed fund..."
                 />
-                <a
-                  href="/seed-fund-guidelines.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline text-sm inline-block mt-2"
-                >
-                  View Seed Fund Guidelines (PDF)
-                </a>
               </div>
 
               <div className="space-y-2">
@@ -2805,7 +2844,6 @@ export default function ApplyPage() {
                   id="pitchVideoLink"
                   name="pitchVideoLink"
                   type="url"
-                  required
                   value={formData.pitchVideoLink}
                   onChange={handleChange}
                   placeholder="Enter link to your pitch video"

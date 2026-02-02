@@ -17,9 +17,15 @@ async function sendResumeLinkEmail(
     }
     const resumeLink = `${baseUrl.replace(/\/$/, "")}/apply/resume?token=${encodeURIComponent(resumeToken)}`;
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: gmailUser, pass: gmailPass },
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true, // SSL
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
     });
+     
     const emailHTML = `
       <!DOCTYPE html>
       <html>

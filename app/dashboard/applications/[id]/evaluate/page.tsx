@@ -999,7 +999,11 @@ export default function EvaluatePage() {
                                   <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Name</th>
                                   <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Roll Number</th>
                                   <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Email</th>
+                                  <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Degree</th>
                                   <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50">Department</th>
+                                  <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50">Year of Graduation</th>
+                                  <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50">Role</th>
+                                  <th className="px-2 py-1 text-left text-xs font-semibold text-zinc-900 dark:text-zinc-50">Contact Number</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1016,7 +1020,11 @@ export default function EvaluatePage() {
                                         "N/A"
                                       )}
                                     </td>
+                                    <td className="px-2 py-1 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700 text-xs">{member.degree || "N/A"}</td>
                                     <td className="px-2 py-1 text-black dark:text-zinc-50 text-xs">{member.department || "N/A"}</td>
+                                    <td className="px-2 py-1 text-black dark:text-zinc-50 text-xs">{member.yearOfGraduation || "N/A"}</td>
+                                    <td className="px-2 py-1 text-black dark:text-zinc-50 text-xs">{member.role || "N/A"}</td>
+                                    <td className="px-2 py-1 text-black dark:text-zinc-50 text-xs">{member.contactNumber || "N/A"}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1299,13 +1307,13 @@ export default function EvaluatePage() {
                             Nirmaan Presentation:{" "}
                           </span>
                           <a
-                            href={application.nirmaan_presentation_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
-                          >
-                            {extractFilenameFromS3Url(application.nirmaan_presentation_link)}
-                          </a>
+                              href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(application.nirmaan_presentation_link)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {extractFilenameFromS3Url(application.nirmaan_presentation_link)}
+                            </a>
                         </div>
                       )}
                       {application.has_proof_of_concept && (
