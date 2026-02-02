@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { backendUrl } from "@/lib/config";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * POST /api/applications/[id]/reviewer-respond
- * Reviewer accepts or rejects the assignment. Requires Authorization: Bearer <supabase_access_token>.
+ * Proxies to backend. Reviewer accepts or rejects the assignment.
+ * Backend notifies managers by email. Requires Authorization: Bearer <supabase_access_token>.
  */
 export async function POST(
   request: NextRequest,
@@ -24,89 +24,63 @@ export async function POST(
     }
 
     const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace(/^Bearer\s+/i, "");
-
-    if (!token) {
+    if (!authHeader) {
       return NextResponse.json(
         { error: "Authorization required (Bearer token)" },
         { status: 401 }
       );
     }
 
-    const supabaseUrl =
-      process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      process.env.SUPABASE_URL ||
-      "";
-    const supabaseAnonKey =
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      "";
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
-      );
-    }
-
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseAuth.auth.getUser(token);
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 401 }
-      );
-    }
-
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const accept = body.accept === true;
 
-    const { error: updateError } = await supabaseServer
-      .from("application_reviewers")
-      .update({
-        invite_status: accept ? "accepted" : "rejected",
-        responded_at: new Date().toISOString(),
-      })
-      .eq("application_id", applicationId)
-      .eq("reviewer_id", user.id);
-
-    if (updateError) {
+    const url = `${backendUrl}/api/applications/${applicationId}/reviewer-respond`;
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ accept }),
+      });
+    } catch (fetchError: unknown) {
+      console.error("reviewer-respond proxy: backend fetch failed", fetchError);
       return NextResponse.json(
-        { error: "Failed to update response", details: updateError.message },
-        { status: 500 }
+        {
+          error: "Could not reach the backend server.",
+          details:
+            fetchError instanceof Error && (fetchError as { code?: string }).code === "ECONNREFUSED"
+              ? "Backend may not be running."
+              : fetchError instanceof Error
+                ? (fetchError as Error).message
+                : "Unknown network error",
+        },
+        { status: 503 }
       );
     }
 
-    // When reviewer accepts: if at least 2 reviewers have accepted, move application to under_review
-    if (accept) {
-      const { data: acceptedRows } = await supabaseServer
-        .from("application_reviewers")
-        .select("id")
-        .eq("application_id", applicationId)
-        .eq("invite_status", "accepted");
+    const data = await res.json().catch(() => ({}));
 
-      if (acceptedRows && acceptedRows.length >= 2) {
-        await supabaseServer
-          .from("new_application")
-          .update({ status: "under_review" })
-          .eq("id", applicationId);
-      }
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          error: data.error ?? "Failed to update response",
+          details: data.details,
+        },
+        { status: res.status }
+      );
     }
 
-    return NextResponse.json({
-      message: accept
-        ? "You have accepted the assignment"
-        : "You have declined the assignment",
-      accepted: accept,
-    });
-  } catch (error: any) {
+    return NextResponse.json(data);
+  } catch (error: unknown) {
     console.error("reviewer-respond error:", error);
     return NextResponse.json(
-      { error: "Failed to update response" },
+      {
+        error: "Failed to update response",
+        details: error instanceof Error ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
