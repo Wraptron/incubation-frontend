@@ -22,10 +22,12 @@ async function sendApplicationConfirmationEmail(
       return { success: false, error: "Email not configured" };
     }
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true, // SSL
       auth: {
-        user: gmailUser,
-        pass: gmailPass,
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
 
@@ -147,7 +149,6 @@ export async function POST(request: NextRequest) {
       "hasProofOfConcept",
       "hasPatentsOrPapers",
       "seedFundUtilizationPlan",
-      "pitchVideoLink",
     ];
 
     for (const field of requiredFields) {

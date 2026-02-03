@@ -78,9 +78,10 @@ export default function ApplyPage() {
       name: string;
       rollNumber: string;
       email: string;
-      mailId: string;
+      degree: string;
       department: string;
       college: string;
+      yearOfGraduation: string;
       role: string;
       contactNumber: string;
       isCoFounder?: boolean;
@@ -231,9 +232,10 @@ export default function ApplyPage() {
                     (m as { rollNumber?: string }).rollNumber ??
                     "",
                   email: m.email ?? (m as { mailId?: string }).mailId ?? "",
-                  mailId: (m as { mailId?: string }).mailId ?? m.email ?? "",
+                  degree: m.degree ?? "",
                   department: m.department ?? "",
                   college: m.college ?? "",
+                  yearOfGraduation: m.year_of_graduation ?? "",
                   role: m.role ?? (i < coCount ? "Co-founder" : ""),
                   contactNumber:
                     m.contact_number ??
@@ -362,9 +364,10 @@ export default function ApplyPage() {
                 name: m.name ?? "",
                 rollNumber: m.roll_number ?? m.rollNumber ?? "",
                 email: m.email ?? m.mailId ?? "",
-                mailId: m.mailId ?? m.email ?? "",
+                degree: m.degree ?? "",
                 department: m.department ?? "",
                 college: m.college ?? "",
+                yearOfGraduation: m.year_of_graduation ?? "",
                 role: m.role ?? (i < coCount ? "Co-founder" : ""),
                 contactNumber: m.contact_number ?? m.contactNumber ?? "",
                 isCoFounder: i < coCount,
@@ -432,9 +435,10 @@ export default function ApplyPage() {
         name: "",
         rollNumber: "",
         email: "",
-        mailId: "",
+        degree: "",
         department: "",
         college: "",
+        yearOfGraduation: "",
         role: "Co-founder",
         contactNumber: "",
         isCoFounder: true as const,
@@ -975,9 +979,7 @@ export default function ApplyPage() {
                 <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
                   TRAKTOR
                 </h1>
-                <p className="text-primary font-semibold">
-                  IITM Pre-Incubation
-                </p>
+                <p className="text-primary font-semibold">IITM Pre-Incubation</p>
               </div>
             <div className="flex items-center justify-between w-full max-w-4xl">
               <div>
@@ -1048,16 +1050,220 @@ export default function ApplyPage() {
             </Alert>
           )}
 
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
-                <CardDescription>
-                  Tell us about yourself and your team
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>
+                Tell us about yourself and your team
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email Address <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-sm text-zinc-500">Please use your personal email address.</p>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (fieldErrors.email) setFieldErrors((prev) => { const next = { ...prev }; delete next.email; return next; });
+                  }}
+                  placeholder="your@email.com"
+                  className={cn(fieldErrors.email && "border-red-500")}
+                />
+                {fieldErrors.email && (
+                  <p className="text-sm text-red-500">{fieldErrors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="teamName">
+                  Name of Your Team / Startup{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="teamName"
+                  name="teamName"
+                  type="text"
+                  required
+                  value={formData.teamName}
+                  onChange={handleChange}
+                  placeholder="Enter your team or startup name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="yourName">
+                  Your Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="yourName"
+                  name="yourName"
+                  type="text"
+                  required
+                  value={formData.yourName}
+                  onChange={handleChange}
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label>
+                  Are you from IITM? <span className="text-red-500">*</span>
+                </Label>
+                <RadioGroup
+                  value={formData.isIITM}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      isIITM: value,
+                      // Clear college name and occupation if switching to IITM
+                      // Clear roll number when switching
+                      rollNumber: "",
+                      ...(value === "Yes" && {
+                        collegeName: "",
+                        currentOccupation: "",
+                      }),
+                    }));
+                  }}
+                  className="flex gap-6"
+                >
+                  <RadioGroupItem value="Yes" id="iitm-yes">
+                    Yes
+                  </RadioGroupItem>
+                  <RadioGroupItem value="No" id="iitm-no">
+                    No
+                  </RadioGroupItem>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rollNumber">
+                  Roll Number <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="rollNumber"
+                  name="rollNumber"
+                  type="text"
+                  required
+                  value={formData.rollNumber}
+                  onChange={handleChange}
+                  placeholder="Enter your roll number"
+                />
+              </div>
+
+              {showNonIITMFields && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="collegeName">
+                      College Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="collegeName"
+                      name="collegeName"
+                      type="text"
+                      required={showNonIITMFields}
+                      value={formData.collegeName}
+                      onChange={handleChange}
+                      placeholder="Enter your college name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="currentOccupation">
+                      Current Occupation <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.currentOccupation}
+                      onValueChange={(value) => {
+                        setFormData((prev) => ({ ...prev, currentOccupation: value }));
+                        if (fieldErrors.currentOccupation) setFieldErrors((prev) => { const next = { ...prev }; delete next.currentOccupation; return next; });
+                      }}
+                      required={showNonIITMFields}
+                    >
+                      <SelectTrigger id="currentOccupation" className={cn(fieldErrors.currentOccupation && "border-red-500")}>
+                        <SelectValue placeholder="Select your occupation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Student">Student</SelectItem>
+                        <SelectItem value="Employed">Employed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {fieldErrors.currentOccupation && (
+                      <p className="text-sm text-red-500">{fieldErrors.currentOccupation}</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">
+                  Phone Number <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  required
+                  value={formData.phoneNumber}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    setFormData((prev) => ({ ...prev, phoneNumber: v }));
+                    if (fieldErrors.phoneNumber) setFieldErrors((prev) => { const next = { ...prev }; delete next.phoneNumber; return next; });
+                  }}
+                  placeholder="10 digit number"
+                  className={cn(fieldErrors.phoneNumber && "border-red-500")}
+                />
+                {fieldErrors.phoneNumber && (
+                  <p className="text-sm text-red-500">{fieldErrors.phoneNumber}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="channel">
+                  Please select the relevant channel that you belong to{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.channel}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, channel: value, channelOther: "" }));
+                    if (fieldErrors.channel) setFieldErrors((prev) => { const next = { ...prev }; delete next.channel; return next; });
+                  }}
+                  required
+                >
+                  <SelectTrigger id="channel" className={cn(fieldErrors.channel && "border-red-500")}>
+                    <SelectValue placeholder="Select a channel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CFI">CFI</SelectItem>
+                    <SelectItem value="E-cell">E-cell</SelectItem>
+                    <SelectItem value="PALS">PALS</SelectItem>
+                    <SelectItem value="Carbon Zero Challenge (CZC)">
+                      Carbon Zero Challenge (CZC)
+                    </SelectItem>
+                    <SelectItem value="I2I (Sustainability Venture Studio)">
+                      I2I (Sustainability Venture Studio)
+                    </SelectItem>
+                    <SelectItem value="IITM (Others)">IITM (Others)</SelectItem>
+                    <SelectItem value="Others">Others</SelectItem>
+                  </SelectContent>
+                </Select>
+                {fieldErrors.channel && (
+                  <p className="text-sm text-red-500">{fieldErrors.channel}</p>
+                )}
+              </div>
+
+              {showChannelOther && (
                 <div className="space-y-2">
                   <Label htmlFor="email">
                     Email Address <span className="text-red-500">*</span>
@@ -1717,13 +1923,270 @@ export default function ApplyPage() {
                                 below to add one.
                               </td>
                             </tr>
-                          ) : (
-                            formData.externalFunding.map((funding, index) => (
-                              <tr
-                                key={index}
-                                className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                              >
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          externalFunding: [
+                            ...prev.externalFunding,
+                            {
+                              funding: "",
+                              fundingType: "",
+                              amount: "",
+                              description: "",
+                            },
+                          ],
+                        }));
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Funding Entry
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currentlyIncubated">
+                  Is the startup currently incubated anywhere? (If yes write the
+                  name or else write `No`)
+                </Label>
+                <Input
+                  id="currentlyIncubated"
+                  name="currentlyIncubated"
+                  type="text"
+                  value={formData.currentlyIncubated}
+                  onChange={handleChange}
+                  placeholder="Enter incubation name or 'No'"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Team Members */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Members</CardTitle>
+              <CardDescription>
+                Information about your team composition
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="teamMembers">
+                  Enter the team members names with their roll numbers below{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-sm text-zinc-500">Please fill founder,co-founder and other team members details.</p>
+                <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[1200px]">
+                      <thead className="bg-zinc-100 dark:bg-zinc-800">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            1. Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            2. Roll Number
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            3. Email
+                          </th>
+                         
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            4. Department
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            5. College
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            6. Role
+                          </th>
+                          <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">
+                            7. Contact Number
+                          </th>
+                          <th className="px-3 py-2 text-center text-sm font-semibold text-zinc-900 dark:text-zinc-50 w-12">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.teamMembers.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={8}
+                              className="px-3 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400"
+                            >
+                              No team members added. Click the Add button below to add one.
+                            </td>
+                          </tr>
+                        ) : (
+                          formData.teamMembers.map((member, index) => (
+                            <tr
+                              key={index}
+                              className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                            >
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.name}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      name: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter name"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.rollNumber}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      rollNumber: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter roll number"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <div>
+                                  <Input
+                                    type="email"
+                                    value={member.email}
+                                    onChange={(e) => {
+                                      const updated = [...formData.teamMembers];
+                                      updated[index] = {
+                                        ...updated[index],
+                                        email: e.target.value,
+                                      };
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        teamMembers: updated,
+                                      }));
+                                      if (fieldErrors[`teamEmail_${index}`]) setFieldErrors((prev) => { const next = { ...prev }; delete next[`teamEmail_${index}`]; return next; });
+                                    }}
+                                    placeholder="e.g. name@domain.com or .in"
+                                    className={cn("w-full", fieldErrors[`teamEmail_${index}`] && "border-red-500")}
+                                    required
+                                  />
+                                  {fieldErrors[`teamEmail_${index}`] && (
+                                    <p className="text-xs text-red-500 mt-0.5">{fieldErrors[`teamEmail_${index}`]}</p>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={member.degree}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      degree: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter degree"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="text"
+                                  value={member.department}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      department: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter department"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.college}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      college: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter College Name"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                <Input
+                                  type="text"
+                                  value={member.yearOfGraduation}
+                                  onChange={(e) => {
+                                    const updated = [...formData.teamMembers];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      yearOfGraduation: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      teamMembers: updated,
+                                    }));
+                                  }}
+                                  placeholder="Enter Year of Graduation"
+                                  className="w-full"
+                                  required
+                                />
+                              </td>
+                              <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
+                                {member.isCoFounder ? (
+                                  <span className="text-sm text-zinc-700 dark:text-zinc-300 px-2 py-1.5 block bg-zinc-100 dark:bg-zinc-800 rounded">
+                                    Co-founder
+                                  </span>
+                                ) : (
                                   <Input
                                     type="text"
                                     value={funding.funding}
@@ -1955,250 +2418,389 @@ export default function ApplyPage() {
                                 below to add one.
                               </td>
                             </tr>
-                          ) : (
-                            formData.teamMembers.map((member, index) => (
-                              <tr
-                                key={index}
-                                className="border-t border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                              >
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  <Input
-                                    type="text"
-                                    value={member.name}
-                                    onChange={(e) => {
-                                      const updated = [...formData.teamMembers];
-                                      updated[index] = {
-                                        ...updated[index],
-                                        name: e.target.value,
-                                      };
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        teamMembers: updated,
-                                      }));
-                                    }}
-                                    placeholder="Enter name"
-                                    className="w-full"
-                                    required
-                                  />
-                                </td>
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  <Input
-                                    type="text"
-                                    value={member.rollNumber}
-                                    onChange={(e) => {
-                                      const updated = [...formData.teamMembers];
-                                      updated[index] = {
-                                        ...updated[index],
-                                        rollNumber: e.target.value,
-                                      };
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        teamMembers: updated,
-                                      }));
-                                    }}
-                                    placeholder="Enter roll number"
-                                    className="w-full"
-                                    required
-                                  />
-                                </td>
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  <div>
-                                    <Input
-                                      type="email"
-                                      value={member.email}
-                                      onChange={(e) => {
-                                        const updated = [
-                                          ...formData.teamMembers,
-                                        ];
-                                        updated[index] = {
-                                          ...updated[index],
-                                          email: e.target.value,
-                                        };
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          teamMembers: updated,
-                                        }));
-                                        if (fieldErrors[`teamEmail_${index}`])
-                                          setFieldErrors((prev) => {
-                                            const next = { ...prev };
-                                            delete next[`teamEmail_${index}`];
-                                            return next;
-                                          });
-                                      }}
-                                      placeholder="e.g. name@domain.com or .in"
-                                      className={cn(
-                                        "w-full",
-                                        fieldErrors[`teamEmail_${index}`] &&
-                                          "border-red-500",
-                                      )}
-                                      required
-                                    />
-                                    {fieldErrors[`teamEmail_${index}`] && (
-                                      <p className="text-xs text-red-500 mt-0.5">
-                                        {fieldErrors[`teamEmail_${index}`]}
-                                      </p>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-3 py-2">
-                                  <Input
-                                    type="text"
-                                    value={member.department}
-                                    onChange={(e) => {
-                                      const updated = [...formData.teamMembers];
-                                      updated[index] = {
-                                        ...updated[index],
-                                        department: e.target.value,
-                                      };
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        teamMembers: updated,
-                                      }));
-                                    }}
-                                    placeholder="Enter department"
-                                    className="w-full"
-                                    required
-                                  />
-                                </td>
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  <Input
-                                    type="text"
-                                    value={member.college}
-                                    onChange={(e) => {
-                                      const updated = [...formData.teamMembers];
-                                      updated[index] = {
-                                        ...updated[index],
-                                        college: e.target.value,
-                                      };
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        teamMembers: updated,
-                                      }));
-                                    }}
-                                    placeholder="Enter College Name"
-                                    className="w-full"
-                                    required
-                                  />
-                                </td>
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  {member.isCoFounder ? (
-                                    <span className="text-sm text-zinc-700 dark:text-zinc-300 px-2 py-1.5 block bg-zinc-100 dark:bg-zinc-800 rounded">
-                                      Co-founder
-                                    </span>
-                                  ) : (
-                                    <Input
-                                      type="text"
-                                      value={member.role ?? ""}
-                                      onChange={(e) => {
-                                        const updated = [
-                                          ...formData.teamMembers,
-                                        ];
-                                        updated[index] = {
-                                          ...updated[index],
-                                          role: e.target.value,
-                                        };
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          teamMembers: updated,
-                                        }));
-                                      }}
-                                      placeholder="Enter role"
-                                      className="w-full"
-                                    />
-                                  )}
-                                </td>
-                                <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
-                                  <div>
-                                    <Input
-                                      type="tel"
-                                      inputMode="numeric"
-                                      maxLength={10}
-                                      value={member.contactNumber ?? ""}
-                                      onChange={(e) => {
-                                        const v = e.target.value
-                                          .replace(/\D/g, "")
-                                          .slice(0, 10);
-                                        const updated = [
-                                          ...formData.teamMembers,
-                                        ];
-                                        updated[index] = {
-                                          ...updated[index],
-                                          contactNumber: v,
-                                        };
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          teamMembers: updated,
-                                        }));
-                                        if (fieldErrors[`teamContact_${index}`])
-                                          setFieldErrors((prev) => {
-                                            const next = { ...prev };
-                                            delete next[`teamContact_${index}`];
-                                            return next;
-                                          });
-                                      }}
-                                      placeholder="10 digit number"
-                                      className={cn(
-                                        "w-full",
-                                        fieldErrors[`teamContact_${index}`] &&
-                                          "border-red-500",
-                                      )}
-                                    />
-                                    {fieldErrors[`teamContact_${index}`] && (
-                                      <p className="text-xs text-red-500 mt-0.5">
-                                        {fieldErrors[`teamContact_${index}`]}
-                                      </p>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-3 py-2 text-center">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (member.isCoFounder) return;
-                                      const updated =
-                                        formData.teamMembers.filter(
-                                          (_, i) => i !== index,
-                                        );
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        teamMembers: updated,
-                                      }));
-                                    }}
-                                    disabled={member.isCoFounder}
-                                    className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    aria-label="Remove team member"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            teamMembers: [
-                              ...prev.teamMembers,
-                              {
-                                name: "",
-                                rollNumber: "",
-                                email: "",
-                                mailId: "",
-                                department: "",
-                                college: "",
-                                role: "",
-                                contactNumber: "",
-                                isCoFounder: false,
-                              },
-                            ],
-                          }));
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="p-2 border-t border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          teamMembers: [
+                            ...prev.teamMembers,
+                            {
+                              name: "",
+                              rollNumber: "",
+                              email: "",
+                              degree: "",
+                              department: "",
+                              college: "",
+                              yearOfGraduation: "",
+                              role: "",
+                              contactNumber: "",
+                              isCoFounder: false,
+                            },
+                          ],
+                        }));
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Team Member
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Nirmaan Program Questions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>About Nirmaan Program</CardTitle>
+              <CardDescription>
+                Help us understand your interest in the Nirmaan program
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="heardAboutNirmaan">
+                  Where did you get to know about Nirmaan?{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="heardAboutNirmaan"
+                  name="heardAboutNirmaan"
+                  required
+                  rows={3}
+                  value={formData.heardAboutNirmaan}
+                  onChange={handleChange}
+                  placeholder="Tell us how you heard about Nirmaan..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nirmaanCanHelp">
+                  I believe Nirmaan can help me with...{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="nirmaanCanHelp"
+                  name="nirmaanCanHelp"
+                  required
+                  rows={4}
+                  value={formData.nirmaanCanHelp}
+                  onChange={handleChange}
+                  placeholder="Describe how Nirmaan can help you..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="preIncubationReason">
+                  At this stage, I am applying for the pre-incubation program
+                  instead of incubation because...{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="preIncubationReason"
+                  name="preIncubationReason"
+                  required
+                  rows={4}
+                  value={formData.preIncubationReason}
+                  onChange={handleChange}
+                  placeholder="Explain your reason for applying to pre-incubation..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="heardAboutStartups">
+                  What startups from IITM have you heard about which were
+                  pre-incubated in Nirmaan?{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="heardAboutStartups"
+                  name="heardAboutStartups"
+                  required
+                  rows={4}
+                  value={formData.heardAboutStartups}
+                  onChange={handleChange}
+                  placeholder="List the startups you know about..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Problem & Solution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Problem & Solution</CardTitle>
+              <CardDescription>
+                Tell us about the problem you're solving and your solution
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+
+              <div className="space-y-2">
+                <Label htmlFor="problemSolving">
+                  What is the problem you are solving? Mention in brief (2-3
+                  lines) <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="problemSolving"
+                  name="problemSolving"
+                  required
+                  rows={3}
+                  value={formData.problemSolving}
+                  onChange={handleChange}
+                  placeholder="Describe the problem you're addressing..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="yourSolution">
+                  What is your solution? (2-3 lines){" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="yourSolution"
+                  name="yourSolution"
+                  required
+                  rows={3}
+                  value={formData.yourSolution}
+                  onChange={handleChange}
+                  placeholder="Describe your solution..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="solutionType">
+                  What kind of solution is it?{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.solutionType}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, solutionType: value, solutionTypeOther: "" }));
+                    if (fieldErrors.solutionType) setFieldErrors((prev) => { const next = { ...prev }; delete next.solutionType; return next; });
+                  }}
+                  required
+                >
+                  <SelectTrigger id="solutionType" className={cn(fieldErrors.solutionType && "border-red-500")}>
+                    <SelectValue placeholder="Select solution type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Hardware Oriented / Physical Products">
+                      Hardware Oriented / Physical Products
+                    </SelectItem>
+                    <SelectItem value="Software Oriented / App / Analytics">
+                      Software Oriented / App / Analytics
+                    </SelectItem>
+                    <SelectItem value="Hybrid - Hardware + Software / Embedded Analytics">
+                      Hybrid - Hardware + Software / Embedded Analytics
+                    </SelectItem>
+                    <SelectItem value="Service Oriented / Services Offered / Consultancy">
+                      Service Oriented / Services Offered / Consultancy
+                    </SelectItem>
+                    <SelectItem value="Others">
+                      Others
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {fieldErrors.solutionType && (
+                  <p className="text-sm text-red-500">{fieldErrors.solutionType}</p>
+                )}
+              </div>
+
+              {showSolutionTypeOther && (
+                <div className="space-y-2">
+                  <Label htmlFor="solutionTypeOther">
+                    Please specify <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="solutionTypeOther"
+                    name="solutionTypeOther"
+                    type="text"
+                    required={showSolutionTypeOther}
+                    value={formData.solutionTypeOther}
+                    onChange={handleChange}
+                    placeholder="Enter solution type"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Industry & Technologies */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Industry & Technologies</CardTitle>
+              <CardDescription>
+                Tell us about your target industry and technologies used
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="targetIndustry">
+                  Which industry would this most likely be applied to? Select
+                  only the top / main industry.{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.targetIndustry}
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      targetIndustry: value,
+                      industryOther: value === "Other" ? prev.industryOther : "",
+                    }));
+                    if (fieldErrors.targetIndustry) setFieldErrors((prev) => { const next = { ...prev }; delete next.targetIndustry; return next; });
+                  }}
+                  required
+                >
+                  <SelectTrigger id="targetIndustry" className={cn(fieldErrors.targetIndustry && "border-red-500")}>
+                    <SelectValue placeholder="Select main industry" />
+                  </SelectTrigger>
+                  <SelectContent className=" max-h-[250px] overflow-y-auto">
+                    <SelectItem value="Aerospace & Drones Applications">
+                      Aerospace & Drones Applications
+                    </SelectItem>
+                    <SelectItem value="Agriculture & Allied Industries">
+                      Agriculture & Allied Industries
+                    </SelectItem>
+                    <SelectItem value="Apparels, Fashion & Personal Gadgets">
+                      Apparels, Fashion & Personal Gadgets
+                    </SelectItem>
+                    <SelectItem value="Arts, Culture & Traditions">
+                      Arts, Culture & Traditions
+                    </SelectItem>
+                    <SelectItem value="Automobiles & Self-Driving Assistances">
+                      Automobiles & Self-Driving Assistances
+                    </SelectItem>
+                    <SelectItem value="Banking, Finance Services & Insurance (BFSI)">
+                      Banking, Finance Services & Insurance (BFSI)
+                    </SelectItem>
+                    <SelectItem value="Central & State Government Agencies">
+                      Central & State Government Agencies
+                    </SelectItem>
+                    <SelectItem value="Defense & Security Systems">
+                      Defense & Security Systems
+                    </SelectItem>
+                    <SelectItem value="E-Commerce Platform">
+                      E-Commerce Platform
+                    </SelectItem>
+                    <SelectItem value="Education & Research">
+                      Education & Research
+                    </SelectItem>
+                    <SelectItem value="Health, Wellness & Allied Industries">
+                      Health, Wellness & Allied Industries
+                    </SelectItem>
+                    <SelectItem value="Human Resources Management">
+                      Human Resources Management
+                    </SelectItem>
+                    <SelectItem value="Logistics & Transportation">
+                      Logistics & Transportation
+                    </SelectItem>
+                    <SelectItem value="Manufacturing & Processing">
+                      Manufacturing & Processing
+                    </SelectItem>
+                    <SelectItem value="Marketing, Social Media & Sales">
+                      Marketing, Social Media & Sales
+                    </SelectItem>
+                    <SelectItem value="Space Exploration Satellite">
+                      Space Exploration Satellite
+                    </SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {fieldErrors.targetIndustry && (
+                  <p className="text-sm text-red-500">{fieldErrors.targetIndustry}</p>
+                )}
+              </div>
+
+              {showIndustryOther && (
+                <div className="space-y-2">
+                  <Label htmlFor="industryOther">
+                    Please specify <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="industryOther"
+                    name="industryOther"
+                    type="text"
+                    required={showIndustryOther}
+                    value={formData.industryOther}
+                    onChange={handleChange}
+                    placeholder="Enter your industry"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>
+                  Which other industries would this most likely be applied to?
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 p-4 border border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-900">
+                  {[
+                    "None",
+                    "Aerospace & Drones Applications",
+                    "Agriculture & Allied Industries",
+                    "Apparels, Fashion & Personal Gadgets",
+                    "Arts, Culture & Traditions",
+                    "Automobiles & Self-Driving Assistances",
+                    "Banking, Finance Services & Insurance (BFSI)",
+                    "Central & State Government Agencies",
+                    "Defense & Security Systems",
+                    "E-Commerce Platform",
+                    "Education & Research",
+                    "Health, Wellness & Allied Industries",
+                    "Human Resources Management",
+                    "Logistics & Transportation",
+                    "Manufacturing & Processing",
+                    "Marketing, Social Media & Sales",
+                    "Space Exploration Satellite",
+                    "Other",
+                  ].map((industry) => (
+                    <label
+                      key={industry}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.otherIndustries.includes(industry)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              otherIndustries: [
+                                ...prev.otherIndustries,
+                                industry,
+                              ],
+                              // Clear "Other" input if "None" is selected or vice versa
+                              ...(industry === "None" && {
+                                otherIndustries: ["None"],
+                                otherIndustriesOther: "",
+                              }),
+                              ...(prev.otherIndustries.includes("None") &&
+                                industry !== "None" && {
+                                  otherIndustries: prev.otherIndustries.filter(
+                                    (i) => i !== "None",
+                                  ),
+                                }),
+                            }));
+                          } else {
+                            setFormData((prev) => ({
+                              ...prev,
+                              otherIndustries: prev.otherIndustries.filter(
+                                (i) => i !== industry,
+                              ),
+                              ...(industry === "Other" && {
+                                otherIndustriesOther: "",
+                              }),
+                            }));
+                          }
                         }}
                         className="w-full sm:w-auto"
                       >
@@ -3096,6 +3698,50 @@ export default function ApplyPage() {
                   />
                 </div>
 
+          {/* Seed Fund & Pitch Video */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Seed Fund & Pitch Video</CardTitle>
+              <CardDescription>
+                Information about seed fund utilization and pitch video
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="seedFundUtilizationPlan">
+                  How do you plan to use the seed fund...{" "}
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="seedFundUtilizationPlan"
+                  name="seedFundUtilizationPlan"
+                  required
+                  rows={4}
+                  value={formData.seedFundUtilizationPlan}
+                  onChange={handleChange}
+                  placeholder="Describe how you plan to utilize the seed fund..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pitchVideoLink">
+                  Please share the link to the video of you presenting the
+                  PPT... <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="pitchVideoLink"
+                  name="pitchVideoLink"
+                  type="url"
+                  value={formData.pitchVideoLink}
+                  onChange={handleChange}
+                  placeholder="Enter link to your pitch video"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="document1Link">If you have any documents related to your startup upload here
+                  <p className="text-sm text-zinc-500">(research paper, White document or others )		</p>
+                </Label>
                 <div className="space-y-2">
                   <Label htmlFor="document1Link">
                     If you have any documents related to your startup upload

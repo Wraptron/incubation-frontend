@@ -65,10 +65,12 @@ async function sendWelcomeEmail(
     }
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true, // SSL
       auth: {
-        user: gmailUser,
-        pass: gmailAppPassword,
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
 
