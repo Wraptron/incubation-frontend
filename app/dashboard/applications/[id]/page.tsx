@@ -71,8 +71,12 @@ interface Application {
     name: string;
     rollNumber: string;
     email: string;
-    mailId: string;
+    degree: string;
     department: string;
+    college: string;
+    yearOfGraduation: string;
+    role: string;
+    contactNumber: string;
   }> | null;
   
   // About Nirmaan Program
@@ -1887,7 +1891,13 @@ export default function ApplicationDetailPage() {
                                   <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Name</th>
                                   <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Roll Number</th>
                                   <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Email</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Degree</th>
                                   <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Department</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">College</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Year of Graduation</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Role</th>
+                                  <th className="px-3 py-2 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">Contact Number</th>
+
                                 </tr>
                               </thead>
                               <tbody>
@@ -1904,7 +1914,12 @@ export default function ApplicationDetailPage() {
                                         "N/A"
                                       )}
                                     </td>
-                                    <td className="px-3 py-2 text-black dark:text-zinc-50">{member.department || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.degree || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.department || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.college || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.yearOfGraduation || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.role || "N/A"}</td>
+                                    <td className="px-3 py-2 text-black dark:text-zinc-50 border-r border-zinc-300 dark:border-zinc-700">{member.contactNumber || "N/A"}</td>
                                   </tr>
                                 ))}
                               </tbody>

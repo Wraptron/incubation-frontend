@@ -944,7 +944,7 @@ export default function ApplyPage() {
                 <Label htmlFor="email">
                   Email Address <span className="text-red-500">*</span>
                 </Label>
-                <p>Please enter your personal email address</p>
+                <p className="text-sm text-zinc-500">Please enter your personal email address</p>
                 <Input
                   id="email"
                   name="email"
@@ -1705,7 +1705,7 @@ export default function ApplyPage() {
                   Enter the team members names with their roll numbers below{" "}
                   <span className="text-red-500">*</span>
                 </Label>
-                <p>Please fill founder,co-founder and other team members details</p>
+                <p className="text-sm text-zinc-500">Please fill founder,co-founder and other team members details</p>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1200px]">

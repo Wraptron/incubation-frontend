@@ -60,8 +60,12 @@ interface Application {
     name: string;
     rollNumber: string;
     email: string;
-    mailId: string;
+    degree: string;
     department: string;
+    college: string;
+    yearOfGraduation: string;
+    role: string;
+    contactNumber: string;
   }> | null;
   
   // About Nirmaan Program

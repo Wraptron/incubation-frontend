@@ -57,7 +57,7 @@ async function sendWelcomeEmail(
       =====================================
     `);
 
-    const gmailUser = process.env.GMAIL_USER || "wraptron@gmail.com";
+    const gmailUser = process.env.GMAIL_USER || "support@sieiitm.org";
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
     if (!gmailAppPassword) {
       console.warn("GMAIL_APP_PASSWORD not set; skipping welcome email");
