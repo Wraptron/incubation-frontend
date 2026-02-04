@@ -2,80 +2,191 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+const HERO_IMAGES = [
+  encodeURI("/WhatsApp Image 2026-02-03 at 3.31.02 PM.jpeg"),
+  encodeURI("/WhatsApp Image 2026-02-03 at 3.32.06 PM (1).jpeg"),
+  encodeURI("/WhatsApp Image 2026-02-03 at 3.32.08 PM.jpeg"),
+  encodeURI("/WhatsApp Image 2026-02-03 at 3.31.03 PM (1).jpeg"),
+];
+
+const HIGHLIGHTS = [
+  {
+    title: "Mentorship",
+    description:
+      "Dedicated mentors support students at every stage, from problem identification and idea validation to customer discovery.",
+  },
+  {
+    title: "Funding",
+    description:
+      "Student teams are provided with structured funding support to cover key expenses and develop their first MVP.",
+  },
+  {
+    title: "Workshops",
+    description:
+      "Expert-led workshops cover customer discovery, lean startup, business models, pitching, and design thinking.",
+  },
+  {
+    title: "Workspace",
+    description:
+      "Nirmaan provides a workplace to interact, collaborate, and innovate, at the Sadha & Shankar Innovation Hub.",
+  },
+  {
+    title: "Tools & Resources",
+    description:
+      "At Nirmaan, you will find an extensive array of resources within our workspace, featuring advanced machining tools, sophisticated characterisation equipment, and top-tier computing facilities.",
+  },
+  {
+    title: "Networking",
+    description:
+      "Student teams have the opportunity to engage with a diverse array of industry experts and IITM alumni, allowing them to discuss and refine their startup ideas.",
+  },
+];
+
 export default function Home() {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-950 via-black to-zinc-900 dark:from-black dark:via-zinc-950 dark:to-black font-sans relative overflow-hidden flex items-center justify-center">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(108,184,108,0.1),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(108,184,108,0.08),transparent_50%)]"></div>
-      
-      <main className="relative flex flex-col items-center justify-center gap-12 px-6 py-12 max-w-4xl mx-auto text-center">
-        {/* Logo and Brand */}
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center justify-center gap-8 flex-wrap">
+    <div className="min-h-screen w-full min-w-full bg-gradient-to-br from-zinc-100 via-white to-zinc-100 dark:from-zinc-950 dark:via-black dark:to-zinc-900 font-sans relative overflow-x-hidden">
+      {/* Header — adapts to light/dark */}
+      <header className="w-full border-b border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/60 backdrop-blur-sm shrink-0">
+        <div className="w-full px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
             <Image
               src="/iitm-sie-logo.png"
               alt="School of Innovation & Entrepreneurship IIT Madras"
-              width={180}
-              height={80}
+              width={160}
+              height={72}
               priority
-              className="h-20 w-auto object-contain"
+              className="h-12 sm:h-14 w-auto object-contain"
             />
+             <Image
+            src="/nirmaan logo.png"
+            alt="Nirmaan"
+            width={90}
+            height={90}
+            priority
+            className="h-14 sm:h-16 w-auto object-contain"
+          />
+          </div>
+          <div className="flex items-center">
             <Image
-              src="/nirmaan logo.png"
-              alt="Nirmaan logo"
-              width={100}
-              height={100}
+              src="/iitm logo.png"
+              alt="IIT Madras"
+              width={72}
+              height={72}
               priority
-              className="rounded-2xl shadow-2xl shadow-primary/20 object-contain"
+              className="h-12 sm:h-14 w-12 sm:w-14 object-contain rounded-full object-center border-2 border-amber-700/40"
             />
           </div>
-          <div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-2">
-              TRAKTOR
+        </div>
+      </header>
+
+      {/* First page — text centered; below: images left, Start Your Journey + buttons right */}
+      <section className="min-h-[calc(100vh-4rem)] w-full px-4 sm:px-6 lg:px-10 py-6 lg:py-8 flex flex-col gap-8 lg:gap-10">
+        {/* All text centered (description left-aligned within block) */}
+        <div className="w-full flex flex-col items-center">
+          <div className="w-full max-w-2xl flex flex-col items-center text-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+              NIRMAAN TRAKTOR <span className="text-zinc-500 dark:text-zinc-400 font-semibold">Ascent</span>
             </h1>
-            <p className="text-base sm:text-lg text-primary font-semibold">IITM Pre-Incubation Center</p>
+            <p className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+              Begin your startup journey with us...
+            </p>
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base mb-4">
+              Have a game-changing idea you&apos;ve been holding on to?
+              <br />
+              Wondering how to take the first step towards building a startup?
+            </p>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex flex-col items-center gap-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight text-white max-w-2xl">
-            Transform Your Ideas Into Reality
-          </h2>
-          <p className="text-lg sm:text-xl leading-relaxed text-zinc-300 max-w-2xl">
-            Join IITM Nirmaan's pre-incubation program and get access to mentorship, 
-            funding, and resources to build your startup from the ground up.
+          <p className="text-zinc-600 dark:text-zinc-500 text-sm sm:text-base leading-relaxed max-w-6xl mx-auto text-left">
+            Traktor Ascent is the entry point to Nirmaan&apos;s pre-incubation ecosystem, designed to help budding entrepreneurs take their first structured step towards entrepreneurship and startup building. The program supports early-stage innovators by providing a guided pathway where aspiring founders are introduced to entrepreneurship as a practice, not just a concept. Through guided learning, mentorship, and hands-on validation, Traktor Ascent enables participants to explore, validate, and build their startup ideas in a structured and supportive environment.
           </p>
-          
-          {/* Features */}
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 text-sm sm:text-base mt-4">
-            <div className="flex items-center gap-3 bg-zinc-900/50 backdrop-blur-sm px-4 py-2.5 rounded-lg border border-zinc-800">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <span className="text-zinc-200 font-medium">Expert Mentorship</span>
+        </div>
+
+        {/* Images left, Start Your Journey + buttons right — equal-width columns, equal outer spacing */}
+        <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-stretch">
+          {/* Left: 2x2 image thumbnails */}
+          <div className="w-full lg:min-w-0 flex justify-center lg:justify-center">
+            <div className="grid grid-cols-2 gap-2 w-[360px] h-[252px] sm:w-[440px] sm:h-[308px] lg:w-[520px] lg:h-[364px]">
+              {HERO_IMAGES.map((src, i) => (
+                <div
+                  key={i}
+                  className="relative rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 min-h-0 min-w-0"
+                >
+                  <Image
+                    src={src}
+                    alt={`Program ${i + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 260px"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-3 bg-zinc-900/50 backdrop-blur-sm px-4 py-2.5 rounded-lg border border-zinc-800">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <span className="text-zinc-200 font-medium">IITM Network Access</span>
+          </div>
+
+          {/* Right: full-height column — Application banner, Start Your Journey, Login (separate) */}
+          <div className="w-full lg:min-w-0 flex flex-col gap-5 lg:h-full lg:justify-start mt-14">
+            {/* Application Open for Feb '26 — full-width banner */}
+            <div className="w-full rounded-xl overflow-hidden shadow-lg ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 ">
+              <div className="bg-gradient-to-r from-primary to-primary/80 text-white text-center font-semibold text-sm py-3.5 px-4 tracking-wide">
+                Application Open for Feb &apos;26 Cohort
+              </div>
+            </div>
+            {/* Start Your Journey Here [Apply] — stylish CTA card */}
+            <Link
+              href="/apply"
+              className="group w-full rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
+            >
+              <div className="relative bg-gradient-to-br from-white to-zinc-50/80 dark:from-white dark:to-zinc-100 p-6 border-l-4 border-primary">
+                <p className="text-zinc-900 dark:text-zinc-900 font-bold text-base mb-1">
+                  Start Your Journey Here
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm group-hover:gap-2.5 transition-all">
+                  Apply now
+                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
+            {/* Login — separate card/button */}
+            <div className="w-1/2 rounded-xl overflow-hidden shadow-lg ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 mx-auto">
+              <Button
+                asChild
+                size="lg"
+                className="w-full rounded-none h-auto py-5 text-base font-bold uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-inner hover:shadow-none transition-all duration-200"
+              >
+                <Link href="/login">Login</Link>
+              </Button>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 text-base font-medium mt-4">
-          <Button asChild size="lg" className="text-base px-8 py-6 shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all">
-            <Link href="/apply">Apply Now</Link>
-          </Button>
-          <Button 
-            asChild 
-            variant="outline" 
-            size="lg" 
-            className="text-base px-8 py-6 border-2 border-zinc-700 bg-transparent text-zinc-200 hover:bg-zinc-800 hover:border-primary hover:text-white transition-all"
-          >
-            <Link href="/login">Login</Link>
-          </Button>
+      {/* Next page — Program Highlights (full width) */}
+      <section className="w-full px-4 sm:px-6 lg:px-10 py-12 lg:py-16 bg-zinc-50/50 dark:bg-transparent">
+        <div className="w-full max-w-[1600px] mx-auto">
+          <div className="flex justify-center mb-8">
+            <h2 className="bg-orange-500 text-white font-semibold text-base px-6 py-2.5 rounded-md shadow-md">
+              Program Highlights
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {HIGHLIGHTS.map((item, i) => (
+              <div
+                key={i}
+                className="bg-emerald-50/95 dark:bg-emerald-50/90 border border-emerald-200/70 rounded-lg p-5 shadow-sm"
+              >
+                <h3 className="font-bold text-zinc-900 text-base mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-zinc-700 text-sm leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

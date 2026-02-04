@@ -109,7 +109,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
             NIRMAAN
           </h1>
-          <p className="text-primary font-semibold">LaunchPad</p>
+          <p className="text-primary font-semibold">TRACKTOR Ascent</p>
         </div>
         <Card>
           <CardHeader>

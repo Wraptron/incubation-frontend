@@ -331,7 +331,7 @@ export default function UsersPage() {
                       }
                       className="bg-purple-600 hover:bg-purple-700"
                     >
-                      {isSubmitting ? "Creating..." : "Create User"}
+                      {isSubmitting ? "Adding..." : "Add User"}
                     </Button>
                   </DialogFooter>
                 </>
