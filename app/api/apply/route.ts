@@ -89,13 +89,32 @@ export async function POST(request: NextRequest) {
   try {
     // Parse FormData instead of JSON (for file uploads)
     const formData = await request.formData();
-
     // Extract files directly from FormData (before converting to object)
     const presentationFile = formData.get("presentationFile") as File | null;
     const document1File = formData.get("document1File") as File | null;
     const document2File = formData.get("document2File") as File | null;
     const ipFile = formData.get("ipFile") as File | null;
     const potentialIpFile = formData.get("potentialIpFile") as File | null;
+
+    // Validate file size: max 1 MB per file (check numeric size in case of runtime quirks)
+    const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+    const filesToCheck: { file: File | null; label: string }[] = [
+      { file: presentationFile, label: "Presentation" },
+      { file: document1File, label: "Document 1" },
+      { file: document2File, label: "Document 2" },
+      { file: ipFile, label: "IP document" },
+      { file: potentialIpFile, label: "Potential IP document" },
+    ];
+    for (const { file, label } of filesToCheck) {
+      if (!file || !(file instanceof File)) continue;
+      const sizeBytes = Number(file.size);
+      if (!Number.isNaN(sizeBytes) && sizeBytes > MAX_FILE_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: "File size is too large. Please upload files under 1 MB." },
+          { status: 400 },
+        );
+      }
+    }
 
     // Debug logging
     console.log("Files received:", {
@@ -121,15 +140,16 @@ export async function POST(request: NextRequest) {
     });
 
     // Validate required fields based on database schema (NOT NULL constraints)
+    // NOTE: `rollNumber` is required only for IITM applicants.
     const requiredFields = [
       "email",
       "teamName",
       "yourName",
       "isIITM",
-      "rollNumber",
       "phoneNumber",
       "channel",
       "coFoundersCount",
+      "facultyInvolved",
       "priorEntrepreneurshipExperience",
       "teamPriorEntrepreneurshipExperience",
       "mcaRegistered",
@@ -151,6 +171,10 @@ export async function POST(request: NextRequest) {
       "seedFundUtilizationPlan",
     ];
 
+    if (String(body.isIITM || "").trim() === "Yes") {
+      requiredFields.push("rollNumber");
+    }
+
     for (const field of requiredFields) {
       // Special handling for array fields
       if (field === "teamMembers") {
@@ -167,6 +191,34 @@ export async function POST(request: NextRequest) {
             {
               error: `Missing required field: ${field}. At least one team member is required.`,
             },
+            { status: 400 },
+          );
+        }
+      } else if (field === "facultyInvolved") {
+        let facultyValue: unknown = body[field];
+        if (typeof facultyValue === "string") {
+          const trimmed = facultyValue.trim();
+          // Allow explicit N/A/NA markers
+          if (trimmed.toUpperCase() === "NA" || trimmed.toUpperCase() === "N/A") {
+            continue;
+          }
+          try {
+            facultyValue = JSON.parse(trimmed);
+          } catch {
+            facultyValue = null;
+          }
+        }
+
+        if (Array.isArray(facultyValue)) {
+          if (facultyValue.length === 0) {
+            return NextResponse.json(
+              { error: "Missing required field: facultyInvolved. If no faculty, enter N/A." },
+              { status: 400 },
+            );
+          }
+        } else if (!facultyValue || String(facultyValue).trim() === "") {
+          return NextResponse.json(
+            { error: "Missing required field: facultyInvolved. If no faculty, enter N/A." },
             { status: 400 },
           );
         }

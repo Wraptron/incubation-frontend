@@ -595,6 +595,19 @@ export default function ApplyPage() {
     if (!formData.channel?.trim()) {
       newErrors.channel = "Please select a channel.";
     }
+    // Faculty involved: mandatory (enter N/A if none)
+    const hasAnyFacultyInfo = formData.facultyInvolved.some((f) =>
+      Boolean(
+        f.name?.trim() ||
+          f.designation?.trim() ||
+          f.department?.trim() ||
+          f.university?.trim() ||
+          f.roleInStartup?.trim(),
+      ),
+    );
+    if (!hasAnyFacultyInfo) {
+      newErrors.facultyInvolved = "Faculty involved is required. If no faculty, add one row and enter N/A.";
+    }
     if (showNonIITMFields && !formData.currentOccupation?.trim()) {
       newErrors.currentOccupation = "Please select your occupation.";
     }
@@ -676,6 +689,25 @@ export default function ApplyPage() {
       return;
     }
 
+    // Enforce 1 MB max file size before building the request (outside try so we always show toast)
+    const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+    const FILE_SIZE_TOAST_MSG = "File size is too large. Please upload files under 1 MB.";
+    const filesToCheck: { file: File | null; label: string }[] = [
+      { file: presentationFile, label: "Presentation" },
+      { file: document1File, label: "Document 1" },
+      { file: document2File, label: "Document 2" },
+      { file: ipFile, label: "IP document" },
+      { file: potentialIpFile, label: "Potential IP document" },
+    ];
+    for (const { file, label } of filesToCheck) {
+      if (file && file.size > MAX_FILE_SIZE_BYTES) {
+        setIsSubmitting(false);
+        setErrorMessage(FILE_SIZE_TOAST_MSG);
+        addToast({ variant: "destructive", description: FILE_SIZE_TOAST_MSG });
+        return;
+      }
+    }
+
     try {
       // Create FormData for file upload
       const formDataToSend = new FormData();
@@ -743,7 +775,7 @@ export default function ApplyPage() {
         body: formDataToSend,
       });
 
-      const data = await response.json();
+const data=  await response.json()      
 
       if (response.ok) {
         setSubmitStatus("success");
@@ -758,14 +790,16 @@ export default function ApplyPage() {
         }, 3000);
       } else {
         setSubmitStatus("error");
-        const msg = data.error || "Failed to submit application";
+        const msg =
+          data.error ||
+          (response.status === 413 ? "File size is too large. Please upload files under 1 MB." : "Failed to submit application");
         setErrorMessage(msg);
         addToast({ variant: "destructive", description: msg });
       }
     } catch (error) {
       console.error("Error submitting application:", error);
       setSubmitStatus("error");
-      const msg = "An unexpected error occurred. Please try again.";
+      const msg = "Request failed. If you uploaded large files, please ensure each file is under 1 MB and try again.";
       setErrorMessage(msg);
       addToast({ variant: "destructive", description: msg });
     } finally {
@@ -774,6 +808,7 @@ export default function ApplyPage() {
   };
 
   const showNonIITMFields = formData.isIITM === "No";
+  const requireIITMRollAndCollege = formData.isIITM === "Yes";
   const showChannelOther = formData.channel === "Others";
   const showSolutionTypeOther = formData.solutionType === "Others";
   const showPriorExperience =
@@ -1026,13 +1061,16 @@ export default function ApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="rollNumber">
-                  Roll Number <span className="text-red-500">*</span>
+                  Roll Number{" "}
+                  {requireIITMRollAndCollege && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </Label>
                 <Input
                   id="rollNumber"
                   name="rollNumber"
                   type="text"
-                  required
+                  required={requireIITMRollAndCollege}
                   value={formData.rollNumber}
                   onChange={handleChange}
                   placeholder="Enter your roll number"
@@ -1043,13 +1081,12 @@ export default function ApplyPage() {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="collegeName">
-                      College Name <span className="text-red-500">*</span>
+                      College Name
                     </Label>
                     <Input
                       id="collegeName"
                       name="collegeName"
                       type="text"
-                      required={showNonIITMFields}
                       value={formData.collegeName}
                       onChange={handleChange}
                       placeholder="Enter your college name"
@@ -1184,7 +1221,11 @@ export default function ApplyPage() {
                 <Label htmlFor="facultyInvolved">
                   Faculty Involved (Name, Designation, Department, Institute
                   {"{IITM or other}"} and Role in the team){" "}
+                  <span className="text-red-500">*</span>
                 </Label>
+                <p className="text-sm text-zinc-500">
+                  If no faculty is involved, add one row and enter <span className="font-medium">N/A</span>.
+                </p>
                 <div className="border border-zinc-300 dark:border-zinc-700 rounded-md overflow-hidden mt-4">
                   <div className="overflow-x-auto">
                     <table className="w-full">
@@ -1371,6 +1412,9 @@ export default function ApplyPage() {
                     </Button>
                   </div>
                 </div>
+                {fieldErrors.facultyInvolved && (
+                  <p className="text-sm text-red-500">{fieldErrors.facultyInvolved}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1797,7 +1841,7 @@ export default function ApplyPage() {
                                   }}
                                   placeholder="Enter roll number"
                                   className="w-full"
-                                  required
+                                  required={requireIITMRollAndCollege}
                                 />
                               </td>
                               <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
@@ -1883,7 +1927,7 @@ export default function ApplyPage() {
                                   }}
                                   placeholder="Enter College Name"
                                   className="w-full"
-                                  required
+                                  required={requireIITMRollAndCollege}
                                 />
                               </td>
                               <td className="px-3 py-2 border-r border-zinc-300 dark:border-zinc-700">
@@ -2524,6 +2568,14 @@ export default function ApplyPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          const maxSize = 1 * 1024 * 1024;
+                          if (file.size > maxSize) {
+                            setErrorMessage("File size is too large. Please upload files under 1 MB.");
+                          addToast({ variant: "destructive", description: "File size is too large. Please upload files under 1 MB." });
+                            e.target.value = "";
+                            setIpFile(null);
+                            return;
+                          }
                           setIpFile(file);
                           setErrorMessage("");
                         }
@@ -2602,6 +2654,14 @@ export default function ApplyPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          const maxSize = 1 * 1024 * 1024;
+                          if (file.size > maxSize) {
+                            setErrorMessage("File size is too large. Please upload files under 1 MB.");
+                          addToast({ variant: "destructive", description: "File size is too large. Please upload files under 1 MB." });
+                            e.target.value = "";
+                            setPotentialIpFile(null);
+                            return;
+                          }
                           setPotentialIpFile(file);
                           setErrorMessage("");
                         }
@@ -2673,12 +2733,11 @@ export default function ApplyPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        // Validate file size (10 MB = 10 * 1024 * 1024 bytes)
-                        const maxSize = 10 * 1024 * 1024;
+                        // Validate file size (1 MB = 1024 * 1024 bytes)
+                        const maxSize = 1 * 1024 * 1024;
                         if (file.size > maxSize) {
-                          setErrorMessage(
-                            "File size exceeds 10 MB limit. Please upload a smaller file.",
-                          );
+                          setErrorMessage("File size is too large. Please upload files under 1 MB.");
+                          addToast({ variant: "destructive", description: "File size is too large. Please upload files under 1 MB." });
                           e.target.value = "";
                           setPresentationFile(null);
                           return;
@@ -2720,7 +2779,7 @@ export default function ApplyPage() {
                   )}
                 </div>
                 <p className="text-sm text-zinc-500">
-                  Accepted formats: PDF, PPT, PPTX (Max 10 MB)
+                  Accepted formats: PDF, PPT, PPTX (Max 1 MB)
                 </p>
               </div>
 
@@ -2869,11 +2928,21 @@ export default function ApplyPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        const maxSize = 1 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          setErrorMessage("File size is too large. Please upload files under 1 MB.");
+                          addToast({ variant: "destructive", description: "File size is too large. Please upload files under 1 MB." });
+                          e.target.value = "";
+                          setDocument1File(null);
+                          setFormData((prev) => ({ ...prev, document1Link: "" }));
+                          return;
+                        }
                         setDocument1File(file);
                         setFormData((prev) => ({
                           ...prev,
                           document1Link: file.name,
                         }));
+                        setErrorMessage("");
                       }
                     }}
                     className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-900 dark:file:text-zinc-50 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700"
@@ -2922,11 +2991,21 @@ export default function ApplyPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        const maxSize = 1 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          setErrorMessage("File size is too large. Please upload files under 1 MB.");
+                          addToast({ variant: "destructive", description: "File size is too large. Please upload files under 1 MB." });
+                          e.target.value = "";
+                          setDocument2File(null);
+                          setFormData((prev) => ({ ...prev, document2Link: "" }));
+                          return;
+                        }
                         setDocument2File(file);
                         setFormData((prev) => ({
                           ...prev,
                           document2Link: file.name,
                         }));
+                        setErrorMessage("");
                       }
                     }}
                     className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-900 dark:file:text-zinc-50 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700"

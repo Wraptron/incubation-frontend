@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { KeyRound, CheckCircle, AlertCircle } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -232,9 +233,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
                       <div className="grid gap-2">
                         <Label htmlFor="oldPassword">Current Password</Label>
-                        <Input
+                        <PasswordInput
                           id="oldPassword"
-                          type="password"
                           placeholder="Enter current password"
                           value={passwordData.oldPassword}
                           onChange={(e) =>
@@ -246,9 +246,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
                       <div className="grid gap-2">
                         <Label htmlFor="newPassword">New Password</Label>
-                        <Input
+                        <PasswordInput
                           id="newPassword"
-                          type="password"
                           placeholder="Enter new password"
                           value={passwordData.newPassword}
                           onChange={(e) =>
@@ -260,9 +259,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
                       <div className="grid gap-2">
                         <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <Input
+                        <PasswordInput
                           id="confirmPassword"
-                          type="password"
                           placeholder="Confirm new password"
                           value={passwordData.confirmPassword}
                           onChange={(e) =>

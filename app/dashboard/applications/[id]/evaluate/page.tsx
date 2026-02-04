@@ -195,11 +195,11 @@ export default function EvaluatePage() {
   const [error, setError] = useState<string>("");
 
   const [formData, setFormData] = useState({
-    needScore: "5.0",
-    noveltyScore: "5.0",
-    feasibilityScalabilityScore: "5.0",
-    marketPotentialScore: "5.0",
-    impactScore: "5.0",
+    needScore: "",
+    noveltyScore: "",
+    feasibilityScalabilityScore: "",
+    marketPotentialScore: "",
+    impactScore: "",
     needComment: "",
     noveltyComment: "",
     feasibilityScalabilityComment: "",
@@ -350,9 +350,9 @@ export default function EvaluatePage() {
           setEvaluation(data.evaluation);
           // Format scores for display (up to 2 decimals, no rounding)
           const formatScore = (score: number | null | undefined): string => {
-            if (score == null) return "5.0";
+            if (score == null) return "";
             const num = typeof score === "number" ? score : parseFloat(String(score));
-            if (isNaN(num)) return "5.0";
+            if (isNaN(num)) return "";
             return num % 1 === 0 ? String(num) : num.toFixed(2).replace(/\.?0+$/, "") || String(num);
           };
           setFormData({
@@ -391,12 +391,12 @@ export default function EvaluatePage() {
 
   const handleScoreBlur = (key: string, value: string) => {
     if (value === "" || value === ".") {
-      setFormData((prev) => ({ ...prev, [key]: "5.0" }));
+      setFormData((prev) => ({ ...prev, [key]: " " }));
       return;
     }
     const numValue = parseFloat(value);
     if (isNaN(numValue)) {
-      setFormData((prev) => ({ ...prev, [key]: "5.0" }));
+      setFormData((prev) => ({ ...prev, [key]: " " }));
       return;
     }
     // Clamp to 0-10 only; do not round - truncate to 2 decimals (7.536 -> 7.53)
@@ -1459,7 +1459,7 @@ export default function EvaluatePage() {
                         <Input
                           type="text"
                           inputMode="decimal"
-                          value={formData[criterion.scoreKey] || "5.0"}
+                          value={formData[criterion.scoreKey] ?? " "}
                           onChange={(e) =>
                             handleScoreChange(
                               criterion.scoreKey,
@@ -1472,7 +1472,7 @@ export default function EvaluatePage() {
                               e.target.value,
                             )
                           }
-                          placeholder="5.0"
+                          placeholder="Please enter your score"
                           className="w-full"
                           required
                         />
