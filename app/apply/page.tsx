@@ -879,30 +879,29 @@ const data=  await response.json()
         </DialogContent>
       </Dialog>
 
-      <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900 py-8 px-4 sm:px-6 lg:px-5">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 text-center">
-            <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="flex items-center justify-between w-full mb-6">
             <img
               src="/iitm-sie-logo.png"
               alt="School of Innovation & Entrepreneurship IIT Madras"
               className="h-20 w-auto object-contain"
             />
-              <img
-                src="/nirmaan logo.png"
-                alt="Nirmaan logo"
-                className="w-20 h-20 rounded-2xl shadow-lg"
-              />
-              </div>
+            <img
+              src="/nirmaan logo.png"
+              alt="Nirmaan logo"
+              className="w-20 h-20 rounded-2xl shadow-lg"
+            />
+          </div>
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
-                  TRAKTOR
+                  NIRMAAN TRAKTOR Ascent
                 </h1>
-                <p className="text-primary font-semibold">IITM Pre-Incubation</p>
               </div>
-            <div className="flex items-center justify-between w-full max-w-4xl">
-              <div>
-                <h2 className="text-4xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
+            <div className="relative flex items-center justify-center w-full max-w-4xl">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold tracking-tight mb-2 text-black dark:text-zinc-50">
                   Pre-Incubation Application
                 </h2>
                 <p className="text-lg text-zinc-600 dark:text-zinc-400">
@@ -918,7 +917,7 @@ const data=  await response.json()
                     await supabase.auth.signOut();
                     router.push("/");
                   }}
-                  className="ml-4"
+                  className="absolute right-0 top-0"
                 >
                   Logout
                 </Button>
