@@ -1447,7 +1447,7 @@ export default function ApplicationDetailPage() {
                 {/* Company Information */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Company Information</CardTitle>
+                    <CardTitle>Team Information</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -1495,7 +1495,7 @@ export default function ApplicationDetailPage() {
                           {application.founder_name}
                         </p>
                       </div>
-                      <div>
+                      {/* <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Co-Founders
                         </label>
@@ -1512,7 +1512,7 @@ export default function ApplicationDetailPage() {
                             {typeof application.team_members === 'string' ? application.team_members : "N/A"}
                           </p>
                         )}
-                      </div>
+                      </div> */}
                       <div>
                         <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                           Email

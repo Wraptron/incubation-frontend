@@ -143,7 +143,7 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold mb-4">Startup Applications</h2>
+        <h2 className="text-2xl font-bold mb-4">Applications for Pre-Incubation</h2>
 
         <div className="flex gap-2 mb-6 flex-wrap">
           {tabFilters.map((status) => (
@@ -167,7 +167,7 @@ export default function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Company</TableHead>
+                  <TableHead>Team Name</TableHead>
                   <TableHead>Founder</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>

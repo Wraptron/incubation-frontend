@@ -133,7 +133,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             <img
               src="/nirmaan logo.png"
               alt="Nirmaan logo"
-              className="w-10 h-10 rounded-lg"
+              className="w-12 h-12 rounded-lg object-contain"
             />
           </div>
         ) : (
@@ -141,7 +141,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
             <img
               src="/nirmaan logo.png"
               alt="Nirmaan logo"
-              className="w-12 h-12 rounded-lg shadow-md"
+              className="w-12 h-12 rounded-lg shadow-md object-contain"
             />
             <div>
               <h2 className="text-lg font-bold text-black dark:text-zinc-50">
