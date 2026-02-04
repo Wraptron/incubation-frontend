@@ -384,9 +384,20 @@ export default function EvaluatePage() {
   const handleScoreChange = (key: string, value: string) => {
     // Allow free typing - don't format immediately; allow up to 2 decimal places
     const validPattern = /^$|^\.$|^\d+$|^\d+\.\d{0,2}$|^\.\d{0,2}$/;
-    if (validPattern.test(value)) {
-      setFormData((prev) => ({ ...prev, [key]: value }));
+    if (!validPattern.test(value)) return;
+    // Clamp to 0–10 so user cannot type values above 10
+    const numValue = parseFloat(value);
+    if (value !== "" && value !== "." && !isNaN(numValue)) {
+      if (numValue > 10) {
+        setFormData((prev) => ({ ...prev, [key]: "10" }));
+        return;
+      }
+      if (numValue < 0) {
+        setFormData((prev) => ({ ...prev, [key]: "0" }));
+        return;
+      }
     }
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleScoreBlur = (key: string, value: string) => {
@@ -1457,9 +1468,12 @@ export default function EvaluatePage() {
                           Score (0.0 - 10.0) <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          type="text"
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={0.01}
                           inputMode="decimal"
-                          value={formData[criterion.scoreKey] ?? " "}
+                          value={formData[criterion.scoreKey] === " " || formData[criterion.scoreKey] === undefined ? "" : formData[criterion.scoreKey]}
                           onChange={(e) =>
                             handleScoreChange(
                               criterion.scoreKey,
@@ -1480,7 +1494,6 @@ export default function EvaluatePage() {
                           Type a score between 0.0 and 10.0 (1 decimal place allowed)
                         </p>
                       </div>
-
                       <div>
                         <Label className="text-sm text-zinc-700 dark:text-zinc-300">
                           Comment
