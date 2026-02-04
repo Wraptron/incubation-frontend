@@ -66,7 +66,7 @@ export default function Home() {
             className="h-14 sm:h-16 w-auto object-contain"
           />
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <Image
               src="/iitm logo.png"
               alt="IIT Madras"
@@ -80,32 +80,32 @@ export default function Home() {
       </header>
 
       {/* First page — text centered; below: images left, Start Your Journey + buttons right */}
-      <section className="min-h-[calc(100vh-4rem)] w-full px-4 sm:px-6 lg:px-10 py-6 lg:py-8 flex flex-col gap-8 lg:gap-10">
+      <section className="min-h-[calc(100vh-4rem)] w-full px-4 sm:px-4 lg:px-10 py-6 lg:py-8 flex flex-col gap-8 lg:gap-10">
         {/* All text centered (description left-aligned within block) */}
-        <div className="w-full flex flex-col items-center">
-          <div className="w-full max-w-2xl flex flex-col items-center text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+        <div className="w-full flex flex-col items-center gap-6">
+          <div className="w-full max-w-2xl flex flex-col items-center text-center gap-5">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-zinc-900 dark:text-zinc-100">
               NIRMAAN TRAKTOR <span className="text-zinc-500 dark:text-zinc-400 font-semibold">Ascent</span>
             </h1>
-            <p className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+            <p className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">
               Begin your startup journey with us...
             </p>
-            <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base mb-4">
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm sm:text-base leading-loose">
               Have a game-changing idea you&apos;ve been holding on to?
               <br />
               Wondering how to take the first step towards building a startup?
             </p>
           </div>
-          <p className="text-zinc-600 dark:text-zinc-500 text-sm sm:text-base leading-relaxed max-w-6xl mx-auto text-left">
+          <p className="text-zinc-600 dark:text-zinc-500 text-sm sm:text-base leading-relaxed max-w-6xl mx-auto text-left pt-2">
             Traktor Ascent is the entry point to Nirmaan&apos;s pre-incubation ecosystem, designed to help budding entrepreneurs take their first structured step towards entrepreneurship and startup building. The program supports early-stage innovators by providing a guided pathway where aspiring founders are introduced to entrepreneurship as a practice, not just a concept. Through guided learning, mentorship, and hands-on validation, Traktor Ascent enables participants to explore, validate, and build their startup ideas in a structured and supportive environment.
           </p>
         </div>
 
         {/* Images left, Start Your Journey + buttons right — equal-width columns, equal outer spacing */}
-        <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-stretch">
+        <div className="w-full max-w-6xl mx-auto px-6 lg:px-8 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-stretch">
           {/* Left: 2x2 image thumbnails */}
-          <div className="w-full lg:min-w-0 flex justify-center lg:justify-center">
-            <div className="grid grid-cols-2 gap-2 w-[360px] h-[252px] sm:w-[440px] sm:h-[308px] lg:w-[520px] lg:h-[364px]">
+          <div className="w-full lg:min-w-0 flex justify-center lg:justify-start">
+            <div className="grid grid-cols-2 gap-2 w-full min-w-[400px] max-w-[min(90vw,640px)] sm:min-w-[480px] sm:max-w-[min(90vw,760px)] lg:min-w-0 lg:max-w-none lg:w-full h-[252px] sm:h-[308px] lg:h-[364px]">
               {HERO_IMAGES.map((src, i) => (
                 <div
                   key={i}
@@ -115,7 +115,7 @@ export default function Home() {
                     src={src}
                     alt={`Program ${i + 1}`}
                     fill
-                    sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 260px"
+                    sizes="(max-width: 640px) 320px, (max-width: 1024px) 380px, 50vw"
                     className="object-cover"
                   />
                 </div>
@@ -123,42 +123,44 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right: full-height column — Application banner, Start Your Journey, Login (separate) */}
-          <div className="w-full lg:min-w-0 flex flex-col gap-5 lg:h-full lg:justify-start mt-14">
-            {/* Application Open for Feb '26 — full-width banner */}
-            <div className="w-full rounded-xl overflow-hidden shadow-lg ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 ">
-              <div className="bg-gradient-to-r from-primary to-primary/80 text-white text-center font-semibold text-sm py-3.5 px-4 tracking-wide">
-                Application Open for Feb &apos;26 Cohort
-              </div>
-            </div>
-            {/* Start Your Journey Here [Apply] — stylish CTA card */}
-            <Link
-              href="/apply"
-              className="group w-full rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
-            >
-              <div className="relative bg-gradient-to-br from-white to-zinc-50/80 dark:from-white dark:to-zinc-100 p-6 border-l-4 border-primary">
-                <p className="text-zinc-900 dark:text-zinc-900 font-bold text-base mb-1">
-                  Start Your Journey Here
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm group-hover:gap-2.5 transition-all">
-                  Apply now
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-            {/* Login — separate card/button */}
-            <div className="w-1/2 rounded-xl overflow-hidden shadow-lg ring-1 ring-zinc-200/50 dark:ring-zinc-700/50 mx-auto">
-              <Button
-                asChild
-                size="lg"
-                className="w-full rounded-none h-auto py-5 text-base font-bold uppercase tracking-wider bg-primary hover:bg-primary/90 text-white shadow-inner hover:shadow-none transition-all duration-200"
-              >
-                <Link href="/login">Login</Link>
-              </Button>
-            </div>
-          </div>
+          {/* Right: full-height column — Application banner, Start Your Journey */}
+          <div className="w-full lg:min-w-0 flex flex-col gap-6 lg:h-full lg:justify-start mt-20">
+  {/* Application Open for Feb '26 — modern banner */}
+  <div className="w-full rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
+    <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/80 text-white text-center font-medium  text-xl py-3 px-4 tracking-wide">
+      Call for Applications for Feb &apos;26 Cohort
+    </div>
+  </div>
+
+  {/* Start Your Journey Here [Apply] — modern CTA card */}
+  <Link
+    href="/apply"
+    className="group relative w-fit max-w-sm self-center rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
+  >
+    {/* subtle glow */}
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity " />
+
+    <div className="relative bg-white/80 backdrop-blur-md dark:bg-white p-7 border-l-[5px] border-primary">
+      <p className="text-zinc-900 font-semibold text-base mb-1">
+        Start Your Journey Here
+      </p>
+
+      <span className="inline-flex items-center gap-2 text-primary font-bold text-2xl transition-all group-hover:gap-3">
+        Apply now
+        <svg
+          className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </span>
+    </div>
+  </Link>
+</div>
+
         </div>
       </section>
 
