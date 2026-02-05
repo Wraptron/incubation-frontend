@@ -164,7 +164,7 @@ export default function Home() {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="relative h-full min-h-[160px] bg-white/80 backdrop-blur-md dark:bg-white p-6 border-l-4 border-primary flex flex-col">
         <p className="text-zinc-900 font-semibold text-base mb-0.5">
-          For IITM Off-Campus Learners
+          IITM Off-Campus Learners
         </p>
         <p className="text-zinc-600 text-sm">
           BS Data Science and Electrical Systems
