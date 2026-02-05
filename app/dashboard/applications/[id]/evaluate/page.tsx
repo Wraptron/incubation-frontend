@@ -1322,7 +1322,7 @@ export default function EvaluatePage() {
                             Nirmaan Presentation:{" "}
                           </span>
                           <a
-                              href={`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(application.nirmaan_presentation_link)}`}
+                              href={application.nirmaan_presentation_link}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 dark:text-blue-400 hover:underline"
