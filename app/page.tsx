@@ -125,40 +125,60 @@ export default function Home() {
 
           {/* Right: full-height column — Application banner, Start Your Journey */}
           <div className="w-full lg:min-w-0 flex flex-col gap-6 lg:h-full lg:justify-start mt-20">
-  {/* Application Open for Feb '26 — modern banner */}
-  <div className="w-full rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
-    <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/80 text-white text-center font-medium  text-xl py-3 px-4 tracking-wide">
+  {/* Application Open for Feb '26 — banner aligned with cards */}
+  <div className="w-full max-w-2xl rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
+    <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/80 text-white text-center font-medium text-xl py-3 px-4 tracking-wide">
       Call for Applications for Feb &apos;26 Cohort
     </div>
   </div>
 
-  {/* Start Your Journey Here [Apply] — modern CTA card */}
-  <Link
-    href="/apply"
-    className="group relative w-fit max-w-sm self-center rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
-  >
-    {/* subtle glow */}
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity " />
+  {/* Two CTA cards: equal height, buttons aligned at bottom */}
+  <div className="w-full flex flex-col sm:flex-row items-stretch justify-center gap-4 sm:gap-5 max-w-2xl">
+    {/* Left: Start Your Journey Here */}
+    <Link
+      href="/apply"
+      className="group relative flex-1 min-w-0 rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="relative h-full min-h-[160px] bg-white/80 backdrop-blur-md dark:bg-white p-6 border-l-4 border-primary flex flex-col">
+        <p className="text-zinc-900 font-semibold text-base mb-1">
+          Start Your Journey Here
+        </p>
+        <div className="flex-1 min-h-[2.5rem]" aria-hidden />
+        <span className="inline-flex items-center gap-2 text-primary font-bold text-xl transition-all group-hover:gap-3">
+          Apply now
+          <svg className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </div>
+    </Link>
 
-    <div className="relative bg-white/80 backdrop-blur-md dark:bg-white p-7 border-l-[5px] border-primary">
-      <p className="text-zinc-900 font-semibold text-base mb-1">
-        Start Your Journey Here
-      </p>
-
-      <span className="inline-flex items-center gap-2 text-primary font-bold text-2xl transition-all group-hover:gap-3">
-        Apply now
-        <svg
-          className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </span>
-    </div>
-  </Link>
+    {/* Right: IITM Off-Campus Learners */}
+    <a
+      href="https://forms.gle/hVSKZe3VJ75LRowo7"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative flex-1 min-w-0 rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="relative h-full min-h-[160px] bg-white/80 backdrop-blur-md dark:bg-white p-6 border-l-4 border-primary flex flex-col">
+        <p className="text-zinc-900 font-semibold text-base mb-0.5">
+          For IITM Off-Campus Learners
+        </p>
+        <p className="text-zinc-600 text-sm">
+          BS Data Science and Electrical Systems
+        </p>
+        <div className="flex-1 min-h-[0.5rem]" aria-hidden />
+        <span className="inline-flex items-center gap-2 text-primary font-bold text-xl transition-all group-hover:gap-3 mt-2">
+          Apply Here
+          <svg className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </span>
+      </div>
+    </a>
+  </div>
 </div>
 
         </div>
