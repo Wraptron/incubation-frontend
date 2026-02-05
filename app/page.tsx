@@ -124,7 +124,7 @@ export default function Home() {
           </div>
 
           {/* Right: full-height column — Application banner, Start Your Journey */}
-          <div className="w-full lg:min-w-0 flex flex-col gap-6 lg:h-full lg:justify-start mt-20">
+          <div className="w-full lg:min-w-0 flex flex-col gap-6 lg:h-full lg:justify-start mt-4">
   {/* Application Open for Feb '26 — banner aligned with cards */}
   <div className="w-full max-w-2xl rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
     <div className="bg-gradient-to-r from-primary/90 via-primary to-primary/80 text-white text-center font-medium text-xl py-3 px-4 tracking-wide">
@@ -178,6 +178,13 @@ export default function Home() {
         </span>
       </div>
     </a>
+  </div>
+
+  {/* Submission Deadline — red banner */}
+  <div className="w-full max-w-2xl rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
+    <div className="bg-red-400 text-white text-center font-medium text-xl py-3 px-4 tracking-wide">
+      Submission Deadline: 18th Feb 2026, 11:59 PM
+    </div>
   </div>
 </div>
 
