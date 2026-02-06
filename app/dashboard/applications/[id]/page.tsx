@@ -178,6 +178,8 @@ export default function ApplicationDetailPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [showDeclineInviteDialog, setShowDeclineInviteDialog] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
   const [evaluations, setEvaluations] = useState<
     Array<{
       id: string;
@@ -896,41 +898,8 @@ export default function ApplicationDetailPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={async () => {
-                      setIsResponding(true);
-                      try {
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session?.access_token) {
-                          setUpdateMessage("Please log in again.");
-                          setTimeout(() => setUpdateMessage(""), 3000);
-                          return;
-                        }
-                        const r = await fetch(
-                          `/api/applications/${params.id}/reviewer-respond`,
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${session.access_token}`,
-                            },
-                            body: JSON.stringify({ accept: false }),
-                          }
-                        );
-                        const data = await r.json().catch(() => ({}));
-                        if (r.ok) {
-                          setUpdateMessage("You have declined the assignment.");
-                          setTimeout(() => setUpdateMessage(""), 3000);
-                          fetchApplication();
-                        } else {
-                          setUpdateMessage(data.error || "Failed to decline");
-                          setTimeout(() => setUpdateMessage(""), 3000);
-                        }
-                      } catch (e) {
-                        setUpdateMessage("Failed to respond");
-                        setTimeout(() => setUpdateMessage(""), 3000);
-                      } finally {
-                        setIsResponding(false);
-                      }
+                    onClick={() => {
+                      setShowDeclineInviteDialog(true);
                     }}
                     disabled={isResponding}
                   >
@@ -940,6 +909,91 @@ export default function ApplicationDetailPage() {
               </AlertDescription>
             </Alert>
           )}
+
+        {/* Decline Invite Dialog */}
+        <Dialog open={showDeclineInviteDialog} onOpenChange={setShowDeclineInviteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Decline Invitation</DialogTitle>
+              <DialogDescription>
+                Please provide a reason for declining this review invitation.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                placeholder="Enter your reason for declining..."
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                rows={4}
+                className="w-full"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeclineInviteDialog(false);
+                  setDeclineReason("");
+                }}
+                disabled={isResponding}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (!declineReason.trim()) {
+                    setUpdateMessage("Please provide a reason for declining.");
+                    setTimeout(() => setUpdateMessage(""), 3000);
+                    return;
+                  }
+                  setIsResponding(true);
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session?.access_token) {
+                      setUpdateMessage("Please log in again.");
+                      setTimeout(() => setUpdateMessage(""), 3000);
+                      return;
+                    }
+                    const r = await fetch(
+                      `/api/applications/${params.id}/reviewer-respond`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${session.access_token}`,
+                        },
+                        body: JSON.stringify({ 
+                          accept: false,
+                          rejectReason: declineReason.trim()
+                        }),
+                      }
+                    );
+                    const data = await r.json().catch(() => ({}));
+                    if (r.ok) {
+                      setUpdateMessage("You have declined the assignment.");
+                      setTimeout(() => setUpdateMessage(""), 3000);
+                      setShowDeclineInviteDialog(false);
+                      setDeclineReason("");
+                      fetchApplication();
+                    } else {
+                      setUpdateMessage(data.error || "Failed to decline");
+                      setTimeout(() => setUpdateMessage(""), 3000);
+                    }
+                  } catch (e) {
+                    setUpdateMessage("Failed to respond");
+                    setTimeout(() => setUpdateMessage(""), 3000);
+                  } finally {
+                    setIsResponding(false);
+                  }
+                }}
+                disabled={isResponding || !declineReason.trim()}
+              >
+                Confirm Decline
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card className="mb-6">
           <CardHeader>
