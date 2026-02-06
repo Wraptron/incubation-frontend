@@ -33,6 +33,7 @@ export async function POST(
 
     const body = await request.json().catch(() => ({}));
     const accept = body.accept === true;
+    const rejectReason = body.rejectReason || null;
 
     const url = `${backendUrl}/api/applications/${applicationId}/reviewer-respond`;
     let res: Response;
@@ -43,7 +44,7 @@ export async function POST(
           "Content-Type": "application/json",
           Authorization: authHeader,
         },
-        body: JSON.stringify({ accept }),
+        body: JSON.stringify({ accept, rejectReason }),
       });
     } catch (fetchError: unknown) {
       console.error("reviewer-respond proxy: backend fetch failed", fetchError);
