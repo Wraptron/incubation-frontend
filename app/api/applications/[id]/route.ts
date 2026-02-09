@@ -78,9 +78,13 @@ const buildApplicationResponse = async (
     .select("id, reviewer_id")
     .eq("application_id", id);
 
+  // Count only accepted reviewers (matching backend logic)
+  const acceptedReviewers = reviewerAssignments?.filter(
+    (a: any) => (a.invite_status ?? "pending") === "accepted"
+  ) ?? [];
   const totalReviewers = viewerReviewerId
-    ? (reviewerAssignments?.length ?? 0)
-    : reviewers.length;
+    ? (reviewerAssignments?.filter((a: any) => (a.invite_status ?? "pending") === "accepted").length ?? 0)
+    : acceptedReviewers.length;
   const evaluationsCount = evaluations?.length ?? 0;
   const allEvaluationsComplete =
     totalReviewers > 0 && evaluationsCount >= totalReviewers;

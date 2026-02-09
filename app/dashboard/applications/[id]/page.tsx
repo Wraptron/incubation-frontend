@@ -178,6 +178,12 @@ export default function ApplicationDetailPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [showCallForInterviewModal, setShowCallForInterviewModal] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewHour, setInterviewHour] = useState("");
+  const [interviewMinute, setInterviewMinute] = useState("");
+  const [interviewAmPm, setInterviewAmPm] = useState<"AM" | "PM">("AM");
+  const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
   const [evaluations, setEvaluations] = useState<
     Array<{
       id: string;
@@ -764,6 +770,10 @@ export default function ApplicationDetailPage() {
         "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800",
       under_review:
         "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+      evaluated:
+        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
+      interview_scheduled:
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800",
       approved:
         "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
       rejected:
@@ -1120,7 +1130,7 @@ export default function ApplicationDetailPage() {
                       Evaluate
                     </Button>
                   )}
-                {/* Manager actions when all evaluations are complete */}
+                {/* Manager actions when all evaluations are complete (under_review: Accept/Reject) */}
                 {user?.role === "manager" &&
                   application.status === "under_review" &&
                   application.allEvaluationsComplete &&
@@ -1132,6 +1142,30 @@ export default function ApplicationDetailPage() {
                         variant="default"
                       >
                         Accept
+                      </Button>
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        variant="default"
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                {/* Manager: when status is evaluated, show Call for interview + Reject */}
+                {user?.role === "manager" &&
+                  application.status === "evaluated" && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          setInterviewDate("");
+                          setInterviewHour("");
+                          setInterviewMinute("");
+                          setInterviewAmPm("AM");
+                          setShowCallForInterviewModal(true);
+                        }}
+                        variant="default"
+                      >
+                        Call for interview
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
@@ -1411,6 +1445,300 @@ export default function ApplicationDetailPage() {
                 className="disabled:opacity-50"
               >
                 Reject Application
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Call for interview Modal */}
+        <Dialog open={showCallForInterviewModal} onOpenChange={setShowCallForInterviewModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Call for interview</DialogTitle>
+              <DialogDescription>
+                Select the date and time for the interview. An email will be sent to the startup founder at {application?.email}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-5">
+              <div>
+                <label htmlFor="interview-date" className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
+                  Select Date
+                </label>
+                <input
+                  id="interview-date"
+                  type="date"
+                  value={interviewDate}
+                  onChange={(e) => {
+                    setInterviewDate(e.target.value);
+                    // Reset time if date changes to today and current time selection is invalid
+                    if (e.target.value === new Date().toISOString().split('T')[0]) {
+                      const now = new Date();
+                      const currentHour12 = now.getHours() % 12 || 12;
+                      const currentMinute = now.getMinutes();
+                      const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                      
+                      if (interviewHour && interviewMinute && interviewAmPm) {
+                        const selectedHour24 = parseInt(interviewHour) + (interviewAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                        const selectedMinute = parseInt(interviewMinute);
+                        const nowHour24 = now.getHours();
+                        
+                        if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && selectedMinute <= currentMinute)) {
+                          setInterviewHour("");
+                          setInterviewMinute("");
+                        }
+                      }
+                    }
+                  }}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-white px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-zinc-900 dark:text-zinc-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-3 text-zinc-700 dark:text-zinc-300">
+                  Select Time
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <select
+                      value={interviewHour}
+                      onChange={(e) => {
+                        setInterviewHour(e.target.value);
+                        // Reset minute if hour becomes invalid
+                        if (interviewDate === new Date().toISOString().split('T')[0] && e.target.value && interviewMinute) {
+                          const now = new Date();
+                          const selectedHour24 = parseInt(e.target.value) + (interviewAmPm === "PM" && parseInt(e.target.value) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(e.target.value) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && parseInt(interviewMinute) <= now.getMinutes())) {
+                            setInterviewMinute("");
+                          }
+                        }
+                      }}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Hour --</option>
+                      {(() => {
+                        const now = new Date();
+                        const isToday = interviewDate === now.toISOString().split('T')[0];
+                        
+                        if (!isToday) {
+                          // Future date - show all hours
+                          return Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                            <option key={hour} value={hour.toString().padStart(2, '0')}>
+                              {hour}
+                            </option>
+                          ));
+                        }
+                        
+                        // Today - filter based on current time
+                        const currentHour24 = now.getHours();
+                        const currentHour12 = currentHour24 % 12 || 12;
+                        const currentAmPm = currentHour24 >= 12 ? "PM" : "AM";
+                        
+                        return Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => {
+                          // Convert hour to 24-hour format for comparison
+                          const hour24 = hour + (interviewAmPm === "PM" && hour !== 12 ? 12 : 0) - (interviewAmPm === "AM" && hour === 12 ? 12 : 0);
+                          
+                          // Can't select AM if current time is PM (AM already passed)
+                          if (interviewAmPm === "AM" && currentAmPm === "PM") {
+                            return null;
+                          }
+                          
+                          // PM selected and current is AM - all PM hours are valid (future)
+                          if (interviewAmPm === "PM" && currentAmPm === "AM") {
+                            return (
+                              <option key={hour} value={hour.toString().padStart(2, '0')}>
+                                {hour}
+                              </option>
+                            );
+                          }
+                          
+                          // Same AM/PM period - check if hour is valid
+                          if (interviewAmPm === currentAmPm) {
+                            if (hour24 < currentHour24) {
+                              return null; // Past hour
+                            }
+                            // If same hour, minutes will be filtered separately
+                          }
+                          
+                          return (
+                            <option key={hour} value={hour.toString().padStart(2, '0')}>
+                              {hour}
+                            </option>
+                          );
+                        }).filter(Boolean);
+                      })()}
+                    </select>
+                  </div>
+                  <span className="text-2xl font-bold text-zinc-400 dark:text-zinc-500">:</span>
+                  <div className="flex-1">
+                    <select
+                      value={interviewMinute}
+                      onChange={(e) => setInterviewMinute(e.target.value)}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Min --</option>
+                      {(() => {
+                        const now = new Date();
+                        const isToday = interviewDate === now.toISOString().split('T')[0];
+                        const currentHour12 = now.getHours() % 12 || 12;
+                        const currentMinute = now.getMinutes();
+                        const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                        
+                        if (isToday && interviewHour && interviewAmPm) {
+                          const selectedHour24 = parseInt(interviewHour) + (interviewAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          
+                          if (selectedHour24 === nowHour24 && interviewAmPm === currentAmPm) {
+                            // Same hour as now, only show minutes > current minute
+                            return Array.from({ length: 60 }, (_, i) => i)
+                              .filter((minute) => minute > currentMinute)
+                              .map((minute) => (
+                                <option key={minute} value={minute.toString().padStart(2, '0')}>
+                                  {minute.toString().padStart(2, '0')}
+                                </option>
+                              ));
+                          } else if (selectedHour24 < nowHour24) {
+                            // Past hour selected - shouldn't happen but filter anyway
+                            return [];
+                          }
+                        }
+                        
+                        // Show all minutes (in 5-minute intervals for better UX, or all minutes)
+                        return Array.from({ length: 60 }, (_, i) => i).map((minute) => (
+                          <option key={minute} value={minute.toString().padStart(2, '0')}>
+                            {minute.toString().padStart(2, '0')}
+                          </option>
+                        ));
+                      })()}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      value={interviewAmPm}
+                      onChange={(e) => {
+                        const newAmPm = e.target.value as "AM" | "PM";
+                        setInterviewAmPm(newAmPm);
+                        // Reset hour/minute if AM/PM change makes selection invalid
+                        if (interviewDate === new Date().toISOString().split('T')[0] && interviewHour && interviewMinute) {
+                          const now = new Date();
+                          const selectedHour24 = parseInt(interviewHour) + (newAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (newAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                          
+                          if (newAmPm === "AM" && currentAmPm === "PM") {
+                            setInterviewHour("");
+                            setInterviewMinute("");
+                          } else if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && parseInt(interviewMinute) <= now.getMinutes())) {
+                            setInterviewHour("");
+                            setInterviewMinute("");
+                          }
+                        }
+                      }}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
+                {interviewDate === new Date().toISOString().split('T')[0] && (
+                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    Only future times are available for today
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCallForInterviewModal(false);
+                  setInterviewDate("");
+                  setInterviewHour("");
+                  setInterviewMinute("");
+                  setInterviewAmPm("AM");
+                }}
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!interviewDate || !interviewHour || !interviewMinute) {
+                    setUpdateMessage("Please select date, hour, and minute");
+                    setTimeout(() => setUpdateMessage(""), 3000);
+                    return;
+                  }
+                  setIsSubmittingInterview(true);
+                  try {
+                    // Convert 12-hour format to 24-hour format for API
+                    let hour24 = parseInt(interviewHour);
+                    if (interviewAmPm === "PM" && hour24 !== 12) {
+                      hour24 += 12;
+                    } else if (interviewAmPm === "AM" && hour24 === 12) {
+                      hour24 = 0;
+                    }
+                    const time24Hour = `${hour24.toString().padStart(2, '0')}:${interviewMinute}`;
+                    
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (sessionError || !session?.access_token) {
+                      setUpdateMessage("Please log in again. Your session may have expired.");
+                      setTimeout(() => setUpdateMessage(""), 4000);
+                      setIsSubmittingInterview(false);
+                      return;
+                    }
+                    
+                    const headers: HeadersInit = { 
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${session.access_token}`
+                    };
+                    
+                    const response = await fetch(
+                      `/api/applications/${params.id}/call-for-interview`,
+                      {
+                        method: "POST",
+                        headers,
+                        body: JSON.stringify({
+                          date: interviewDate,
+                          time: time24Hour,
+                        }),
+                      }
+                    );
+                    
+                    let data: { message?: string; error?: string } = {};
+                    try {
+                      data = await response.json();
+                    } catch (parseError) {
+                      console.error("Failed to parse response:", parseError);
+                    }
+                    
+                    if (response.ok) {
+                      setUpdateMessage(data.message || "Interview scheduled and email sent to the founder.");
+                      setTimeout(() => setUpdateMessage(""), 5000);
+                      setShowCallForInterviewModal(false);
+                      setInterviewDate("");
+                      setInterviewHour("");
+                      setInterviewMinute("");
+                      setInterviewAmPm("AM");
+                      fetchApplication();
+                    } else {
+                      const errorMsg = data.error || `Failed to schedule interview (${response.status})`;
+                      setUpdateMessage(errorMsg);
+                      setTimeout(() => setUpdateMessage(""), 4000);
+                    }
+                  } catch (error) {
+                    setUpdateMessage("Failed to schedule interview");
+                    setTimeout(() => setUpdateMessage(""), 4000);
+                  } finally {
+                    setIsSubmittingInterview(false);
+                  }
+                }}
+                disabled={!interviewDate || !interviewHour || !interviewMinute || isSubmittingInterview}
+                variant="default"
+                className="disabled:opacity-50"
+              >
+                {isSubmittingInterview ? "Sending…" : "Submit & send email"}
               </Button>
             </DialogFooter>
           </DialogContent>
