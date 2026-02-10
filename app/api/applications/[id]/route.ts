@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabaseServer";
+import nodemailer from "nodemailer";
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -123,6 +124,178 @@ const buildApplicationResponse = async (
     },
   };
 };
+
+/** Send rejection email to team founder when manager rejects the application. */
+async function sendRejectionEmail(
+  email: string,
+  founderName: string,
+  startupName: string,
+  rejectionReason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn(
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping rejection email"
+      );
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+
+    const reasonBlock = rejectionReason.trim()
+      ? `<p><strong>Reason:</strong></p><p>${rejectionReason.trim().replace(/\n/g, "<br>")}</p>`
+      : "";
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${founderName},</p>
+            <p>Thank you for your interest in Nirmaan Pre-Incubation and for submitting your application${startupName ? ` for <strong>${startupName}</strong>` : ""}.</p>
+            <p>After careful review, we regret to inform you that we are unable to move forward with your application at this time.</p>
+            ${reasonBlock}
+            <p>We encourage you to apply again in the future if your plans or circumstances change.</p>
+            <p>Regards,<br>Team Nirmaan</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const reasonText = rejectionReason.trim()
+      ? `\n\nReason: ${rejectionReason.trim()}`
+      : "";
+    const emailText = `
+Dear ${founderName},
+
+Thank you for your interest in Nirmaan Pre-Incubation and for submitting your application${startupName ? ` for ${startupName}` : ""}.
+
+After careful review, we regret to inform you that we are unable to move forward with your application at this time.${reasonText}
+
+We encourage you to apply again in the future if your plans or circumstances change.
+
+Regards,
+Team Nirmaan
+    `.trim();
+
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      subject: `Update on your Pre-Incubation application${startupName ? ` – ${startupName}` : ""}`,
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Rejection email sent to founder at", email);
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending rejection email:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/** Send approval email to team founder when manager approves the application. */
+async function sendApprovalEmail(
+  email: string,
+  founderName: string,
+  startupName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn(
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping approval email"
+      );
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+          .highlight { font-weight: bold; color: #166534; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${founderName},</p>
+            
+            <p>Congratulations! We are thrilled to inform you that your application${startupName ? ` for <strong>${startupName}</strong>` : ""} has been approved, and you have been <span class="highlight">added to our Pre-Incubation cohort</span>!</p>
+            
+            <p>This is an exciting milestone, and we look forward to supporting you on your entrepreneurial journey.</p>
+            
+            <p>Once again, congratulations on this achievement! We are excited to work with you and help bring your vision to life.</p>
+            
+            <p>Regards,<br>Team Nirmaan</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const emailText = `
+Dear ${founderName},
+
+Congratulations! We are thrilled to inform you that your application${startupName ? ` for ${startupName}` : ""} has been approved, and you have been added to our Pre-Incubation cohort!
+
+This is an exciting milestone, and we look forward to supporting you on your entrepreneurial journey.
+
+Once again, congratulations on this achievement! We are excited to work with you and help bring your vision to life.
+
+Regards,
+Team Nirmaan
+    `.trim();
+
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      subject: `Congratulations! You've been added to the Pre-Incubation cohort${startupName ? ` – ${startupName}` : ""}`,
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Approval email sent to founder at", email);
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending approval email:", err);
+    return { success: false, error: err.message };
+  }
+}
 
 /* =========================
    GET: Single application
@@ -294,6 +467,58 @@ export async function PUT(
           { error: "Failed to update status", details: updateError.message },
           { status: 500 },
         );
+      }
+
+      // When manager rejects, send email to team founder
+      if (body.status === "rejected") {
+        const { data: appRow } = await supabaseServer
+          .from("new_application")
+          .select("email, your_name, team_name, rejection_reason")
+          .eq("id", id)
+          .single();
+
+        const founderEmail = appRow?.email?.trim();
+        if (founderEmail) {
+          const founderName = appRow?.your_name || "Founder";
+          const startupName = appRow?.team_name || "";
+          const reason = appRow?.rejection_reason || body.rejectionReason || "";
+          const emailResult = await sendRejectionEmail(
+            founderEmail,
+            founderName,
+            startupName,
+            reason,
+          );
+          if (!emailResult.success) {
+            console.warn("Rejection email not sent to founder:", emailResult.error);
+          }
+        } else {
+          console.warn("Application has no founder email; rejection email skipped.");
+        }
+      }
+
+      // When manager approves, send email to team founder about cohort and onboarding
+      if (body.status === "approved") {
+        const { data: appRow } = await supabaseServer
+          .from("new_application")
+          .select("email, your_name, team_name")
+          .eq("id", id)
+          .single();
+
+        const founderEmail = appRow?.email?.trim();
+        if (founderEmail) {
+          const founderName = appRow?.your_name || "Founder";
+          const startupName = appRow?.team_name || "";
+          const emailResult = await sendApprovalEmail(
+            founderEmail,
+            founderName,
+            startupName,
+          );
+          if (!emailResult.success) {
+            console.warn("Approval email not sent to founder:", emailResult.error);
+          }
+        } else {
+          console.warn("Application has no founder email; approval email skipped.");
+        }
       }
     }
 

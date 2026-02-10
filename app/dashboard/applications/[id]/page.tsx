@@ -178,6 +178,8 @@ export default function ApplicationDetailPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   const [showCallForInterviewModal, setShowCallForInterviewModal] = useState(false);
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewHour, setInterviewHour] = useState("");
@@ -677,13 +679,27 @@ export default function ApplicationDetailPage() {
   //     "bg-gray-100 text-gray-800 border-gray-200 dark:border-gray-800"
   //   );
   // };
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       setUpdateMessage("Please provide a reason for rejection");
       setTimeout(() => setUpdateMessage(""), 3000);
       return;
     }
-    updateStatus("rejected", rejectionReason);
+    setIsRejecting(true);
+    try {
+      await updateStatus("rejected", rejectionReason);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    setIsApproving(true);
+    try {
+      await updateStatus("approved");
+    } finally {
+      setIsApproving(false);
+    }
   };
   
   const handleReviewerToggle = (reviewerId: string) => {
@@ -1138,14 +1154,44 @@ export default function ApplicationDetailPage() {
                   application.totalReviewers > 0 && (
                     <>
                       <Button
-                        onClick={() => updateStatus("approved")}
+                        onClick={handleApprove}
+                        disabled={isApproving}
                         variant="default"
+                        className="disabled:opacity-50"
                       >
-                        Accept
+                        {isApproving ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Approving...
+                          </>
+                        ) : (
+                          "Accept"
+                        )}
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving}
                         variant="default"
+                        className="disabled:opacity-50"
                       >
                         Reject
                       </Button>
@@ -1170,6 +1216,54 @@ export default function ApplicationDetailPage() {
                       <Button
                         onClick={() => setShowRejectModal(true)}
                         variant="default"
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                {/* Manager: when status is interview_scheduled, show Approved + Reject */}
+                {user?.role === "manager" &&
+                  application.status === "interview_scheduled" && (
+                    <>
+                      <Button
+                        onClick={handleApprove}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
+                      >
+                        {isApproving ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Approving...
+                          </>
+                        ) : (
+                          "Approved"
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
                       >
                         Reject
                       </Button>
@@ -1409,7 +1503,16 @@ export default function ApplicationDetailPage() {
         )}
 
         {/* Reject Modal */}
-        <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <Dialog 
+          open={showRejectModal} 
+          onOpenChange={(open) => {
+            setShowRejectModal(open);
+            if (!open) {
+              setRejectionReason("");
+              setIsRejecting(false);
+            }
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Reject Application</DialogTitle>
@@ -1425,6 +1528,7 @@ export default function ApplicationDetailPage() {
                 placeholder="Enter rejection reason..."
                 className="min-h-[100px]"
                 required
+                disabled={isRejecting}
               />
             </div>
             <DialogFooter>
@@ -1434,17 +1538,44 @@ export default function ApplicationDetailPage() {
                   setShowRejectModal(false);
                   setRejectionReason("");
                 }}
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
+                disabled={isRejecting}
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white disabled:opacity-50"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleReject}
-                disabled={!rejectionReason.trim()}
+                disabled={!rejectionReason.trim() || isRejecting}
                 variant="default"
                 className="disabled:opacity-50"
               >
-                Reject Application
+                {isRejecting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Rejecting...
+                  </>
+                ) : (
+                  "Reject Application"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
