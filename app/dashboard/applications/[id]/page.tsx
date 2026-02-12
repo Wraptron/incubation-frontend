@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatStatus } from "@/lib/utils";
 import { extractFilenameFromS3Url } from "@/lib/s3";
@@ -157,6 +157,8 @@ interface Application {
 export default function ApplicationDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
   const [application, setApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{
@@ -214,6 +216,23 @@ export default function ApplicationDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Close assign-reviewers dropdown when clicking/touching outside
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handlePointer = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+    };
+  }, [showDropdown]);
 
   useEffect(() => {
     checkUser();
@@ -844,7 +863,7 @@ export default function ApplicationDetailPage() {
         <div className="mb-4">
           <Button
             variant="link"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(`/dashboard?page=${fromPage}`)}
             className="mb-4"
           >
             ← Back to Applications
@@ -1138,7 +1157,7 @@ export default function ApplicationDetailPage() {
                     <Button
                       onClick={() =>
                         router.push(
-                          `/dashboard/applications/${params.id}/evaluate`,
+                          `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
                         )
                       }
                       variant="default"
@@ -1720,8 +1739,8 @@ export default function ApplicationDetailPage() {
                           const nowHour24 = now.getHours();
                           
                           if (selectedHour24 === nowHour24 && interviewAmPm === currentAmPm) {
-                            // Same hour as now, only show minutes > current minute
-                            return Array.from({ length: 60 }, (_, i) => i)
+                            // Same hour as now, only show minutes > current minute (0, 15, 30, 45)
+                            return [0, 15, 30, 45]
                               .filter((minute) => minute > currentMinute)
                               .map((minute) => (
                                 <option key={minute} value={minute.toString().padStart(2, '0')}>
@@ -1734,8 +1753,8 @@ export default function ApplicationDetailPage() {
                           }
                         }
                         
-                        // Show all minutes (in 5-minute intervals for better UX, or all minutes)
-                        return Array.from({ length: 60 }, (_, i) => i).map((minute) => (
+                        // Show only 15-minute intervals: 0, 15, 30, 45
+                        return [0, 15, 30, 45].map((minute) => (
                           <option key={minute} value={minute.toString().padStart(2, '0')}>
                             {minute.toString().padStart(2, '0')}
                           </option>
@@ -2831,7 +2850,7 @@ export default function ApplicationDetailPage() {
                           <Button
                             onClick={() =>
                               router.push(
-                                `/dashboard/applications/${params.id}/evaluate`,
+                                `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
                               )
                             }
                             variant="default"

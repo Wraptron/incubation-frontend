@@ -212,6 +212,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const emailNorm = email.trim();
+    const { data: existingProfile } = await supabaseServer
+      .from("user_profiles")
+      .select("id")
+      .ilike("email_address", emailNorm)
+      .maybeSingle();
+
+    if (existingProfile) {
+      return NextResponse.json(
+        { error: "User/email is already registered." },
+        { status: 409 }
+      );
+    }
+
     const password = generateRandomPassword(12);
 
     const { data: authData, error: authError } =
@@ -224,8 +238,19 @@ export async function POST(request: NextRequest) {
 
     if (authError) {
       console.error("Auth error:", authError);
+      const msg = (authError as { message?: string }).message ?? String(authError);
+      const isDuplicate =
+        /already exists|duplicate|unique constraint|23505|email_partial_key|database error creating new user/i.test(
+          msg
+        );
+      if (isDuplicate) {
+        return NextResponse.json(
+          { error: "User/email is already registered." },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
-        { error: "Failed to create user account", details: authError.message },
+        { error: "Failed to create user account", details: msg },
         { status: 500 }
       );
     }

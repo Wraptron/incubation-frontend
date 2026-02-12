@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { extractFilenameFromS3Url } from "@/lib/s3";
 import { Input } from "@/components/ui/input";
@@ -186,6 +186,9 @@ const EVALUATION_CRITERIA = [
 export default function EvaluatePage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
+  const dashboardUrl = `/dashboard?page=${fromPage}`;
   const [application, setApplication] = useState<Application | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -233,7 +236,7 @@ export default function EvaluatePage() {
       console.error("params.id is string 'undefined' or 'null'");
       setError("Invalid application ID");
       setIsLoading(false);
-      setTimeout(() => router.push("/dashboard"), 2000);
+      setTimeout(() => router.push(dashboardUrl), 2000);
       return;
     }
 
@@ -241,7 +244,7 @@ export default function EvaluatePage() {
       console.error("params.id is not a valid UUID:", params.id);
       setError("Invalid application ID format");
       setIsLoading(false);
-      setTimeout(() => router.push("/dashboard"), 2000);
+      setTimeout(() => router.push(dashboardUrl), 2000);
       return;
     }
 
@@ -254,7 +257,7 @@ export default function EvaluatePage() {
       // Double-check params.id is still valid
       if (!params?.id || !isValidUUID(params.id)) {
         console.error("Invalid application ID in checkUser");
-        router.push("/dashboard");
+        router.push(dashboardUrl);
         return;
       }
 
@@ -274,7 +277,7 @@ export default function EvaluatePage() {
         .single();
 
       if (!profile || profile.role !== "reviewer") {
-        router.push("/dashboard");
+        router.push(dashboardUrl);
         return;
       }
 
@@ -306,12 +309,12 @@ export default function EvaluatePage() {
       } else {
         console.error("Failed to fetch application");
         setError("Failed to load application");
-        setTimeout(() => router.push("/dashboard"), 2000);
+        setTimeout(() => router.push(dashboardUrl), 2000);
       }
     } catch (error) {
       console.error("Error fetching application:", error);
       setError("Failed to load application");
-      setTimeout(() => router.push("/dashboard"), 2000);
+      setTimeout(() => router.push(dashboardUrl), 2000);
     }
   };
 
@@ -561,7 +564,7 @@ export default function EvaluatePage() {
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-          <Button onClick={() => router.push("/dashboard")}>
+          <Button onClick={() => router.push(dashboardUrl)}>
             Return to Dashboard
           </Button>
         </div>
@@ -588,7 +591,7 @@ export default function EvaluatePage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() =>
-                router.push(`/dashboard/applications/${params.id}`)
+                router.push(`/dashboard/applications/${params.id}?fromPage=${fromPage}`)
               }
               className="text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-50"
             >

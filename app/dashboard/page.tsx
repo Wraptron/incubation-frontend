@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Pagination } from "@/components/ui/pagination";
 import { formatStatus } from "@/lib/utils";
 import {
   Table,
@@ -33,8 +33,9 @@ interface Application {
   created_at: string;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<{
     id: string;
     email?: string;
@@ -43,8 +44,27 @@ export default function DashboardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+  const [currentPage, setCurrentPage] = useState(pageFromUrl);
   const itemsPerPage = 7;
+  const prevFilterRef = useRef(filterStatus);
+
+  // Sync state with URL when returning to dashboard (e.g. after closing an application)
+  useEffect(() => {
+    setCurrentPage(pageFromUrl);
+  }, [pageFromUrl]);
+
+  // Clamp current page when total pages changes (e.g. after filter or data load).
+  // Only run after applications have loaded; otherwise we'd reset page=3 to 1 while still loading.
+  const totalPagesComputed = applications.length ? Math.ceil(applications.length / itemsPerPage) : 1;
+  useEffect(() => {
+    if (applications.length > 0 && currentPage > totalPagesComputed && totalPagesComputed >= 1) {
+      setCurrentPage(totalPagesComputed);
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", String(totalPagesComputed));
+      router.replace(url.pathname + url.search, { scroll: false });
+    }
+  }, [totalPagesComputed, applications.length, currentPage]);
 
   /* =========================
      FETCH APPLICATIONS
@@ -120,7 +140,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       fetchApplications();
-      setCurrentPage(1); // Reset to first page when filter changes
+      if (prevFilterRef.current !== filterStatus) {
+        prevFilterRef.current = filterStatus;
+        setCurrentPage(1);
+        const url = new URL(window.location.href);
+        url.searchParams.set("page", "1");
+        router.replace(url.pathname + url.search, { scroll: false });
+      }
     }
   }, [filterStatus, user, fetchApplications]);
 
@@ -147,7 +173,7 @@ export default function DashboardPage() {
       : ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "approved", "rejected"];
 
   // Calculate pagination
-  const totalPages = Math.ceil(applications.length / itemsPerPage);
+  const totalPages = totalPagesComputed;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedApplications = applications.slice(startIndex, endIndex);
@@ -155,50 +181,11 @@ export default function DashboardPage() {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to top of table when page changes
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", String(page));
+      router.replace(url.pathname + url.search, { scroll: false });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
-
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      // Show all pages if total pages is less than max visible
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Always show first page
-      pages.push(1);
-
-      if (currentPage > 3) {
-        pages.push("ellipsis-start");
-      }
-
-      // Show pages around current page
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = start; i <= end; i++) {
-        if (i !== 1 && i !== totalPages) {
-          pages.push(i);
-        }
-      }
-
-      if (currentPage < totalPages - 2) {
-        pages.push("ellipsis-end");
-      }
-
-      // Always show last page
-      if (totalPages > 1) {
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
   };
 
   return (
@@ -242,7 +229,7 @@ export default function DashboardPage() {
                     key={app.id}
                     className="cursor-pointer"
                     onClick={() =>
-                      router.push(`/dashboard/applications/${app.id}`)
+                      router.push(`/dashboard/applications/${app.id}?fromPage=${currentPage}`)
                     }
                   >
                     <TableCell>{app.company_name}</TableCell>
@@ -259,7 +246,7 @@ export default function DashboardPage() {
                     <TableCell>
                       <Button variant="link" asChild>
                         <Link
-                          href={`/dashboard/applications/${app.id}`}
+                          href={`/dashboard/applications/${app.id}?fromPage=${currentPage}`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           View →
@@ -273,99 +260,51 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        {/* Pagination Controls */}
+        {/* Pagination */}
         {applications.length > itemsPerPage && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-            <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-              Showing <span className="font-semibold text-gray-900 dark:text-gray-100">{startIndex + 1}</span> to{" "}
-              <span className="font-semibold text-gray-900 dark:text-gray-100">{Math.min(endIndex, applications.length)}</span> of{" "}
-              <span className="font-semibold text-gray-900 dark:text-gray-100">{applications.length}</span> teams
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400 font-medium order-2 sm:order-1">
+              Showing{" "}
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {startIndex + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {Math.min(endIndex, applications.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {applications.length}
+              </span>{" "}
+              teams
             </div>
-            <div className="flex items-center gap-1">
-              {/* First Page Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage === 1}
-                className="h-9 w-9 p-0"
-                title="First page"
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              
-              {/* Previous Page Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="h-9 px-3"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Previous</span>
-              </Button>
-
-              {/* Page Numbers */}
-              <div className="flex items-center gap-1 mx-1">
-                {getPageNumbers().map((page, index) => {
-                  if (page === "ellipsis-start" || page === "ellipsis-end") {
-                    return (
-                      <span
-                        key={`ellipsis-${index}`}
-                        className="px-2 py-1 text-gray-500 dark:text-gray-400"
-                      >
-                        ...
-                      </span>
-                    );
-                  }
-                  
-                  const pageNum = page as number;
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`h-9 min-w-[36px] font-medium ${
-                        currentPage === pageNum
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                      }`}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {/* Next Page Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="h-9 px-3"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-
-              {/* Last Page Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(totalPages)}
-                disabled={currentPage === totalPages}
-                className="h-9 w-9 p-0"
-                title="Last page"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+            <div className="order-1 sm:order-2">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                maxVisible={3}
+              />
             </div>
           </div>
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-gray-500">Loading...</div>
+          </div>
+        </div>
+      </DashboardLayout>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
