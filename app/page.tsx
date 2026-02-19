@@ -183,7 +183,7 @@ export default function Home() {
   {/* Submission Deadline — red banner */}
   <div className="w-full max-w-2xl rounded-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10 shadow-sm">
     <div className="bg-red-400 text-white text-center font-medium text-xl py-3 px-4 tracking-wide">
-      Submission Deadline: 18th Feb 2026, 11:59 PM
+      Submission Deadline: 21st Feb 2026, 11:59 PM
     </div>
   </div>
 </div>
