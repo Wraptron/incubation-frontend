@@ -131,6 +131,8 @@ interface Application {
   // Status & Metadata
   status: string;
   rejection_reason?: string | null;
+  /** ISO datetime string for scheduled interview (e.g. "2025-02-20T14:30:00") */
+  interview_scheduled_at?: string | null;
   reviewer_id?: string | null;
   reviewers?: Array<{
     id: string;
@@ -809,6 +811,8 @@ export default function ApplicationDetailPage() {
         "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
       interview_scheduled:
         "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800",
+      interview_completed:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200 border-purple-200 dark:border-purple-800",
       approved:
         "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
       rejected:
@@ -839,6 +843,13 @@ export default function ApplicationDetailPage() {
       })
       .filter(Boolean);
   };
+
+  // Interview slot has passed (or no stored time = treat as past so manager can act)
+  const isInterviewTimePast =
+    application?.status === "interview_scheduled" &&
+    (!application?.interview_scheduled_at ||
+      new Date(application.interview_scheduled_at) <= new Date());
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
@@ -1240,9 +1251,91 @@ export default function ApplicationDetailPage() {
                       </Button>
                     </>
                   )}
-                {/* Manager: when status is interview_scheduled, show Approved + Reject */}
+                {/* Manager: when status is interview_scheduled — Mark as completed + Reschedule only after scheduled time has passed */}
                 {user?.role === "manager" &&
                   application.status === "interview_scheduled" && (
+                    <>
+                      {isInterviewTimePast ? (
+                        /* Scheduled time has passed: show Mark as completed + Reschedule */
+                        <>
+                          <Button
+                            onClick={async () => {
+                              setIsApproving(true);
+                              try {
+                                await updateStatus("interview_completed");
+                              } finally {
+                                setIsApproving(false);
+                              }
+                            }}
+                            disabled={isApproving}
+                            variant="default"
+                            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            {isApproving ? (
+                              <>
+                                <svg
+                                  className="animate-spin -ml-1 mr-2 h-4 w-4"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : (
+                              "Mark as completed"
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setInterviewDate("");
+                              setInterviewHour("");
+                              setInterviewMinute("");
+                              setInterviewAmPm("AM");
+                              setShowCallForInterviewModal(true);
+                            }}
+                            variant="outline"
+                            className="border-2 border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          >
+                            Reschedule
+                          </Button>
+                        </>
+                      ) : (
+                        /* Scheduled time not yet passed: show Reschedule only */
+                        <>
+                          <Button
+                            onClick={() => {
+                              setInterviewDate("");
+                              setInterviewHour("");
+                              setInterviewMinute("");
+                              setInterviewAmPm("AM");
+                              setShowCallForInterviewModal(true);
+                            }}
+                            variant="outline"
+                            className="border-2 border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          >
+                            Reschedule
+                          </Button>
+                        </>
+                      )}
+                    </>
+                  )}
+                {/* Manager: when status is interview_completed, show Approve + Reject */}
+                {user?.role === "manager" &&
+                  application.status === "interview_completed" && (
                     <>
                       <Button
                         onClick={handleApprove}
@@ -1275,7 +1368,7 @@ export default function ApplicationDetailPage() {
                             Approving...
                           </>
                         ) : (
-                          "Approved"
+                          "Approve"
                         )}
                       </Button>
                       <Button
@@ -1600,13 +1693,20 @@ export default function ApplicationDetailPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Call for interview Modal */}
+        {/* Call for interview / Reschedule Modal */}
         <Dialog open={showCallForInterviewModal} onOpenChange={setShowCallForInterviewModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Call for interview</DialogTitle>
+              <DialogTitle>
+                {application?.status === "interview_scheduled"
+                  ? "Reschedule interview"
+                  : "Call for interview"}
+              </DialogTitle>
               <DialogDescription>
-                Select the date and time for the interview. An email will be sent to the startup founder at {application?.email}.
+                {application?.status === "interview_scheduled"
+                  ? "Select a new date and time. An updated email will be sent to the founder at "
+                  : "Select the date and time for the interview. An email will be sent to the startup founder at "}
+                {application?.email}.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-5">
@@ -1888,7 +1988,11 @@ export default function ApplicationDetailPage() {
                 variant="default"
                 className="disabled:opacity-50"
               >
-                {isSubmittingInterview ? "Sending…" : "Submit & send email"}
+                {isSubmittingInterview
+                  ? "Sending…"
+                  : application?.status === "interview_scheduled"
+                    ? "Reschedule & send email"
+                    : "Submit & send email"}
               </Button>
             </DialogFooter>
           </DialogContent>

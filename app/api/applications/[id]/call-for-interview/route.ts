@@ -194,9 +194,10 @@ export async function POST(
       );
     }
 
-    if (application.status !== "evaluated") {
+    const isReschedule = application.status === "interview_scheduled";
+    if (application.status !== "evaluated" && !isReschedule) {
       return NextResponse.json(
-        { error: "Application must be in evaluated status to schedule interview" },
+        { error: "Application must be in evaluated or interview_scheduled status to schedule or reschedule interview" },
         { status: 400 }
       );
     }
@@ -209,9 +210,15 @@ export async function POST(
       );
     }
 
+    // Store interview datetime as ISO string (e.g. "2025-02-20T14:30:00") for "is time past" checks.
+    const interviewScheduledAt = `${date}T${time}:00`;
+
     const { error: updateError } = await supabaseServer
       .from("new_application")
-      .update({ status: "interview_scheduled" })
+      .update({
+        status: "interview_scheduled",
+        interview_scheduled_at: interviewScheduledAt,
+      })
       .eq("id", id);
 
     if (updateError) {

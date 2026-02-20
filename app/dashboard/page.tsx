@@ -18,6 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Application {
   id: string;
@@ -33,6 +40,8 @@ interface Application {
   created_at: string;
 }
 
+const VALID_PAGE_SIZES = [10, 25, 50, 100];
+
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,42 +51,56 @@ function DashboardContent() {
     role: string;
   } | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const [currentPage, setCurrentPage] = useState(pageFromUrl);
-  const itemsPerPage = 7;
+  const pageSizeFromUrl = parseInt(searchParams.get("pageSize") ?? "25", 10);
+  const [itemsPerPage, setItemsPerPage] = useState(
+    VALID_PAGE_SIZES.includes(pageSizeFromUrl) ? pageSizeFromUrl : 25
+  );
   const prevFilterRef = useRef(filterStatus);
 
   // Sync state with URL when returning to dashboard (e.g. after closing an application)
   useEffect(() => {
     setCurrentPage(pageFromUrl);
-  }, [pageFromUrl]);
+    const pageSizeFromUrl = parseInt(searchParams.get("pageSize") ?? "25", 10);
+    if (VALID_PAGE_SIZES.includes(pageSizeFromUrl)) {
+      setItemsPerPage(pageSizeFromUrl);
+    }
+  }, [pageFromUrl, searchParams]);
+
+  const totalPagesComputed = totalCount > 0 ? Math.ceil(totalCount / itemsPerPage) : 1;
 
   // Clamp current page when total pages changes (e.g. after filter or data load).
-  // Only run after applications have loaded; otherwise we'd reset page=3 to 1 while still loading.
-  const totalPagesComputed = applications.length ? Math.ceil(applications.length / itemsPerPage) : 1;
   useEffect(() => {
-    if (applications.length > 0 && currentPage > totalPagesComputed && totalPagesComputed >= 1) {
+    if (totalCount > 0 && currentPage > totalPagesComputed && totalPagesComputed >= 1) {
       setCurrentPage(totalPagesComputed);
       const url = new URL(window.location.href);
       url.searchParams.set("page", String(totalPagesComputed));
       router.replace(url.pathname + url.search, { scroll: false });
     }
-  }, [totalPagesComputed, applications.length, currentPage]);
+  }, [totalPagesComputed, totalCount, currentPage]);
 
   /* =========================
-     FETCH APPLICATIONS
+     FETCH APPLICATIONS (server-side pagination)
   ========================= */
   const fetchApplications = useCallback(async () => {
     try {
-      const params = filterStatus !== "all" ? `?status=${filterStatus}` : "";
+      const offset = (currentPage - 1) * itemsPerPage;
+      const params = new URLSearchParams();
+      if (filterStatus !== "all") params.set("status", filterStatus);
+      params.set("limit", String(itemsPerPage));
+      params.set("offset", String(offset));
+      const query = params.toString() ? `?${params.toString()}` : "";
       const { data: { session } } = await supabase.auth.getSession();
       const headers: HeadersInit = { "Content-Type": "application/json" };
       if (session?.access_token) {
         headers["Authorization"] = `Bearer ${session.access_token}`;
       }
-      const response = await fetch(`/api/applications${params}`, {
+      const response = await fetch(`/api/applications${query}`, {
         cache: "no-store",
         headers,
       });
@@ -88,10 +111,27 @@ function DashboardContent() {
 
       const data = await response.json();
       setApplications(data.applications || []);
+      setTotalCount(data.pagination?.total ?? 0);
     } catch (error) {
       console.error("Error fetching applications:", error);
     }
-  }, [filterStatus]);
+  }, [filterStatus, currentPage, itemsPerPage]);
+
+  /* =========================
+     REFETCH ON PAGE OR FILTER CHANGE
+  ========================= */
+  useEffect(() => {
+    if (!user) return;
+    if (prevFilterRef.current !== filterStatus) {
+      prevFilterRef.current = filterStatus;
+      setCurrentPage(1);
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", "1");
+      router.replace(url.pathname + url.search, { scroll: false });
+      return;
+    }
+    fetchApplications();
+  }, [filterStatus, currentPage, user, fetchApplications]);
 
   /* =========================
      AUTH CHECK
@@ -135,6 +175,32 @@ function DashboardContent() {
   }, [router]);
 
   /* =========================
+     FETCH STATUS COUNTS (for tab badges)
+  ========================= */
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+      const response = await fetch("/api/applications/counts", {
+        cache: "no-store",
+        headers,
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setStatusCounts(data.counts ?? {});
+    } catch (error) {
+      console.error("Error fetching application counts:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) fetchStatusCounts();
+  }, [user, fetchStatusCounts]);
+
+  /* =========================
      REFETCH ON FILTER CHANGE
   ========================= */
   useEffect(() => {
@@ -160,6 +226,8 @@ function DashboardContent() {
       evaluated: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
       interview_scheduled:
         "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+      interview_completed:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
       approved: "bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary font-semibold",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
       withdrawn: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
@@ -170,13 +238,11 @@ function DashboardContent() {
   const tabFilters =
     user?.role === "reviewer"
       ? ["all", "pending", "under_review", "evaluated", "rejected"]
-      : ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "approved", "rejected"];
+      : ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
 
-  // Calculate pagination
   const totalPages = totalPagesComputed;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedApplications = applications.slice(startIndex, endIndex);
+  const paginatedApplications = applications;
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -186,6 +252,16 @@ function DashboardContent() {
       router.replace(url.pathname + url.search, { scroll: false });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    const size = parseInt(newPageSize, 10);
+    setItemsPerPage(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+    const url = new URL(window.location.href);
+    url.searchParams.set("pageSize", String(size));
+    url.searchParams.set("page", "1");
+    router.replace(url.pathname + url.search, { scroll: false });
   };
 
   return (
@@ -202,6 +278,9 @@ function DashboardContent() {
               onClick={() => setFilterStatus(status)}
             >
               {formatStatus(status)}
+              <span className="ml-1.5 opacity-90">
+                ({statusCounts[status] ?? "—"})
+              </span>
             </Button>
           ))}
         </div>
@@ -261,7 +340,7 @@ function DashboardContent() {
         </Card>
 
         {/* Pagination */}
-        {applications.length > itemsPerPage && (
+        {totalCount > 0 && (
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 dark:text-gray-400 font-medium order-2 sm:order-1">
               Showing{" "}
@@ -270,21 +349,38 @@ function DashboardContent() {
               </span>{" "}
               to{" "}
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {Math.min(endIndex, applications.length)}
+                {Math.min(startIndex + applications.length, totalCount)}
               </span>{" "}
               of{" "}
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {applications.length}
+                {totalCount}
               </span>{" "}
               teams
             </div>
-            <div className="order-1 sm:order-2">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                maxVisible={3}
-              />
+            <div className="flex items-center gap-4 order-1 sm:order-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Rows per page:</span>
+                <Select value={String(itemsPerPage)} onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className="w-[80px] h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VALID_PAGE_SIZES.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {totalCount > itemsPerPage && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  maxVisible={3}
+                />
+              )}
             </div>
           </div>
         )}
