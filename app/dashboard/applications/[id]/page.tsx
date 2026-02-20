@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatStatus } from "@/lib/utils";
 import { extractFilenameFromS3Url } from "@/lib/s3";
@@ -131,6 +131,8 @@ interface Application {
   // Status & Metadata
   status: string;
   rejection_reason?: string | null;
+  /** ISO datetime string for scheduled interview (e.g. "2025-02-20T14:30:00") */
+  interview_scheduled_at?: string | null;
   reviewer_id?: string | null;
   reviewers?: Array<{
     id: string;
@@ -157,6 +159,8 @@ interface Application {
 export default function ApplicationDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
   const [application, setApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{
@@ -180,6 +184,14 @@ export default function ApplicationDetailPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showDeclineInviteDialog, setShowDeclineInviteDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [showCallForInterviewModal, setShowCallForInterviewModal] = useState(false);
+  const [interviewDate, setInterviewDate] = useState("");
+  const [interviewHour, setInterviewHour] = useState("");
+  const [interviewMinute, setInterviewMinute] = useState("");
+  const [interviewAmPm, setInterviewAmPm] = useState<"AM" | "PM">("AM");
+  const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
   const [evaluations, setEvaluations] = useState<
     Array<{
       id: string;
@@ -208,6 +220,23 @@ export default function ApplicationDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Close assign-reviewers dropdown when clicking/touching outside
+  useEffect(() => {
+    if (!showDropdown) return;
+    const handlePointer = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+    };
+  }, [showDropdown]);
 
   useEffect(() => {
     checkUser();
@@ -673,13 +702,27 @@ export default function ApplicationDetailPage() {
   //     "bg-gray-100 text-gray-800 border-gray-200 dark:border-gray-800"
   //   );
   // };
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       setUpdateMessage("Please provide a reason for rejection");
       setTimeout(() => setUpdateMessage(""), 3000);
       return;
     }
-    updateStatus("rejected", rejectionReason);
+    setIsRejecting(true);
+    try {
+      await updateStatus("rejected", rejectionReason);
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    setIsApproving(true);
+    try {
+      await updateStatus("approved");
+    } finally {
+      setIsApproving(false);
+    }
   };
   
   const handleReviewerToggle = (reviewerId: string) => {
@@ -766,6 +809,12 @@ export default function ApplicationDetailPage() {
         "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800",
       under_review:
         "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+      evaluated:
+        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
+      interview_scheduled:
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800",
+      interview_completed:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200 border-purple-200 dark:border-purple-800",
       approved:
         "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
       rejected:
@@ -796,6 +845,13 @@ export default function ApplicationDetailPage() {
       })
       .filter(Boolean);
   };
+
+  // Interview slot has passed (or no stored time = treat as past so manager can act)
+  const isInterviewTimePast =
+    application?.status === "interview_scheduled" &&
+    (!application?.interview_scheduled_at ||
+      new Date(application.interview_scheduled_at) <= new Date());
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
@@ -820,7 +876,7 @@ export default function ApplicationDetailPage() {
         <div className="mb-4">
           <Button
             variant="link"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push(`/dashboard?page=${fromPage}`)}
             className="mb-4"
           >
             ← Back to Applications
@@ -1166,7 +1222,7 @@ export default function ApplicationDetailPage() {
                     <Button
                       onClick={() =>
                         router.push(
-                          `/dashboard/applications/${params.id}/evaluate`,
+                          `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
                         )
                       }
                       variant="default"
@@ -1174,7 +1230,7 @@ export default function ApplicationDetailPage() {
                       Evaluate
                     </Button>
                   )}
-                {/* Manager actions when all evaluations are complete */}
+                {/* Manager actions when all evaluations are complete (under_review: Accept/Reject) */}
                 {user?.role === "manager" &&
                   application.status === "under_review" &&
                   application.allEvaluationsComplete &&
@@ -1182,14 +1238,198 @@ export default function ApplicationDetailPage() {
                   application.totalReviewers > 0 && (
                     <>
                       <Button
-                        onClick={() => updateStatus("approved")}
+                        onClick={handleApprove}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
+                      >
+                        {isApproving ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Approving...
+                          </>
+                        ) : (
+                          "Accept"
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                {/* Manager: when status is evaluated, show Call for interview + Reject */}
+                {user?.role === "manager" &&
+                  application.status === "evaluated" && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          setInterviewDate("");
+                          setInterviewHour("");
+                          setInterviewMinute("");
+                          setInterviewAmPm("AM");
+                          setShowCallForInterviewModal(true);
+                        }}
                         variant="default"
                       >
-                        Accept
+                        Call for interview
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
                         variant="default"
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                {/* Manager: when status is interview_scheduled — Mark as completed + Reschedule only after scheduled time has passed */}
+                {user?.role === "manager" &&
+                  application.status === "interview_scheduled" && (
+                    <>
+                      {isInterviewTimePast ? (
+                        /* Scheduled time has passed: show Mark as completed + Reschedule */
+                        <>
+                          <Button
+                            onClick={async () => {
+                              setIsApproving(true);
+                              try {
+                                await updateStatus("interview_completed");
+                              } finally {
+                                setIsApproving(false);
+                              }
+                            }}
+                            disabled={isApproving}
+                            variant="default"
+                            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            {isApproving ? (
+                              <>
+                                <svg
+                                  className="animate-spin -ml-1 mr-2 h-4 w-4"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : (
+                              "Mark as completed"
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setInterviewDate("");
+                              setInterviewHour("");
+                              setInterviewMinute("");
+                              setInterviewAmPm("AM");
+                              setShowCallForInterviewModal(true);
+                            }}
+                            variant="outline"
+                            className="border-2 border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          >
+                            Reschedule
+                          </Button>
+                        </>
+                      ) : (
+                        /* Scheduled time not yet passed: show Reschedule only */
+                        <>
+                          <Button
+                            onClick={() => {
+                              setInterviewDate("");
+                              setInterviewHour("");
+                              setInterviewMinute("");
+                              setInterviewAmPm("AM");
+                              setShowCallForInterviewModal(true);
+                            }}
+                            variant="outline"
+                            className="border-2 border-zinc-300 dark:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          >
+                            Reschedule
+                          </Button>
+                        </>
+                      )}
+                    </>
+                  )}
+                {/* Manager: when status is interview_completed, show Approve + Reject */}
+                {user?.role === "manager" &&
+                  application.status === "interview_completed" && (
+                    <>
+                      <Button
+                        onClick={handleApprove}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
+                      >
+                        {isApproving ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Approving...
+                          </>
+                        ) : (
+                          "Approve"
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving}
+                        variant="default"
+                        className="disabled:opacity-50"
                       >
                         Reject
                       </Button>
@@ -1429,7 +1669,16 @@ export default function ApplicationDetailPage() {
         )}
 
         {/* Reject Modal */}
-        <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <Dialog 
+          open={showRejectModal} 
+          onOpenChange={(open) => {
+            setShowRejectModal(open);
+            if (!open) {
+              setRejectionReason("");
+              setIsRejecting(false);
+            }
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Reject Application</DialogTitle>
@@ -1445,6 +1694,7 @@ export default function ApplicationDetailPage() {
                 placeholder="Enter rejection reason..."
                 className="min-h-[100px]"
                 required
+                disabled={isRejecting}
               />
             </div>
             <DialogFooter>
@@ -1454,17 +1704,349 @@ export default function ApplicationDetailPage() {
                   setShowRejectModal(false);
                   setRejectionReason("");
                 }}
-                className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
+                disabled={isRejecting}
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white disabled:opacity-50"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleReject}
-                disabled={!rejectionReason.trim()}
+                disabled={!rejectionReason.trim() || isRejecting}
                 variant="default"
                 className="disabled:opacity-50"
               >
-                Reject Application
+                {isRejecting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Rejecting...
+                  </>
+                ) : (
+                  "Reject Application"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Call for interview / Reschedule Modal */}
+        <Dialog open={showCallForInterviewModal} onOpenChange={setShowCallForInterviewModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {application?.status === "interview_scheduled"
+                  ? "Reschedule interview"
+                  : "Call for interview"}
+              </DialogTitle>
+              <DialogDescription>
+                {application?.status === "interview_scheduled"
+                  ? "Select a new date and time. An updated email will be sent to the founder at "
+                  : "Select the date and time for the interview. An email will be sent to the startup founder at "}
+                {application?.email}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-5">
+              <div>
+                <label htmlFor="interview-date" className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
+                  Select Date
+                </label>
+                <input
+                  id="interview-date"
+                  type="date"
+                  value={interviewDate}
+                  onChange={(e) => {
+                    setInterviewDate(e.target.value);
+                    // Reset time if date changes to today and current time selection is invalid
+                    if (e.target.value === new Date().toISOString().split('T')[0]) {
+                      const now = new Date();
+                      const currentHour12 = now.getHours() % 12 || 12;
+                      const currentMinute = now.getMinutes();
+                      const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                      
+                      if (interviewHour && interviewMinute && interviewAmPm) {
+                        const selectedHour24 = parseInt(interviewHour) + (interviewAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                        const selectedMinute = parseInt(interviewMinute);
+                        const nowHour24 = now.getHours();
+                        
+                        if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && selectedMinute <= currentMinute)) {
+                          setInterviewHour("");
+                          setInterviewMinute("");
+                        }
+                      }
+                    }
+                  }}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-white px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-zinc-900 dark:text-zinc-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-3 text-zinc-700 dark:text-zinc-300">
+                  Select Time
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <select
+                      value={interviewHour}
+                      onChange={(e) => {
+                        setInterviewHour(e.target.value);
+                        // Reset minute if hour becomes invalid
+                        if (interviewDate === new Date().toISOString().split('T')[0] && e.target.value && interviewMinute) {
+                          const now = new Date();
+                          const selectedHour24 = parseInt(e.target.value) + (interviewAmPm === "PM" && parseInt(e.target.value) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(e.target.value) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && parseInt(interviewMinute) <= now.getMinutes())) {
+                            setInterviewMinute("");
+                          }
+                        }
+                      }}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Hour --</option>
+                      {(() => {
+                        const now = new Date();
+                        const isToday = interviewDate === now.toISOString().split('T')[0];
+                        
+                        if (!isToday) {
+                          // Future date - show all hours
+                          return Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                            <option key={hour} value={hour.toString().padStart(2, '0')}>
+                              {hour}
+                            </option>
+                          ));
+                        }
+                        
+                        // Today - filter based on current time
+                        const currentHour24 = now.getHours();
+                        const currentHour12 = currentHour24 % 12 || 12;
+                        const currentAmPm = currentHour24 >= 12 ? "PM" : "AM";
+                        
+                        return Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => {
+                          // Convert hour to 24-hour format for comparison
+                          const hour24 = hour + (interviewAmPm === "PM" && hour !== 12 ? 12 : 0) - (interviewAmPm === "AM" && hour === 12 ? 12 : 0);
+                          
+                          // Can't select AM if current time is PM (AM already passed)
+                          if (interviewAmPm === "AM" && currentAmPm === "PM") {
+                            return null;
+                          }
+                          
+                          // PM selected and current is AM - all PM hours are valid (future)
+                          if (interviewAmPm === "PM" && currentAmPm === "AM") {
+                            return (
+                              <option key={hour} value={hour.toString().padStart(2, '0')}>
+                                {hour}
+                              </option>
+                            );
+                          }
+                          
+                          // Same AM/PM period - check if hour is valid
+                          if (interviewAmPm === currentAmPm) {
+                            if (hour24 < currentHour24) {
+                              return null; // Past hour
+                            }
+                            // If same hour, minutes will be filtered separately
+                          }
+                          
+                          return (
+                            <option key={hour} value={hour.toString().padStart(2, '0')}>
+                              {hour}
+                            </option>
+                          );
+                        }).filter(Boolean);
+                      })()}
+                    </select>
+                  </div>
+                  <span className="text-2xl font-bold text-zinc-400 dark:text-zinc-500">:</span>
+                  <div className="flex-1">
+                    <select
+                      value={interviewMinute}
+                      onChange={(e) => setInterviewMinute(e.target.value)}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Min --</option>
+                      {(() => {
+                        const now = new Date();
+                        const isToday = interviewDate === now.toISOString().split('T')[0];
+                        const currentHour12 = now.getHours() % 12 || 12;
+                        const currentMinute = now.getMinutes();
+                        const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                        
+                        if (isToday && interviewHour && interviewAmPm) {
+                          const selectedHour24 = parseInt(interviewHour) + (interviewAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (interviewAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          
+                          if (selectedHour24 === nowHour24 && interviewAmPm === currentAmPm) {
+                            // Same hour as now, only show minutes > current minute (0, 15, 30, 45)
+                            return [0, 15, 30, 45]
+                              .filter((minute) => minute > currentMinute)
+                              .map((minute) => (
+                                <option key={minute} value={minute.toString().padStart(2, '0')}>
+                                  {minute.toString().padStart(2, '0')}
+                                </option>
+                              ));
+                          } else if (selectedHour24 < nowHour24) {
+                            // Past hour selected - shouldn't happen but filter anyway
+                            return [];
+                          }
+                        }
+                        
+                        // Show only 15-minute intervals: 0, 15, 30, 45
+                        return [0, 15, 30, 45].map((minute) => (
+                          <option key={minute} value={minute.toString().padStart(2, '0')}>
+                            {minute.toString().padStart(2, '0')}
+                          </option>
+                        ));
+                      })()}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      value={interviewAmPm}
+                      onChange={(e) => {
+                        const newAmPm = e.target.value as "AM" | "PM";
+                        setInterviewAmPm(newAmPm);
+                        // Reset hour/minute if AM/PM change makes selection invalid
+                        if (interviewDate === new Date().toISOString().split('T')[0] && interviewHour && interviewMinute) {
+                          const now = new Date();
+                          const selectedHour24 = parseInt(interviewHour) + (newAmPm === "PM" && parseInt(interviewHour) !== 12 ? 12 : 0) - (newAmPm === "AM" && parseInt(interviewHour) === 12 ? 12 : 0);
+                          const nowHour24 = now.getHours();
+                          const currentAmPm = now.getHours() >= 12 ? "PM" : "AM";
+                          
+                          if (newAmPm === "AM" && currentAmPm === "PM") {
+                            setInterviewHour("");
+                            setInterviewMinute("");
+                          } else if (selectedHour24 < nowHour24 || (selectedHour24 === nowHour24 && parseInt(interviewMinute) <= now.getMinutes())) {
+                            setInterviewHour("");
+                            setInterviewMinute("");
+                          }
+                        }
+                      }}
+                      className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                </div>
+                {interviewDate === new Date().toISOString().split('T')[0] && (
+                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    Only future times are available for today
+                  </p>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCallForInterviewModal(false);
+                  setInterviewDate("");
+                  setInterviewHour("");
+                  setInterviewMinute("");
+                  setInterviewAmPm("AM");
+                }}
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (!interviewDate || !interviewHour || !interviewMinute) {
+                    setUpdateMessage("Please select date, hour, and minute");
+                    setTimeout(() => setUpdateMessage(""), 3000);
+                    return;
+                  }
+                  setIsSubmittingInterview(true);
+                  try {
+                    // Convert 12-hour format to 24-hour format for API
+                    let hour24 = parseInt(interviewHour);
+                    if (interviewAmPm === "PM" && hour24 !== 12) {
+                      hour24 += 12;
+                    } else if (interviewAmPm === "AM" && hour24 === 12) {
+                      hour24 = 0;
+                    }
+                    const time24Hour = `${hour24.toString().padStart(2, '0')}:${interviewMinute}`;
+                    
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    
+                    if (sessionError || !session?.access_token) {
+                      setUpdateMessage("Please log in again. Your session may have expired.");
+                      setTimeout(() => setUpdateMessage(""), 4000);
+                      setIsSubmittingInterview(false);
+                      return;
+                    }
+                    
+                    const headers: HeadersInit = { 
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${session.access_token}`
+                    };
+                    
+                    const response = await fetch(
+                      `/api/applications/${params.id}/call-for-interview`,
+                      {
+                        method: "POST",
+                        headers,
+                        body: JSON.stringify({
+                          date: interviewDate,
+                          time: time24Hour,
+                        }),
+                      }
+                    );
+                    
+                    let data: { message?: string; error?: string } = {};
+                    try {
+                      data = await response.json();
+                    } catch (parseError) {
+                      console.error("Failed to parse response:", parseError);
+                    }
+                    
+                    if (response.ok) {
+                      setUpdateMessage(data.message || "Interview scheduled and email sent to the founder.");
+                      setTimeout(() => setUpdateMessage(""), 5000);
+                      setShowCallForInterviewModal(false);
+                      setInterviewDate("");
+                      setInterviewHour("");
+                      setInterviewMinute("");
+                      setInterviewAmPm("AM");
+                      fetchApplication();
+                    } else {
+                      const errorMsg = data.error || `Failed to schedule interview (${response.status})`;
+                      setUpdateMessage(errorMsg);
+                      setTimeout(() => setUpdateMessage(""), 4000);
+                    }
+                  } catch (error) {
+                    setUpdateMessage("Failed to schedule interview");
+                    setTimeout(() => setUpdateMessage(""), 4000);
+                  } finally {
+                    setIsSubmittingInterview(false);
+                  }
+                }}
+                disabled={!interviewDate || !interviewHour || !interviewMinute || isSubmittingInterview}
+                variant="default"
+                className="disabled:opacity-50"
+              >
+                {isSubmittingInterview
+                  ? "Sending…"
+                  : application?.status === "interview_scheduled"
+                    ? "Reschedule & send email"
+                    : "Submit & send email"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2426,7 +3008,7 @@ export default function ApplicationDetailPage() {
                           <Button
                             onClick={() =>
                               router.push(
-                                `/dashboard/applications/${params.id}/evaluate`,
+                                `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
                               )
                             }
                             variant="default"
