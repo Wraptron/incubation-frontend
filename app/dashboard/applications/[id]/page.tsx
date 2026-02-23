@@ -161,6 +161,18 @@ export default function ApplicationDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
+  const fromStatus = searchParams.get("fromStatus") ?? "all";
+  const fromPageSizeParam = searchParams.get("fromPageSize");
+  const fromPageSize = fromPageSizeParam ? parseInt(fromPageSizeParam, 10) : 25;
+  const validPageSize = [10, 25, 50, 100].includes(fromPageSize) ? fromPageSize : 25;
+  const dashboardBackUrl = (() => {
+    const params = new URLSearchParams();
+    params.set("page", String(fromPage));
+    if (fromStatus !== "all") params.set("status", fromStatus);
+    if (validPageSize !== 25) params.set("pageSize", String(validPageSize));
+    const q = params.toString();
+    return `/dashboard${q ? `?${q}` : ""}`;
+  })();
   const [application, setApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{
@@ -876,7 +888,7 @@ export default function ApplicationDetailPage() {
         <div className="mb-4">
           <Button
             variant="link"
-            onClick={() => router.push(`/dashboard?page=${fromPage}`)}
+            onClick={() => router.push(dashboardBackUrl)}
             className="mb-4"
           >
             ← Back to Applications
@@ -1222,7 +1234,7 @@ export default function ApplicationDetailPage() {
                     <Button
                       onClick={() =>
                         router.push(
-                          `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
+                          `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}&fromStatus=${fromStatus}&fromPageSize=${validPageSize}`,
                         )
                       }
                       variant="default"
@@ -3008,7 +3020,7 @@ export default function ApplicationDetailPage() {
                           <Button
                             onClick={() =>
                               router.push(
-                                `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}`,
+                                `/dashboard/applications/${params.id}/evaluate?fromPage=${fromPage}&fromStatus=${fromStatus}&fromPageSize=${validPageSize}`,
                               )
                             }
                             variant="default"
