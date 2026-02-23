@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const statusParam = searchParams.get("status");
+    const searchQuery = (searchParams.get("search") ?? "").trim().replace(/'/g, "''");
     const limit = Number(searchParams.get("limit") ?? 50);
     const offset = Number(searchParams.get("offset") ?? 0);
 
@@ -68,6 +69,14 @@ export async function GET(request: NextRequest) {
 
     if (statusParam && statusParam !== "all" && !isReviewer) {
       query = query.eq("status", statusParam);
+    }
+
+    if (searchQuery) {
+      const pattern = `%${searchQuery}%`;
+      const quoted = `"${pattern.replace(/"/g, '""')}"`;
+      query = query.or(
+        `team_name.ilike.${quoted},your_name.ilike.${quoted},email.ilike.${quoted}`
+      );
     }
 
     if (isReviewer && reviewerApplicationIds.length === 0) {
@@ -156,6 +165,13 @@ export async function GET(request: NextRequest) {
         .select("*", { count: "exact", head: true });
       if (statusParam && statusParam !== "all") {
         countQuery = countQuery.eq("status", statusParam);
+      }
+      if (searchQuery) {
+        const pattern = `%${searchQuery}%`;
+        const quoted = `"${pattern.replace(/"/g, '""')}"`;
+        countQuery = countQuery.or(
+          `team_name.ilike.${quoted},your_name.ilike.${quoted},email.ilike.${quoted}`
+        );
       }
       const { count: c } = await countQuery;
       count = c ?? 0;

@@ -188,7 +188,19 @@ export default function EvaluatePage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
-  const dashboardUrl = `/dashboard?page=${fromPage}`;
+  const fromStatus = searchParams.get("fromStatus") ?? "all";
+  const fromPageSizeParam = searchParams.get("fromPageSize");
+  const fromPageSize = fromPageSizeParam ? parseInt(fromPageSizeParam, 10) : 25;
+  const validPageSize = [10, 25, 50, 100].includes(fromPageSize) ? fromPageSize : 25;
+  const dashboardUrl = (() => {
+    const params = new URLSearchParams();
+    params.set("page", String(fromPage));
+    if (fromStatus !== "all") params.set("status", fromStatus);
+    if (validPageSize !== 25) params.set("pageSize", String(validPageSize));
+    const q = params.toString();
+    return `/dashboard${q ? `?${q}` : ""}`;
+  })();
+  const applicationUrl = `/dashboard/applications/${params.id}?fromPage=${fromPage}&fromStatus=${fromStatus}&fromPageSize=${validPageSize}`;
   const [application, setApplication] = useState<Application | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -602,7 +614,7 @@ export default function EvaluatePage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() =>
-                router.push(`/dashboard/applications/${params.id}?fromPage=${fromPage}`)
+                router.push(applicationUrl)
               }
               className="text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-50"
             >

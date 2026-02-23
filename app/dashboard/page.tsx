@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface Application {
   id: string;
@@ -41,6 +42,7 @@ interface Application {
 }
 
 const VALID_PAGE_SIZES = [10, 25, 50, 100];
+const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
 
 function DashboardContent() {
   const router = useRouter();
@@ -61,16 +63,47 @@ function DashboardContent() {
   const [itemsPerPage, setItemsPerPage] = useState(
     VALID_PAGE_SIZES.includes(pageSizeFromUrl) ? pageSizeFromUrl : 25
   );
+  const searchFromUrl = searchParams.get("search") ?? "";
+  const [searchInput, setSearchInput] = useState(searchFromUrl);
   const prevFilterRef = useRef(filterStatus);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync state with URL when returning to dashboard (e.g. after closing an application)
+  // Search as you type: debounce and update URL so fetch runs.
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      searchDebounceRef.current = null;
+      const q = searchInput.trim();
+      const currentSearch = searchParams.get("search") ?? "";
+      if (q === currentSearch) return;
+      const url = new URL(window.location.href);
+      url.searchParams.set("page", "1");
+      if (q) url.searchParams.set("search", q);
+      else url.searchParams.delete("search");
+      if (filterStatus !== "all") url.searchParams.set("status", filterStatus);
+      if (itemsPerPage !== 25) url.searchParams.set("pageSize", String(itemsPerPage));
+      router.replace(url.pathname + url.search, { scroll: false });
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchInput]);
+
+  // Sync state with URL when returning to dashboard (e.g. after closing an application).
+  // Restores tab (status), page, and search so "Back" returns to same view.
+  const statusFromUrl = searchParams.get("status") ?? "all";
   useEffect(() => {
     setCurrentPage(pageFromUrl);
+    if (VALID_STATUS_FILTERS.includes(statusFromUrl)) {
+      setFilterStatus(statusFromUrl);
+      prevFilterRef.current = statusFromUrl;
+    }
     const pageSizeFromUrl = parseInt(searchParams.get("pageSize") ?? "25", 10);
     if (VALID_PAGE_SIZES.includes(pageSizeFromUrl)) {
       setItemsPerPage(pageSizeFromUrl);
     }
-  }, [pageFromUrl, searchParams]);
+    setSearchInput(searchFromUrl);
+  }, [pageFromUrl, statusFromUrl, searchFromUrl, searchParams]);
 
   const totalPagesComputed = totalCount > 0 ? Math.ceil(totalCount / itemsPerPage) : 1;
 
@@ -80,9 +113,12 @@ function DashboardContent() {
       setCurrentPage(totalPagesComputed);
       const url = new URL(window.location.href);
       url.searchParams.set("page", String(totalPagesComputed));
+      if (filterStatus !== "all") url.searchParams.set("status", filterStatus);
+      if (itemsPerPage !== 25) url.searchParams.set("pageSize", String(itemsPerPage));
+      if (searchFromUrl) url.searchParams.set("search", searchFromUrl);
       router.replace(url.pathname + url.search, { scroll: false });
     }
-  }, [totalPagesComputed, totalCount, currentPage]);
+  }, [totalPagesComputed, totalCount, currentPage, filterStatus, itemsPerPage, searchFromUrl]);
 
   /* =========================
      FETCH APPLICATIONS (server-side pagination)
@@ -92,6 +128,7 @@ function DashboardContent() {
       const offset = (currentPage - 1) * itemsPerPage;
       const params = new URLSearchParams();
       if (filterStatus !== "all") params.set("status", filterStatus);
+      if (searchFromUrl) params.set("search", searchFromUrl);
       params.set("limit", String(itemsPerPage));
       params.set("offset", String(offset));
       const query = params.toString() ? `?${params.toString()}` : "";
@@ -115,7 +152,7 @@ function DashboardContent() {
     } catch (error) {
       console.error("Error fetching applications:", error);
     }
-  }, [filterStatus, currentPage, itemsPerPage]);
+  }, [filterStatus, currentPage, itemsPerPage, searchFromUrl]);
 
   /* =========================
      REFETCH ON PAGE OR FILTER CHANGE
@@ -127,6 +164,12 @@ function DashboardContent() {
       setCurrentPage(1);
       const url = new URL(window.location.href);
       url.searchParams.set("page", "1");
+      if (filterStatus !== "all") {
+        url.searchParams.set("status", filterStatus);
+      } else {
+        url.searchParams.delete("status");
+      }
+      if (searchFromUrl) url.searchParams.set("search", searchFromUrl);
       router.replace(url.pathname + url.search, { scroll: false });
       return;
     }
@@ -249,6 +292,8 @@ function DashboardContent() {
       setCurrentPage(page);
       const url = new URL(window.location.href);
       url.searchParams.set("page", String(page));
+      if (filterStatus !== "all") url.searchParams.set("status", filterStatus);
+      if (searchFromUrl) url.searchParams.set("search", searchFromUrl);
       router.replace(url.pathname + url.search, { scroll: false });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -261,6 +306,8 @@ function DashboardContent() {
     const url = new URL(window.location.href);
     url.searchParams.set("pageSize", String(size));
     url.searchParams.set("page", "1");
+    if (filterStatus !== "all") url.searchParams.set("status", filterStatus);
+    if (searchFromUrl) url.searchParams.set("search", searchFromUrl);
     router.replace(url.pathname + url.search, { scroll: false });
   };
 
@@ -268,6 +315,18 @@ function DashboardContent() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
         <h2 className="text-2xl font-bold mb-4">Applications for Pre-Incubation</h2>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex flex-1 max-w-md">
+            <Input
+              type="search"
+              placeholder="Search by team name, founder, or email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-9"
+            />
+          </div>
+        </div>
 
         <div className="flex gap-2 mb-6 flex-wrap">
           {tabFilters.map((status) => (
@@ -308,7 +367,7 @@ function DashboardContent() {
                     key={app.id}
                     className="cursor-pointer"
                     onClick={() =>
-                      router.push(`/dashboard/applications/${app.id}?fromPage=${currentPage}`)
+                      router.push(`/dashboard/applications/${app.id}?fromPage=${currentPage}&fromStatus=${filterStatus}&fromPageSize=${itemsPerPage}`)
                     }
                   >
                     <TableCell>{app.company_name}</TableCell>
@@ -325,7 +384,7 @@ function DashboardContent() {
                     <TableCell>
                       <Button variant="link" asChild>
                         <Link
-                          href={`/dashboard/applications/${app.id}?fromPage=${currentPage}`}
+                          href={`/dashboard/applications/${app.id}?fromPage=${currentPage}&fromStatus=${filterStatus}&fromPageSize=${itemsPerPage}`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           View →
