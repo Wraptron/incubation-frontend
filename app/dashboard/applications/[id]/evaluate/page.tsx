@@ -188,19 +188,8 @@ export default function EvaluatePage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromPage = Math.max(1, parseInt(searchParams.get("fromPage") ?? "1", 10) || 1);
-  const fromStatus = searchParams.get("fromStatus") ?? "all";
-  const fromPageSizeParam = searchParams.get("fromPageSize");
-  const fromPageSize = fromPageSizeParam ? parseInt(fromPageSizeParam, 10) : 25;
-  const validPageSize = [10, 25, 50, 100].includes(fromPageSize) ? fromPageSize : 25;
-  const dashboardUrl = (() => {
-    const params = new URLSearchParams();
-    params.set("page", String(fromPage));
-    if (fromStatus !== "all") params.set("status", fromStatus);
-    if (validPageSize !== 25) params.set("pageSize", String(validPageSize));
-    const q = params.toString();
-    return `/dashboard${q ? `?${q}` : ""}`;
-  })();
-  const applicationUrl = `/dashboard/applications/${params.id}?fromPage=${fromPage}&fromStatus=${fromStatus}&fromPageSize=${validPageSize}`;
+  const dashboardUrl = `/dashboard?page=${fromPage}`;
+  const evaluateListUrl = "/dashboard/evaluate";
   const [application, setApplication] = useState<Application | null>(null);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -288,13 +277,13 @@ export default function EvaluatePage() {
         .eq("id", user.id)
         .single();
 
-      if (!profile || profile.role !== "reviewer") {
+      if (!profile || (profile.role !== "reviewer" && profile.role !== "manager")) {
         router.push(dashboardUrl);
         return;
       }
 
       setUser({ id: user.id, role: profile.role });
-      await Promise.all([fetchApplication(), fetchEvaluation()]);
+      await Promise.all([fetchApplication(), fetchEvaluation(profile.role)]);
     } catch (error) {
       console.error("Error checking user:", error);
       router.push("/login");
@@ -330,7 +319,7 @@ export default function EvaluatePage() {
     }
   };
 
-  const fetchEvaluation = async () => {
+  const fetchEvaluation = async (role?: string) => {
     try {
       if (!params?.id || !isValidUUID(params.id)) {
         console.error("Cannot fetch evaluation: invalid ID");
@@ -349,15 +338,13 @@ export default function EvaluatePage() {
         return;
       }
 
-      console.log("Fetching evaluation for application ID:", params.id);
-      const response = await fetch(
-        `/api/evaluations/application/${params.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        },
-      );
+      const evalApiUrl =
+        role === "manager"
+          ? `/api/evaluation/application/${params.id}`
+          : `/api/evaluations/application/${params.id}`;
+      const response = await fetch(evalApiUrl, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -521,9 +508,12 @@ export default function EvaluatePage() {
         impactComment: formData.impactComment || null,
         overallComment: formData.overallComment || null,
       };
-      console.log("[Frontend] Submitting evaluation data:", evaluationPayload);
+      const saveApiUrl =
+        user?.role === "manager"
+          ? `/api/evaluation/application/${params.id}`
+          : `/api/evaluations/application/${params.id}`;
       const response = await fetch(
-        `/api/evaluations/application/${params.id}`,
+        saveApiUrl,
         {
           method: "PUT",
           headers: {
@@ -587,8 +577,12 @@ export default function EvaluatePage() {
       <div className="min-h-screen bg-zinc-50 dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-          <Button onClick={() => router.push(dashboardUrl)}>
-            Return to Dashboard
+          <Button
+            onClick={() =>
+              router.push(user?.role === "manager" ? evaluateListUrl : dashboardUrl)
+            }
+          >
+            Return to {user?.role === "manager" ? "Evaluate List" : "Dashboard"}
           </Button>
         </div>
       </div>
@@ -614,7 +608,11 @@ export default function EvaluatePage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() =>
-                router.push(applicationUrl)
+                router.push(
+                  user?.role === "manager"
+                    ? evaluateListUrl
+                    : `/dashboard/applications/${params.id}?fromPage=${fromPage}`
+                )
               }
               className="text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-zinc-50"
             >

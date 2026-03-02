@@ -27,6 +27,23 @@ const buildApplicationResponse = async (
     .select("application_id, reviewer_id, invite_status, invited_at, responded_at")
     .eq("application_id", id);
 
+  const reviewerIds = reviewerAssignments?.length
+    ? [...new Set(reviewerAssignments.map((r: any) => r.reviewer_id))]
+    : [];
+  let assigneeProfiles: Array<{ id: string; full_name: string | null; email_address?: string | null; role?: string }> = [];
+  if (reviewerIds.length > 0) {
+    const { data } = await supabaseServer
+      .from("user_profiles")
+      .select("id, full_name, email_address, role")
+      .in("id", reviewerIds);
+    assigneeProfiles = data ?? [];
+  }
+
+  const profileLookup = Object.fromEntries(
+    assigneeProfiles.map((r) => [r.id, r])
+  );
+
+  // Reviewers list: only users with role=reviewer (exclude managers)
   let reviewers: Array<{
     id: string;
     full_name: string | null;
@@ -42,33 +59,32 @@ const buildApplicationResponse = async (
         (a: any) => a.reviewer_id === viewerReviewerId
       );
     }
-    const reviewerIds = [
-      ...new Set(assignments.map((r: any) => r.reviewer_id)),
-    ];
-    if (reviewerIds.length) {
-      const { data: reviewerProfiles } = await supabaseServer
-        .from("user_profiles")
-        .select("id, full_name, email_address")
-        .in("id", reviewerIds);
+    reviewers = assignments
+      .map((assignment: any) => {
+        const profile = profileLookup[assignment.reviewer_id];
+        if (!profile || (profile as { role?: string }).role !== "reviewer") return null;
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          email_address: profile.email_address ?? null,
+          invite_status: assignment.invite_status ?? "pending",
+          invited_at: assignment.invited_at ?? null,
+          responded_at: assignment.responded_at ?? null,
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r != null);
+  }
 
-      if (reviewerProfiles) {
-        const lookup = Object.fromEntries(
-          reviewerProfiles.map((r) => [r.id, r]),
-        );
-        reviewers = assignments
-          .map((assignment: any) => {
-            const profile = lookup[assignment.reviewer_id];
-            if (!profile) return null;
-            return {
-              id: profile.id,
-              full_name: profile.full_name,
-              email_address: profile.email_address ?? null,
-              invite_status: assignment.invite_status ?? "pending",
-              invited_at: assignment.invited_at ?? null,
-              responded_at: assignment.responded_at ?? null,
-            };
-          })
-          .filter((r): r is NonNullable<typeof r> => r != null);
+  // Evaluation manager: from application_reviewers, the assignee with role=manager (one per app)
+  let evaluation_manager: { id: string; full_name: string | null } | null = null;
+  if (reviewerAssignments?.length) {
+    const managerAssignment = reviewerAssignments.find(
+      (a: any) => (profileLookup[a.reviewer_id] as { role?: string } | undefined)?.role === "manager"
+    );
+    if (managerAssignment) {
+      const profile = profileLookup[managerAssignment.reviewer_id] as { id: string; full_name: string | null } | undefined;
+      if (profile) {
+        evaluation_manager = { id: profile.id, full_name: profile.full_name };
       }
     }
   }
@@ -79,16 +95,25 @@ const buildApplicationResponse = async (
     .select("id, reviewer_id")
     .eq("application_id", id);
 
-  // Count only accepted reviewers (matching backend logic)
-  const acceptedReviewers = reviewerAssignments?.filter(
-    (a: any) => (a.invite_status ?? "pending") === "accepted"
-  ) ?? [];
+  // Count only accepted reviewers (exclude managers; matching backend logic)
+  const acceptedReviewers =
+    reviewerAssignments?.filter(
+      (a: any) =>
+        (profileLookup[a.reviewer_id] as { role?: string } | undefined)?.role === "reviewer" &&
+        (a.invite_status ?? "pending") === "accepted"
+    ) ?? [];
   const totalReviewers = viewerReviewerId
-    ? (reviewerAssignments?.filter((a: any) => (a.invite_status ?? "pending") === "accepted").length ?? 0)
+    ? (reviewerAssignments?.filter(
+        (a: any) =>
+          (profileLookup[a.reviewer_id] as { role?: string } | undefined)?.role === "reviewer" &&
+          (a.invite_status ?? "pending") === "accepted"
+      ).length ?? 0)
     : acceptedReviewers.length;
   const evaluationsCount = evaluations?.length ?? 0;
+  // Total evaluators = accepted reviewers + assigned evaluation manager (1 if any)
+  const totalEvaluators = totalReviewers + (evaluation_manager ? 1 : 0);
   const allEvaluationsComplete =
-    totalReviewers > 0 && evaluationsCount >= totalReviewers;
+    totalEvaluators > 0 && evaluationsCount >= totalEvaluators;
 
   // Map new_application fields to old field names for frontend compatibility
   return {
@@ -119,8 +144,10 @@ const buildApplicationResponse = async (
       
       reviewers,
       totalReviewers,
+      totalEvaluators,
       evaluationsCount,
       allEvaluationsComplete,
+      evaluation_manager,
     },
   };
 };
@@ -438,11 +465,7 @@ export async function PUT(
         );
       }
 
-      // Move to under_review when reviewers get assigned
-      await supabaseServer
-        .from("new_application")
-        .update({ status: "under_review" })
-        .eq("id", id);
+      // Do not move to under_review here; status moves to under_review only when all assigned reviewers and manager have invite_status = accepted (see reviewer-respond and assign-manager).
     }
 
     // Update status (including rejection reason)
