@@ -150,10 +150,12 @@ interface Application {
   allEvaluationsComplete?: boolean;
   evaluationsCount?: number;
   totalReviewers?: number;
+  totalEvaluators?: number;
   submitted_at?: string;
   created_at?: string;
   website?: string | null;
   funding_stage?: string | null;
+  evaluation_manager?: { id: string; full_name: string | null } | null;
 }
 
 export default function ApplicationDetailPage() {
@@ -218,6 +220,11 @@ export default function ApplicationDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [availableManagers, setAvailableManagers] = useState<
+    Array<{ id: string; full_name: string | null }>
+  >([]);
+  const [selectedEvaluationManagerId, setSelectedEvaluationManagerId] = useState<string | null>(null);
+  const [isAssigningManager, setIsAssigningManager] = useState(false);
 
   // Close assign-reviewers dropdown when clicking/touching outside
   useEffect(() => {
@@ -269,9 +276,10 @@ export default function ApplicationDetailPage() {
       setUser({ ...user, role: profile.role });
       fetchApplication();
 
-      // If manager, fetch reviewers list for assignment
+      // If manager, fetch reviewers and managers list for assignment
       if (profile.role === "manager") {
         fetchReviewers();
+        fetchManagers();
         fetchAllEvaluations();
       } else if (profile.role === "reviewer") {
         fetchReviewerEvaluation();
@@ -295,13 +303,29 @@ export default function ApplicationDetailPage() {
       }
 
       if (data) {
-        console.log("Fetched reviewers:", data);
         setAvailableReviewers(data);
       } else {
         console.log("No reviewers found in database");
       }
     } catch (error) {
       console.error("Error fetching reviewers:", error);
+    }
+  };
+
+  const fetchManagers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("id, full_name")
+        .eq("role", "manager");
+
+      if (error) {
+        console.error("Error fetching managers:", error);
+        return;
+      }
+      setAvailableManagers(data ?? []);
+    } catch (error) {
+      console.error("Error fetching managers:", error);
     }
   };
 
@@ -835,6 +859,18 @@ export default function ApplicationDetailPage() {
         false)
   );
 
+  const assignedEvaluationManagerId = application?.evaluation_manager?.id ?? null;
+  const filteredManagers = availableManagers.filter(
+    (manager) =>
+      manager.id !== assignedEvaluationManagerId &&
+      (manager.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? true)
+  );
+  const hasDropdownOptions = filteredReviewers.length > 0 || filteredManagers.length > 0;
+  const combinedDropdownOptions = [
+    ...filteredReviewers.map((r) => ({ id: r.id, name: r.full_name || "Unnamed Reviewer", isManager: false })),
+    ...filteredManagers.map((m) => ({ id: m.id, name: m.full_name || "Unnamed Manager", isManager: true })),
+  ].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
   const getSelectedReviewerNames = () => {
     return selectedReviewers
       .map((id) => {
@@ -1088,18 +1124,100 @@ export default function ApplicationDetailPage() {
                             </div>
                           );
                         })}
+                        {application.evaluation_manager && (
+                          <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {application.evaluation_manager.full_name || "Unknown"}{" "}
+                            <span className="font-normal">(Accepted)</span>
+                          </span>
+                        )}
                       </div>
                     ) : (
-                      <span className="font-medium text-black dark:text-zinc-50">
-                        {application.reviewer?.full_name || "Unknown"}
-                      </span>
+                      <div className="mt-1 flex flex-wrap gap-2 items-center">
+                        {application.reviewer && (
+                          <span className="font-medium text-black dark:text-zinc-50">
+                            {application.reviewer.full_name || "Unknown"}
+                          </span>
+                        )}
+                        {application.evaluation_manager && (
+                          <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {application.evaluation_manager.full_name || "Unknown"}{" "}
+                            <span className="font-normal">(Accepted)</span>
+                          </span>
+                        )}
+                        {!application.reviewer && !application.evaluation_manager && (
+                          <span className="font-medium text-black dark:text-zinc-50">Unknown</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 ) : user?.role === "manager" ? (
                   <div className="mt-2">
-                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                      No reviewers assigned
-                    </span>
+                    {(!application.reviewers || application.reviewers.length === 0) &&
+                    !application.evaluation_manager ? (
+                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                        No reviewers assigned
+                      </span>
+                    ) : (
+                      <div className="mt-1 flex flex-wrap gap-2 items-center">
+                        {application.reviewers?.map((reviewer) => {
+                          const status = (reviewer as { invite_status?: string }).invite_status ?? "pending";
+                          const name = reviewer.full_name || "Unknown";
+                          return (
+                            <div key={reviewer.id} className="flex items-center gap-1 flex-wrap">
+                              {status === "accepted" ? (
+                                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                  {name} <span className="font-normal">(Accepted)</span>
+                                </span>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">
+                                  {name}
+                                  {status === "rejected" && " ✗ Rejected"}
+                                  {status === "pending" && " (Pending)"}
+                                </Badge>
+                              )}
+                              {status === "rejected" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
+                                  onClick={async () => {
+                                    try {
+                                      const r = await fetch(
+                                        `/api/applications/${params.id}/reviewers/${reviewer.id}`,
+                                        { method: "DELETE" }
+                                      );
+                                      if (r.ok) {
+                                        setUpdateMessage("Reviewer removed. You can invite a new one.");
+                                        setTimeout(() => setUpdateMessage(""), 3000);
+                                        fetchApplication();
+                                        fetchAllEvaluations();
+                                      } else {
+                                        const d = await r.json();
+                                        setUpdateMessage(d.error || "Failed to remove reviewer");
+                                        setTimeout(() => setUpdateMessage(""), 3000);
+                                      }
+                                    } catch (e) {
+                                      setUpdateMessage("Failed to remove reviewer");
+                                      setTimeout(() => setUpdateMessage(""), 3000);
+                                    }
+                                  }}
+                                >
+                                  Reassign
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {application.evaluation_manager && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                              {application.evaluation_manager.full_name || "Unknown"}{" "}
+                              <span className="font-normal">(Accepted)</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1142,11 +1260,11 @@ export default function ApplicationDetailPage() {
 
                 {/* Evaluation status indicator */}
                 {application.status === "under_review" &&
-                  application.totalReviewers &&
-                  application.totalReviewers > 0 && (
+                  application.totalEvaluators != null &&
+                  application.totalEvaluators > 0 && (
                     <div className="text-sm text-zinc-600 dark:text-zinc-400 px-4 py-2">
                       Evaluations: {application.evaluationsCount || 0}/
-                      {application.totalReviewers}
+                      {application.totalEvaluators}
                       {application.allEvaluationsComplete && (
                         <span className="ml-2 text-green-600 dark:text-green-400 font-medium">
                           ✓ Complete
@@ -1180,8 +1298,8 @@ export default function ApplicationDetailPage() {
                 {user?.role === "manager" &&
                   application.status === "under_review" &&
                   application.allEvaluationsComplete &&
-                  application.totalReviewers &&
-                  application.totalReviewers > 0 && (
+                  application.totalEvaluators != null &&
+                  application.totalEvaluators > 0 && (
                     <>
                       <Button
                         onClick={handleApprove}
@@ -1386,13 +1504,13 @@ export default function ApplicationDetailPage() {
           </CardHeader>
         </Card>
 
-        {/* Manage Reviewers panel: Rejected list + Selected list with Invite/Clear */}
+        {/* Manage Reviewers panel: Assigned list + Rejected list + Add reviewer */}
         {showAssignReviewer && user?.role === "manager" && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Manage Reviewers</CardTitle>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Invite at least 2 reviewers. Select from dropdown to add to the list, then click Invite (email will be sent). Rejected reviewers can be cancelled and replaced.
+                Invite at least 2 reviewers (select from dropdown, then Invite). Rejected reviewers can be cancelled and replaced.
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1469,12 +1587,12 @@ export default function ApplicationDetailPage() {
                 </div>
               ) : null}
 
-              {/* Add reviewer: dropdown + selected list with Invite / Clear */}
+              {/* Add reviewer or assign manager: dropdown + selected list */}
               <div>
                 <h4 className="font-medium text-sm mb-2">Add reviewer</h4>
-                {availableReviewers.length === 0 ? (
+                {availableReviewers.length === 0 && availableManagers.length === 0 ? (
                   <p className="text-red-500 text-sm">
-                    No reviewers available. Create reviewer accounts first.
+                    No reviewers or managers available. Create user accounts first.
                   </p>
                 ) : (
                   <>
@@ -1488,35 +1606,34 @@ export default function ApplicationDetailPage() {
                         className="w-full pl-3 pr-10 py-2 border rounded-md focus:outline-none focus:ring"
                       />
                       {showDropdown && (
-                        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto border rounded-md bg-white dark:bg-zinc-800 mt-2 shadow-lg">
-                          {filteredReviewers.length === 0 ? (
+                        <ul className="absolute z-50 w-full max-h-64 overflow-y-auto border rounded-md bg-white dark:bg-zinc-800 mt-2 shadow-lg">
+                          {!hasDropdownOptions ? (
                             <li className="px-4 py-2 text-gray-500 dark:text-gray-400 text-sm">
-                              No reviewers found or all already assigned
+                              No reviewers or managers found (or all already assigned)
                             </li>
                           ) : (
-                            filteredReviewers.map((reviewer) => {
-                              const alreadyInList = selectedToInviteList.some((s) => s.id === reviewer.id);
-                              if (alreadyInList) return null;
+                            combinedDropdownOptions.map((item) => {
+                              const alreadyInList = !item.isManager && selectedToInviteList.some((s) => s.id === item.id);
+                              const isManagerSelected = item.isManager && selectedEvaluationManagerId === item.id;
+                              if (alreadyInList || isManagerSelected) return null;
                               return (
                                 <li
-                                  key={reviewer.id}
+                                  key={`${item.isManager ? "manager" : "reviewer"}-${item.id}`}
                                   onClick={() => {
-                                    setSelectedToInviteList((prev) => {
-                                      if (prev.some((s) => s.id === reviewer.id)) return prev;
-                                      return [
-                                        ...prev,
-                                        {
-                                          id: reviewer.id,
-                                          name: reviewer.full_name || "Unnamed Reviewer",
-                                        },
-                                      ];
-                                    });
+                                    if (item.isManager) {
+                                      setSelectedEvaluationManagerId(item.id);
+                                    } else {
+                                      setSelectedToInviteList((prev) => {
+                                        if (prev.some((s) => s.id === item.id)) return prev;
+                                        return [...prev, { id: item.id, name: item.name }];
+                                      });
+                                    }
                                     setShowDropdown(false);
                                     setSearchQuery("");
                                   }}
-                                  className="flex justify-between px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm"
+                                  className="px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm"
                                 >
-                                  {reviewer.full_name || "Unnamed Reviewer"}
+                                  {item.name}
                                 </li>
                               );
                             })
@@ -1524,6 +1641,58 @@ export default function ApplicationDetailPage() {
                         </ul>
                       )}
                     </div>
+
+                    {/* Selected manager from this dropdown: Assign reviewer / Clear */}
+                    {selectedEvaluationManagerId && (
+                      <div className="flex items-center gap-2 flex-wrap text-sm mb-3 p-2 rounded-md bg-zinc-50 dark:bg-zinc-800/50">
+                        <span className="text-zinc-700 dark:text-zinc-300">
+                          Selected: <strong>{availableManagers.find((m) => m.id === selectedEvaluationManagerId)?.full_name || "Manager"}</strong>
+                        </span>
+                        <Button
+                          size="sm"
+                          disabled={isAssigningManager}
+                          onClick={async () => {
+                            if (!selectedEvaluationManagerId) return;
+                            setIsAssigningManager(true);
+                            try {
+                              const { data: { session } } = await supabase.auth.getSession();
+                              const r = await fetch(`/api/applications/${params.id}/assign-manager`, {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                                },
+                                body: JSON.stringify({ managerId: selectedEvaluationManagerId }),
+                              });
+                              const data = await r.json();
+                              if (r.ok) {
+                                setUpdateMessage("Manager assigned for evaluation.");
+                                setTimeout(() => setUpdateMessage(""), 3000);
+                                setSelectedEvaluationManagerId(null);
+                                fetchApplication();
+                              } else {
+                                setUpdateMessage(data.error || "Failed to assign manager");
+                                setTimeout(() => setUpdateMessage(""), 3000);
+                              }
+                            } catch (e) {
+                              setUpdateMessage("Failed to assign manager");
+                              setTimeout(() => setUpdateMessage(""), 3000);
+                            } finally {
+                              setIsAssigningManager(false);
+                            }
+                          }}
+                        >
+                          {isAssigningManager ? "Assigning…" : "Assign reviewer"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedEvaluationManagerId(null)}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Selected list: "Selected: Name" [Invite] [Clear] */}
                     {selectedToInviteList.length > 0 && (
