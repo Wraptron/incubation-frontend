@@ -41,8 +41,8 @@ interface Application {
   created_at: string;
 }
 
-const VALID_PAGE_SIZES = [10, 25, 50, 100];
 const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
+const VALID_PAGE_SIZES = [10, 25, 50, 100, 150, 200];
 
 function DashboardContent() {
   const router = useRouter();

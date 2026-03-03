@@ -11,7 +11,9 @@ async function sendInterviewEmail(
   founderName: string,
   startupName: string,
   date: string,
-  time: string
+  time: string,
+  mode: "online" | "offline",
+  locationOrLink: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const gmailUser = process.env.GMAIL_USER;
@@ -57,6 +59,10 @@ async function sendInterviewEmail(
             
             <p><strong>Interview date and time:</strong> <span class="highlight">${formattedDate}</span></p>
             
+            <p><strong>Interview mode:</strong> ${mode === "online" ? "Online" : "Offline"}</p>
+            
+            <p><strong>${mode === "online" ? "Google Meet link" : "Venue"}:</strong> ${mode === "online" ? `<a href="${locationOrLink}" class="highlight">${locationOrLink}</a>` : locationOrLink}</p>
+            
             <p>Please ensure you are available at the scheduled time. We will send further details if needed.</p>
             
             <p>Regards,<br>
@@ -73,6 +79,10 @@ Dear ${founderName},
 Congratulations! Your application for Nirmaan Pre-Incubation has been evaluated and we would like to invite you for an interview.
 
 Interview date and time: ${formattedDate}
+
+Interview mode: ${mode === "online" ? "Online" : "Offline"}
+
+${mode === "online" ? "Google Meet link" : "Venue"}: ${locationOrLink}
 
 Please ensure you are available at the scheduled time. We will send further details if needed.
 
@@ -100,7 +110,7 @@ Team Nirmaan
 /**
  * POST /api/applications/[id]/call-for-interview
  * Manager schedules an interview: updates status and sends email to founder.
- * Body: { date: "YYYY-MM-DD", time: "HH:mm" }
+ * Body: { date: "YYYY-MM-DD", time: "HH:mm", mode?: "online"|"offline", locationOrLink?: string }
  */
 export async function POST(
   request: NextRequest,
@@ -173,10 +183,24 @@ export async function POST(
     const body = await request.json();
     const date = typeof body?.date === "string" ? body.date.trim() : "";
     const time = typeof body?.time === "string" ? body.time.trim() : "";
+    const mode = body?.mode === "offline" ? "offline" : "online";
+    const locationOrLink =
+      typeof body?.locationOrLink === "string"
+        ? body.locationOrLink.trim()
+        : mode === "offline"
+          ? "Office of Innovation and Entrepreneurship, I Floor, Sudha & Shankar Innovation Hub, IIT Madras"
+          : "";
 
     if (!date || !time) {
       return NextResponse.json(
         { error: "Date and time are required" },
+        { status: 400 }
+      );
+    }
+
+    if (mode === "online" && !locationOrLink) {
+      return NextResponse.json(
+        { error: "Google Meet link is required for online interviews" },
         { status: 400 }
       );
     }
@@ -239,7 +263,9 @@ export async function POST(
       founderName,
       startupName,
       date,
-      time
+      time,
+      mode,
+      locationOrLink
     );
 
     if (!emailResult.success) {

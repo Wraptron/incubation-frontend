@@ -231,19 +231,19 @@ export async function PUT(
       result = inserted;
     }
 
-    // If all assigned evaluators (accepted reviewers + manager) have submitted, set status to "evaluated"
-    const { data: acceptedAssignments } = await supabaseServer
+    // If all assigned reviewers have submitted, set status to "evaluated"
+    // Count ALL assigned (regardless of invite_status) - only move when every assigned reviewer has evaluated
+    const { data: assignedReviewers } = await supabaseServer
       .from("application_reviewers")
       .select("reviewer_id")
-      .eq("application_id", applicationId)
-      .eq("invite_status", "accepted");
-    const acceptedCount = acceptedAssignments?.length ?? 0;
+      .eq("application_id", applicationId);
+    const assignedCount = assignedReviewers?.length ?? 0;
     const { data: evalsForApp } = await supabaseServer
       .from("application_evaluations")
       .select("reviewer_id")
       .eq("application_id", applicationId);
     const uniqueEvalIds = new Set((evalsForApp ?? []).map((e: { reviewer_id: string }) => e.reviewer_id));
-    if (acceptedCount > 0 && uniqueEvalIds.size >= acceptedCount) {
+    if (assignedCount > 0 && uniqueEvalIds.size >= assignedCount) {
       await supabaseServer
         .from("new_application")
         .update({ status: "evaluated" })
