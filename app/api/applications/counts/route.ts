@@ -77,24 +77,12 @@ export async function GET(request: NextRequest) {
 
       const { data: apps } = await supabaseServer
         .from("new_application")
-        .select("id")
+        .select("id, status")
         .in("id", reviewerApplicationIds);
 
-      const applicationIds = apps?.map((a: { id: string }) => a.id) ?? [];
-
-      let evaluatedApplicationIds: Set<string> = new Set();
-      if (reviewerUserId && applicationIds.length) {
-        const { data: evals } = await supabaseServer
-          .from("application_evaluations")
-          .select("application_id")
-          .eq("reviewer_id", reviewerUserId)
-          .in("application_id", applicationIds);
-        if (evals?.length) {
-          evals.forEach((e: { application_id: string }) =>
-            evaluatedApplicationIds.add(e.application_id)
-          );
-        }
-      }
+      const appById = Object.fromEntries(
+        (apps ?? []).map((a: { id: string; status?: string }) => [a.id, a])
+      );
 
       const assignmentByAppId: Record<string, string | null> = {};
       reviewerAssignmentsWithStatus.forEach((a) => {
@@ -102,16 +90,17 @@ export async function GET(request: NextRequest) {
       });
 
       REVIEWER_STATUSES.forEach((s) => (counts[s] = 0));
-      applicationIds.forEach((id: string) => {
+      reviewerApplicationIds.forEach((id: string) => {
         const inviteStatus = assignmentByAppId[id] ?? "pending";
         let status: string;
         if (inviteStatus === "rejected") status = "rejected";
         else if (inviteStatus === "pending") status = "pending";
         else
-          status = evaluatedApplicationIds.has(id) ? "evaluated" : "under_review";
+          // Use actual DB status - "evaluated" only when all assigned reviewers have submitted
+          status = appById[id]?.status === "evaluated" ? "evaluated" : "under_review";
         if (status in counts) counts[status]++;
       });
-      counts.all = applicationIds.length;
+      counts.all = reviewerApplicationIds.length;
     } else {
       const statusList = [...MANAGER_STATUSES];
       await Promise.all(

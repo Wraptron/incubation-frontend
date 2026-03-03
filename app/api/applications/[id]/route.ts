@@ -75,19 +75,20 @@ const buildApplicationResponse = async (
       .filter((r): r is NonNullable<typeof r> => r != null);
   }
 
-  // Evaluation manager: from application_reviewers, the assignee with role=manager (one per app)
-  let evaluation_manager: { id: string; full_name: string | null } | null = null;
+  // Evaluation managers: from application_reviewers, all assignees with role=manager (multiple per app)
+  const evaluation_managers: Array<{ id: string; full_name: string | null }> = [];
   if (reviewerAssignments?.length) {
-    const managerAssignment = reviewerAssignments.find(
+    const managerAssignments = reviewerAssignments.filter(
       (a: any) => (profileLookup[a.reviewer_id] as { role?: string } | undefined)?.role === "manager"
     );
-    if (managerAssignment) {
-      const profile = profileLookup[managerAssignment.reviewer_id] as { id: string; full_name: string | null } | undefined;
+    for (const assignment of managerAssignments) {
+      const profile = profileLookup[assignment.reviewer_id] as { id: string; full_name: string | null } | undefined;
       if (profile) {
-        evaluation_manager = { id: profile.id, full_name: profile.full_name };
+        evaluation_managers.push({ id: profile.id, full_name: profile.full_name });
       }
     }
   }
+  const evaluation_manager = evaluation_managers[0] ?? null;
 
   // Evaluation stats
   const { data: evaluations } = await supabaseServer
@@ -110,8 +111,8 @@ const buildApplicationResponse = async (
       ).length ?? 0)
     : acceptedReviewers.length;
   const evaluationsCount = evaluations?.length ?? 0;
-  // Total evaluators = accepted reviewers + assigned evaluation manager (1 if any)
-  const totalEvaluators = totalReviewers + (evaluation_manager ? 1 : 0);
+  // Total evaluators = accepted reviewers + all assigned evaluation managers
+  const totalEvaluators = totalReviewers + evaluation_managers.length;
   const allEvaluationsComplete =
     totalEvaluators > 0 && evaluationsCount >= totalEvaluators;
 
@@ -148,6 +149,7 @@ const buildApplicationResponse = async (
       evaluationsCount,
       allEvaluationsComplete,
       evaluation_manager,
+      evaluation_managers,
     },
   };
 };

@@ -169,10 +169,9 @@ export async function GET(request: NextRequest) {
           status = "rejected";
         } else if (inviteStatus === "pending") {
           status = "pending";
-        } else if (inviteStatus === "accepted") {
-          status = evaluatedApplicationIds.has(app.id) ? "evaluated" : "under_review";
         } else {
-          status = evaluatedApplicationIds.has(app.id) ? "evaluated" : "under_review";
+          // Only show "evaluated" when DB status is evaluated (all assigned reviewers have submitted)
+          status = app.status === "evaluated" ? "evaluated" : "under_review";
         }
       }
       return {

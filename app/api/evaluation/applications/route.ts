@@ -74,9 +74,16 @@ export async function GET(request: NextRequest) {
     if (applicationIds.length === 0) {
       return NextResponse.json({
         applications: [],
-        pagination: { total: 0, limit: 100, offset: 0 },
+        pagination: { total: 0, limit: 25, offset: 0 },
       });
     }
+
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(
+      200,
+      Math.max(1, parseInt(searchParams.get("limit") ?? "25", 10) || 25)
+    );
+    const offset = Math.max(0, parseInt(searchParams.get("offset") ?? "0", 10) || 0);
 
     const { data: apps, error: appsError } = await supabaseServer
       .from("new_application")
@@ -92,19 +99,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const applications = (apps ?? []).map((app: any) => ({
+    const allApplications = (apps ?? []).map((app: any) => ({
       ...app,
       company_name: app.team_name || app.company_name,
       founder_name: app.your_name || app.founder_name,
       created_at: app.submitted_at || app.created_at,
     }));
 
+    const total = allApplications.length;
+    const applications = allApplications.slice(offset, offset + limit);
+
     return NextResponse.json({
       applications,
       pagination: {
-        total: applications.length,
-        limit: 100,
-        offset: 0,
+        total,
+        limit,
+        offset,
       },
     });
   } catch (error: any) {

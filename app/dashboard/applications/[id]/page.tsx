@@ -156,6 +156,7 @@ interface Application {
   website?: string | null;
   funding_stage?: string | null;
   evaluation_manager?: { id: string; full_name: string | null } | null;
+  evaluation_managers?: Array<{ id: string; full_name: string | null }>;
 }
 
 export default function ApplicationDetailPage() {
@@ -191,6 +192,8 @@ export default function ApplicationDetailPage() {
   const [interviewHour, setInterviewHour] = useState("");
   const [interviewMinute, setInterviewMinute] = useState("");
   const [interviewAmPm, setInterviewAmPm] = useState<"AM" | "PM">("AM");
+  const [interviewMode, setInterviewMode] = useState<"online" | "offline">("online");
+  const [interviewGmeetLink, setInterviewGmeetLink] = useState("");
   const [isSubmittingInterview, setIsSubmittingInterview] = useState(false);
   const [evaluations, setEvaluations] = useState<
     Array<{
@@ -223,8 +226,10 @@ export default function ApplicationDetailPage() {
   const [availableManagers, setAvailableManagers] = useState<
     Array<{ id: string; full_name: string | null }>
   >([]);
-  const [selectedEvaluationManagerId, setSelectedEvaluationManagerId] = useState<string | null>(null);
-  const [isAssigningManager, setIsAssigningManager] = useState(false);
+  const [selectedManagersToAssign, setSelectedManagersToAssign] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [isAssigningManagerId, setIsAssigningManagerId] = useState<string | null>(null);
 
   // Close assign-reviewers dropdown when clicking/touching outside
   useEffect(() => {
@@ -859,10 +864,10 @@ export default function ApplicationDetailPage() {
         false)
   );
 
-  const assignedEvaluationManagerId = application?.evaluation_manager?.id ?? null;
+  const assignedEvaluationManagerIds = application?.evaluation_managers?.map((m) => m.id) ?? (application?.evaluation_manager ? [application.evaluation_manager.id] : []);
   const filteredManagers = availableManagers.filter(
     (manager) =>
-      manager.id !== assignedEvaluationManagerId &&
+      !assignedEvaluationManagerIds.includes(manager.id) &&
       (manager.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? true)
   );
   const hasDropdownOptions = filteredReviewers.length > 0 || filteredManagers.length > 0;
@@ -1124,12 +1129,12 @@ export default function ApplicationDetailPage() {
                             </div>
                           );
                         })}
-                        {application.evaluation_manager && (
-                          <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                            {application.evaluation_manager.full_name || "Unknown"}{" "}
+                        {(application.evaluation_managers ?? (application.evaluation_manager ? [application.evaluation_manager] : [])).map((mgr) => (
+                          <span key={mgr.id} className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {mgr.full_name || "Unknown"}{" "}
                             <span className="font-normal">(Accepted)</span>
                           </span>
-                        )}
+                        ))}
                       </div>
                     ) : (
                       <div className="mt-1 flex flex-wrap gap-2 items-center">
@@ -1138,13 +1143,13 @@ export default function ApplicationDetailPage() {
                             {application.reviewer.full_name || "Unknown"}
                           </span>
                         )}
-                        {application.evaluation_manager && (
-                          <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                            {application.evaluation_manager.full_name || "Unknown"}{" "}
+                        {(application.evaluation_managers ?? (application.evaluation_manager ? [application.evaluation_manager] : [])).map((mgr) => (
+                          <span key={mgr.id} className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {mgr.full_name || "Unknown"}{" "}
                             <span className="font-normal">(Accepted)</span>
                           </span>
-                        )}
-                        {!application.reviewer && !application.evaluation_manager && (
+                        ))}
+                        {!application.reviewer && (!application.evaluation_managers?.length && !application.evaluation_manager) && (
                           <span className="font-medium text-black dark:text-zinc-50">Unknown</span>
                         )}
                       </div>
@@ -1153,7 +1158,7 @@ export default function ApplicationDetailPage() {
                 ) : user?.role === "manager" ? (
                   <div className="mt-2">
                     {(!application.reviewers || application.reviewers.length === 0) &&
-                    !application.evaluation_manager ? (
+                    !(application.evaluation_managers?.length || application.evaluation_manager) ? (
                       <span className="text-sm text-zinc-600 dark:text-zinc-400">
                         No reviewers assigned
                       </span>
@@ -1208,14 +1213,12 @@ export default function ApplicationDetailPage() {
                             </div>
                           );
                         })}
-                        {application.evaluation_manager && (
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                              {application.evaluation_manager.full_name || "Unknown"}{" "}
-                              <span className="font-normal">(Accepted)</span>
-                            </span>
-                          </div>
-                        )}
+                        {(application.evaluation_managers ?? (application.evaluation_manager ? [application.evaluation_manager] : [])).map((mgr) => (
+                          <span key={mgr.id} className="text-sm font-medium text-green-600 dark:text-green-400">
+                            {mgr.full_name || "Unknown"}{" "}
+                            <span className="font-normal">(Accepted)</span>
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -1232,6 +1235,7 @@ export default function ApplicationDetailPage() {
                           setShowAssignReviewer(!showAssignReviewer);
                           if (!showAssignReviewer) {
                             setSelectedToInviteList([]);
+                            setSelectedManagersToAssign([]);
                             setInviteSentForId(null);
                             setSearchQuery("");
                             setShowDropdown(false);
@@ -1294,57 +1298,6 @@ export default function ApplicationDetailPage() {
                       Evaluate
                     </Button>
                   )}
-                {/* Manager actions when all evaluations are complete (under_review: Accept/Reject) */}
-                {user?.role === "manager" &&
-                  application.status === "under_review" &&
-                  application.allEvaluationsComplete &&
-                  application.totalEvaluators != null &&
-                  application.totalEvaluators > 0 && (
-                    <>
-                      <Button
-                        onClick={handleApprove}
-                        disabled={isApproving}
-                        variant="default"
-                        className="disabled:opacity-50"
-                      >
-                        {isApproving ? (
-                          <>
-                            <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            Approving...
-                          </>
-                        ) : (
-                          "Accept"
-                        )}
-                      </Button>
-                      <Button
-                        onClick={() => setShowRejectModal(true)}
-                        disabled={isApproving}
-                        variant="default"
-                        className="disabled:opacity-50"
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
                 {/* Manager: when status is evaluated, show Call for interview + Reject */}
                 {user?.role === "manager" &&
                   application.status === "evaluated" && (
@@ -1363,7 +1316,9 @@ export default function ApplicationDetailPage() {
                       </Button>
                       <Button
                         onClick={() => setShowRejectModal(true)}
+                        disabled={isApproving}
                         variant="default"
+                        className="disabled:opacity-50"
                       >
                         Reject
                       </Button>
@@ -1614,14 +1569,18 @@ export default function ApplicationDetailPage() {
                           ) : (
                             combinedDropdownOptions.map((item) => {
                               const alreadyInList = !item.isManager && selectedToInviteList.some((s) => s.id === item.id);
-                              const isManagerSelected = item.isManager && selectedEvaluationManagerId === item.id;
-                              if (alreadyInList || isManagerSelected) return null;
+                              const isManagerAlreadyAssigned = item.isManager && assignedEvaluationManagerIds.includes(item.id);
+                              const isManagerInSelectedList = item.isManager && selectedManagersToAssign.some((s) => s.id === item.id);
+                              if (alreadyInList || isManagerAlreadyAssigned || isManagerInSelectedList) return null;
                               return (
                                 <li
                                   key={`${item.isManager ? "manager" : "reviewer"}-${item.id}`}
                                   onClick={() => {
                                     if (item.isManager) {
-                                      setSelectedEvaluationManagerId(item.id);
+                                      setSelectedManagersToAssign((prev) => {
+                                        if (prev.some((s) => s.id === item.id)) return prev;
+                                        return [...prev, { id: item.id, name: item.name }];
+                                      });
                                     } else {
                                       setSelectedToInviteList((prev) => {
                                         if (prev.some((s) => s.id === item.id)) return prev;
@@ -1642,56 +1601,63 @@ export default function ApplicationDetailPage() {
                       )}
                     </div>
 
-                    {/* Selected manager from this dropdown: Assign reviewer / Clear */}
-                    {selectedEvaluationManagerId && (
-                      <div className="flex items-center gap-2 flex-wrap text-sm mb-3 p-2 rounded-md bg-zinc-50 dark:bg-zinc-800/50">
-                        <span className="text-zinc-700 dark:text-zinc-300">
-                          Selected: <strong>{availableManagers.find((m) => m.id === selectedEvaluationManagerId)?.full_name || "Manager"}</strong>
-                        </span>
-                        <Button
-                          size="sm"
-                          disabled={isAssigningManager}
-                          onClick={async () => {
-                            if (!selectedEvaluationManagerId) return;
-                            setIsAssigningManager(true);
-                            try {
-                              const { data: { session } } = await supabase.auth.getSession();
-                              const r = await fetch(`/api/applications/${params.id}/assign-manager`, {
-                                method: "POST",
-                                headers: {
-                                  "Content-Type": "application/json",
-                                  ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-                                },
-                                body: JSON.stringify({ managerId: selectedEvaluationManagerId }),
-                              });
-                              const data = await r.json();
-                              if (r.ok) {
-                                setUpdateMessage("Manager assigned for evaluation.");
-                                setTimeout(() => setUpdateMessage(""), 3000);
-                                setSelectedEvaluationManagerId(null);
-                                fetchApplication();
-                              } else {
-                                setUpdateMessage(data.error || "Failed to assign manager");
-                                setTimeout(() => setUpdateMessage(""), 3000);
-                              }
-                            } catch (e) {
-                              setUpdateMessage("Failed to assign manager");
-                              setTimeout(() => setUpdateMessage(""), 3000);
-                            } finally {
-                              setIsAssigningManager(false);
-                            }
-                          }}
-                        >
-                          {isAssigningManager ? "Assigning…" : "Assign reviewer"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedEvaluationManagerId(null)}
-                        >
-                          Clear
-                        </Button>
-                      </div>
+                    {/* Selected managers: list each with Assign reviewers / Clear */}
+                    {selectedManagersToAssign.length > 0 && (
+                      <ul className="space-y-2 mb-3">
+                        {selectedManagersToAssign.map((item) => (
+                          <li
+                            key={item.id}
+                            className="flex items-center gap-2 flex-wrap text-sm p-2 rounded-md bg-zinc-50 dark:bg-zinc-800/50"
+                          >
+                            <span className="text-zinc-700 dark:text-zinc-300">
+                              Selected: <strong>{item.name}</strong>
+                            </span>
+                            <Button
+                              size="sm"
+                              disabled={isAssigningManagerId !== null}
+                              onClick={async () => {
+                                setIsAssigningManagerId(item.id);
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession();
+                                  const r = await fetch(`/api/applications/${params.id}/assign-manager`, {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                                    },
+                                    body: JSON.stringify({ managerId: item.id }),
+                                  });
+                                  const data = await r.json();
+                                  if (r.ok) {
+                                    setUpdateMessage("Manager added for evaluation.");
+                                    setTimeout(() => setUpdateMessage(""), 3000);
+                                    setSelectedManagersToAssign((prev) => prev.filter((m) => m.id !== item.id));
+                                    fetchApplication();
+                                  } else {
+                                    setUpdateMessage(data.error || "Failed to assign manager");
+                                    setTimeout(() => setUpdateMessage(""), 3000);
+                                  }
+                                } catch (e) {
+                                  setUpdateMessage("Failed to assign manager");
+                                  setTimeout(() => setUpdateMessage(""), 3000);
+                                } finally {
+                                  setIsAssigningManagerId(null);
+                                }
+                              }}
+                            >
+                              {isAssigningManagerId === item.id ? "Assigning…" : "Assign Reviewer"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isAssigningManagerId !== null}
+                              onClick={() => setSelectedManagersToAssign((prev) => prev.filter((m) => m.id !== item.id))}
+                            >
+                              Clear
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
 
                     {/* Selected list: "Selected: Name" [Invite] [Clear] */}
@@ -2066,6 +2032,66 @@ export default function ApplicationDetailPage() {
                   </p>
                 )}
               </div>
+              <div>
+                <label className="block text-sm font-semibold mb-3 text-zinc-700 dark:text-zinc-300">
+                  Mode
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="interview-mode"
+                      value="online"
+                      checked={interviewMode === "online"}
+                      onChange={() => {
+                        setInterviewMode("online");
+                        setInterviewGmeetLink("");
+                      }}
+                      className="rounded-full border-2 border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Online</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="interview-mode"
+                      value="offline"
+                      checked={interviewMode === "offline"}
+                      onChange={() => setInterviewMode("offline")}
+                      className="rounded-full border-2 border-zinc-300 dark:border-zinc-600 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Offline</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="interview-location" className="block text-sm font-semibold mb-2 text-zinc-700 dark:text-zinc-300">
+                  {interviewMode === "online" ? "Google Meet link" : "Venue"}
+                </label>
+                {interviewMode === "online" ? (
+                  <input
+                    id="interview-location"
+                    type="url"
+                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                    value={interviewGmeetLink}
+                    onChange={(e) => setInterviewGmeetLink(e.target.value)}
+                    className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-white px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-zinc-900 dark:text-zinc-900 placeholder:text-zinc-400"
+                  />
+                ) : (
+                  <input
+                    id="interview-location"
+                    type="text"
+                    readOnly
+                    value="Office of Innovation and Entrepreneurship, I Floor, Sudha & Shankar Innovation Hub, IIT Madras"
+                    className="w-full rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-default"
+                  />
+                )}
+                {interviewMode === "online" && (
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    Required for online interviews
+                  </p>
+                )}
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -2076,6 +2102,8 @@ export default function ApplicationDetailPage() {
                   setInterviewHour("");
                   setInterviewMinute("");
                   setInterviewAmPm("AM");
+                  setInterviewMode("online");
+                  setInterviewGmeetLink("");
                 }}
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-white"
               >
@@ -2085,6 +2113,11 @@ export default function ApplicationDetailPage() {
                 onClick={async () => {
                   if (!interviewDate || !interviewHour || !interviewMinute) {
                     setUpdateMessage("Please select date, hour, and minute");
+                    setTimeout(() => setUpdateMessage(""), 3000);
+                    return;
+                  }
+                  if (interviewMode === "online" && !interviewGmeetLink?.trim()) {
+                    setUpdateMessage("Please add a Google Meet link for online interviews");
                     setTimeout(() => setUpdateMessage(""), 3000);
                     return;
                   }
@@ -2121,6 +2154,11 @@ export default function ApplicationDetailPage() {
                         body: JSON.stringify({
                           date: interviewDate,
                           time: time24Hour,
+                          mode: interviewMode,
+                          locationOrLink:
+                            interviewMode === "online"
+                              ? interviewGmeetLink.trim()
+                              : "Office of Innovation and Entrepreneurship, I Floor, Sudha & Shankar Innovation Hub, IIT Madras",
                         }),
                       }
                     );
@@ -2140,6 +2178,8 @@ export default function ApplicationDetailPage() {
                       setInterviewHour("");
                       setInterviewMinute("");
                       setInterviewAmPm("AM");
+                      setInterviewMode("online");
+                      setInterviewGmeetLink("");
                       fetchApplication();
                     } else {
                       const errorMsg = data.error || `Failed to schedule interview (${response.status})`;
@@ -2153,7 +2193,13 @@ export default function ApplicationDetailPage() {
                     setIsSubmittingInterview(false);
                   }
                 }}
-                disabled={!interviewDate || !interviewHour || !interviewMinute || isSubmittingInterview}
+                disabled={
+                  !interviewDate ||
+                  !interviewHour ||
+                  !interviewMinute ||
+                  (interviewMode === "online" && !interviewGmeetLink?.trim()) ||
+                  isSubmittingInterview
+                }
                 variant="default"
                 className="disabled:opacity-50"
               >

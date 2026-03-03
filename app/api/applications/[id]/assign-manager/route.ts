@@ -80,9 +80,9 @@ async function sendManagerAssignEmail(
 }
 
 /**
- * POST - Assign a manager to this application for evaluation (Evaluate tab).
+ * POST - Add a manager to this application for evaluation (Evaluate tab).
  * Body: { managerId: string }
- * Only managers can assign. Replaces any existing evaluation manager for this application.
+ * Only managers can assign. Adds the manager; does not replace existing managers. Multiple managers allowed.
  */
 export async function POST(
   request: NextRequest,
@@ -166,18 +166,18 @@ export async function POST(
       .eq("id", applicationId)
       .single();
 
-    // Get all manager user ids so we can remove any existing manager assignment for this app
-    const { data: managerProfiles } = await supabaseServer
-      .from("user_profiles")
+    // Check if this manager is already assigned to this application
+    const { data: existing } = await supabaseServer
+      .from("application_reviewers")
       .select("id")
-      .eq("role", "manager");
-    const managerIds = (managerProfiles ?? []).map((p: { id: string }) => p.id);
-    if (managerIds.length > 0) {
-      await supabaseServer
-        .from("application_reviewers")
-        .delete()
-        .eq("application_id", applicationId)
-        .in("reviewer_id", managerIds);
+      .eq("application_id", applicationId)
+      .eq("reviewer_id", managerId)
+      .maybeSingle();
+    if (existing) {
+      return NextResponse.json(
+        { message: "Manager already assigned", assignment: existing },
+        { status: 200 }
+      );
     }
 
     const now = new Date().toISOString();
@@ -240,7 +240,7 @@ export async function POST(
     }
 
     return NextResponse.json({
-      message: "Manager assigned for evaluation",
+      message: "Manager added for evaluation",
       assignment: inserted,
       emailSent,
     });
