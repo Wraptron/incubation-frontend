@@ -87,12 +87,22 @@ export async function GET(request: NextRequest) {
       created_at: app.submitted_at,
     }));
 
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(
+      200,
+      Math.max(1, parseInt(searchParams.get("limit") ?? "25", 10) || 25)
+    );
+    const offset = Math.max(0, parseInt(searchParams.get("offset") ?? "0", 10) || 0);
+
+    const total = enriched.length;
+    const paginatedApplications = enriched.slice(offset, offset + limit);
+
     return NextResponse.json({
-      applications: enriched,
+      applications: paginatedApplications,
       pagination: {
-        total: enriched.length,
-        limit: 200,
-        offset: 0,
+        total,
+        limit,
+        offset,
       },
     });
   } catch (error: unknown) {
