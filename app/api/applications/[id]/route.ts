@@ -383,11 +383,20 @@ export async function GET(
         .eq("application_id", id)
         .eq("reviewer_id", viewerReviewerId)
         .maybeSingle();
+      // Also allow reviewers who have submitted an evaluation (e.g. for viewing their evaluation result)
       if (!assignment) {
-        return NextResponse.json(
-          { error: "Application not found or you are not assigned to this application" },
-          { status: 404 },
-        );
+        const { data: evalRow } = await supabaseServer
+          .from("application_evaluations")
+          .select("id")
+          .eq("application_id", id)
+          .eq("reviewer_id", viewerReviewerId)
+          .maybeSingle();
+        if (!evalRow) {
+          return NextResponse.json(
+            { error: "Application not found or you are not assigned to this application" },
+            { status: 404 },
+          );
+        }
       }
     }
 

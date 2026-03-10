@@ -168,14 +168,22 @@ export default function ApplicationDetailPage() {
   const fromPageSizeParam = searchParams.get("fromPageSize");
   const fromPageSize = fromPageSizeParam ? parseInt(fromPageSizeParam, 10) : 25;
   const validPageSize = [10, 25, 50, 100].includes(fromPageSize) ? fromPageSize : 25;
-  const dashboardBackUrl = (() => {
-    const params = new URLSearchParams();
-    params.set("page", String(fromPage));
-    if (fromStatus !== "all") params.set("status", fromStatus);
-    if (validPageSize !== 25) params.set("pageSize", String(validPageSize));
-    const q = params.toString();
-    return `/dashboard${q ? `?${q}` : ""}`;
-  })();
+  const tabFromUrl = searchParams.get("tab") ?? "";
+  const validTabs = ["startup-info", "application-form", "evaluations"] as const;
+  const initialTab = validTabs.includes(tabFromUrl as typeof validTabs[number])
+    ? (tabFromUrl as typeof validTabs[number])
+    : "startup-info";
+  const fromEvaluations = searchParams.get("fromEvaluations") === "true";
+  const dashboardBackUrl = fromEvaluations
+    ? "/dashboard/evaluations"
+    : (() => {
+        const params = new URLSearchParams();
+        params.set("page", String(fromPage));
+        if (fromStatus !== "all") params.set("status", fromStatus);
+        if (validPageSize !== 25) params.set("pageSize", String(validPageSize));
+        const q = params.toString();
+        return `/dashboard${q ? `?${q}` : ""}`;
+      })();
   const [application, setApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{
@@ -244,6 +252,12 @@ export default function ApplicationDetailPage() {
     Array<{ id: string; name: string }>
   >([]);
   const [isAssigningManagerId, setIsAssigningManagerId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"startup-info" | "application-form" | "evaluations">(initialTab);
+
+  // Sync active tab when URL tab param changes (e.g. from evaluations list)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // Close assign-reviewers dropdown when clicking/touching outside
   useEffect(() => {
@@ -932,7 +946,7 @@ export default function ApplicationDetailPage() {
             onClick={() => router.push(dashboardBackUrl)}
             className="mb-4"
           >
-            ← Back to Applications
+            ← {fromEvaluations ? "Back to Evaluations" : "Back to Applications"}
           </Button>
         </div>
         {updateMessage && (
@@ -2282,9 +2296,9 @@ export default function ApplicationDetailPage() {
         <Card>
           <CardContent className="pt-6">
             <Tabs
-              defaultValue="startup-info"
-              className="w-full"
+              value={activeTab}
               onValueChange={(value) => {
+                setActiveTab(value as "startup-info" | "application-form" | "evaluations");
                 // Refresh evaluations when switching to evaluations tab
                 if (value === "evaluations") {
                   if (user?.role === "manager") {
@@ -2294,6 +2308,7 @@ export default function ApplicationDetailPage() {
                   }
                 }
               }}
+              className="w-full"
             >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="startup-info">
