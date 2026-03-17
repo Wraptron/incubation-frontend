@@ -285,8 +285,11 @@ function DashboardContent() {
         cache: "no-store",
         headers,
       });
-      if (!response.ok) throw new Error("Failed to fetch reviewers assignments");
       const data = await response.json();
+      if (!response.ok) {
+        const msg = data?.details ?? data?.error ?? "Failed to fetch reviewers assignments";
+        throw new Error(msg);
+      }
       setAssignees(data.assignees ?? []);
     } catch (error) {
       console.error("Error fetching reviewers assignments:", error);

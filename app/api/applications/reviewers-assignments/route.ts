@@ -160,9 +160,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ assignees });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("Error in reviewers-assignments GET:", err);
+    console.error("Error in reviewers-assignments GET:", err?.message ?? err, err?.stack);
     return NextResponse.json(
-      { error: "Failed to fetch reviewers assignments" },
+      {
+        error: "Failed to fetch reviewers assignments",
+        details: process.env.NODE_ENV === "development" ? err?.message : undefined,
+      },
       { status: 500 }
     );
   }
