@@ -83,7 +83,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
       ),
     },
     {
-      name: "Evaluate",
+      name: "Admin Review",
       href: "/dashboard/evaluate",
       icon: (
         <svg
@@ -100,7 +100,27 @@ export default function Sidebar({ userRole }: SidebarProps) {
           />
         </svg>
       ),
-      roles: ["manager"], // Only managers see Evaluate (evaluation)
+        roles: ["manager"], // Only managers see Evaluate (evaluation)
+    },
+    {
+      name: "Evaluations",
+      href: "/dashboard/evaluations",
+      icon: (
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      ),
+      roles: ["manager", "reviewer"], // Managers see all evaluated; reviewers see their own
     },
     {
       name: "Users",
@@ -134,6 +154,9 @@ export default function Sidebar({ userRole }: SidebarProps) {
     }
     if (href === "/dashboard/evaluate") {
       return pathname === "/dashboard/evaluate" || (pathname?.includes("/applications/") && pathname?.endsWith("/evaluate"));
+    }
+    if (href === "/dashboard/evaluations") {
+      return pathname === "/dashboard/evaluations" || (pathname?.includes("/applications/") && pathname?.endsWith("/evaluations"));
     }
     return pathname?.startsWith(href);
   };
