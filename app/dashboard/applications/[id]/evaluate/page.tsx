@@ -1481,11 +1481,9 @@ export default function EvaluatePage() {
                           Score (0.0 - 10.0) <span className="text-red-500">*</span>
                         </Label>
                         <Input
-                          type="number"
-                          min={0}
-                          max={10}
-                          step={0.01}
+                          type="text"
                           inputMode="decimal"
+                          pattern="^\d*\.?\d{0,2}$"
                           value={formData[criterion.scoreKey] === " " || formData[criterion.scoreKey] === undefined ? "" : formData[criterion.scoreKey]}
                           onChange={(e) =>
                             handleScoreChange(
@@ -1499,6 +1497,7 @@ export default function EvaluatePage() {
                               e.target.value,
                             )
                           }
+                          onWheel={(e) => e.currentTarget.blur()}
                           placeholder="Please enter your score"
                           className="w-full"
                           required
