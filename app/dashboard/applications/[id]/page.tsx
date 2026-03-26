@@ -253,6 +253,8 @@ export default function ApplicationDetailPage() {
   >([]);
   const [isAssigningManagerId, setIsAssigningManagerId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"startup-info" | "application-form" | "evaluations">(initialTab);
+  const [assigneeToRemove, setAssigneeToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [isRemovingAssignee, setIsRemovingAssignee] = useState(false);
 
   // Sync active tab when URL tab param changes (e.g. from evaluations list)
   useEffect(() => {
@@ -394,8 +396,6 @@ export default function ApplicationDetailPage() {
   };
 
   const fetchAllEvaluations = async () => {
-    if (!user || user.role !== "manager") return;
-
     setIsLoadingEvaluations(true);
     setEvaluationsError(null);
     try {
@@ -801,6 +801,45 @@ export default function ApplicationDetailPage() {
     setSelectedReviewers((prev) => prev.filter((id) => id !== reviewerId));
   };
 
+  const askRemoveAssignee = (assigneeId: string, assigneeName: string) => {
+    setAssigneeToRemove({ id: assigneeId, name: assigneeName });
+  };
+
+  const removeAssignee = async (assigneeId: string) => {
+    setIsRemovingAssignee(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: HeadersInit = {};
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(
+        `/api/applications/${params.id}/reviewers/${assigneeId}`,
+        { method: "DELETE", headers }
+      );
+      if (response.ok) {
+        setUpdateMessage("Assignee removed. You can assign someone else.");
+        setTimeout(() => setUpdateMessage(""), 3000);
+        setAssigneeToRemove(null);
+        fetchApplication();
+        fetchAllEvaluations();
+        return;
+      }
+
+      const data = await response.json();
+      setUpdateMessage(data.error || "Failed to remove assignee");
+      setTimeout(() => setUpdateMessage(""), 3000);
+    } catch (_e) {
+      setUpdateMessage("Failed to remove assignee");
+      setTimeout(() => setUpdateMessage(""), 3000);
+    } finally {
+      setIsRemovingAssignee(false);
+    }
+  };
+
   const assignReviewers = async () => {
     try {
       if (selectedReviewers.length < 2) {
@@ -883,6 +922,10 @@ export default function ApplicationDetailPage() {
     );
   };
       
+  const evaluatedReviewerIds = new Set(
+    (evaluations ?? []).map((evaluation) => evaluation.reviewer_id)
+  );
+
   // Filter reviewers: not already assigned, and match search
   const assignedIds = (application?.reviewers ?? []).map((r) => r.id);
   const filteredReviewers = availableReviewers.filter(
@@ -1176,44 +1219,76 @@ export default function ApplicationDetailPage() {
                                   {status === "pending" && " (Pending)"}
                                 </Badge>
                               )}
-                              {status === "rejected" && (
+                              {!evaluatedReviewerIds.has(reviewer.id) && (
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={async () => {
-                                    try {
-                                      const r = await fetch(
-                                        `/api/applications/${params.id}/reviewers/${reviewer.id}`,
-                                        { method: "DELETE" }
-                                      );
-                                      if (r.ok) {
-                                        setUpdateMessage("Reviewer removed. You can invite a new one.");
-                                        setTimeout(() => setUpdateMessage(""), 3000);
-                                        fetchApplication();
-                                        fetchAllEvaluations();
-                                      } else {
-                                        const d = await r.json();
-                                        setUpdateMessage(d.error || "Failed to remove reviewer");
-                                        setTimeout(() => setUpdateMessage(""), 3000);
-                                      }
-                                    } catch (e) {
-                                      setUpdateMessage("Failed to remove reviewer");
-                                      setTimeout(() => setUpdateMessage(""), 3000);
-                                    }
-                                  }}
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  onClick={() => askRemoveAssignee(reviewer.id, name)}
+                                  title={`Remove ${name}`}
+                                  aria-label={`Remove ${name}`}
                                 >
-                                  Reassign
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                  >
+                                    <path d="M3 6h18" />
+                                    <path d="M8 6V4h8v2" />
+                                    <path d="M19 6l-1 14H6L5 6" />
+                                    <path d="M10 11v6" />
+                                    <path d="M14 11v6" />
+                                  </svg>
                                 </Button>
                               )}
                             </div>
                           );
                         })}
-                        {(application.evaluation_managers ?? (application.evaluation_manager ? [application.evaluation_manager] : [])).map((mgr) => (
-                          <span key={mgr.id} className="text-sm font-medium text-green-600 dark:text-green-400">
-                            {mgr.full_name || "Unknown"}{" "}
-                            <span className="font-normal">(Accepted)</span>
-                          </span>
+                        {(application.evaluation_managers ??
+                          (application.evaluation_manager
+                            ? [application.evaluation_manager]
+                            : [])
+                        ).map((mgr) => (
+                          <div key={mgr.id} className="flex items-center gap-1 flex-wrap">
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                              {mgr.full_name || "Unknown"}{" "}
+                              <span className="font-normal">(Accepted)</span>
+                            </span>
+                            {!evaluatedReviewerIds.has(mgr.id) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() =>
+                                  askRemoveAssignee(mgr.id, mgr.full_name || "Unknown")
+                                }
+                                title={`Remove ${mgr.full_name || "Unknown"}`}
+                                aria-label={`Remove ${mgr.full_name || "Unknown"}`}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="h-4 w-4"
+                                >
+                                  <path d="M3 6h18" />
+                                  <path d="M8 6V4h8v2" />
+                                  <path d="M19 6l-1 14H6L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                </svg>
+                              </Button>
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -1260,44 +1335,76 @@ export default function ApplicationDetailPage() {
                                   {status === "pending" && " (Pending)"}
                                 </Badge>
                               )}
-                              {status === "rejected" && (
+                              {!evaluatedReviewerIds.has(reviewer.id) && (
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  className="text-xs"
-                                  onClick={async () => {
-                                    try {
-                                      const r = await fetch(
-                                        `/api/applications/${params.id}/reviewers/${reviewer.id}`,
-                                        { method: "DELETE" }
-                                      );
-                                      if (r.ok) {
-                                        setUpdateMessage("Reviewer removed. You can invite a new one.");
-                                        setTimeout(() => setUpdateMessage(""), 3000);
-                                        fetchApplication();
-                                        fetchAllEvaluations();
-                                      } else {
-                                        const d = await r.json();
-                                        setUpdateMessage(d.error || "Failed to remove reviewer");
-                                        setTimeout(() => setUpdateMessage(""), 3000);
-                                      }
-                                    } catch (e) {
-                                      setUpdateMessage("Failed to remove reviewer");
-                                      setTimeout(() => setUpdateMessage(""), 3000);
-                                    }
-                                  }}
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  onClick={() => askRemoveAssignee(reviewer.id, name)}
+                                  title={`Remove ${name}`}
+                                  aria-label={`Remove ${name}`}
                                 >
-                                  Reassign
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-4 w-4"
+                                  >
+                                    <path d="M3 6h18" />
+                                    <path d="M8 6V4h8v2" />
+                                    <path d="M19 6l-1 14H6L5 6" />
+                                    <path d="M10 11v6" />
+                                    <path d="M14 11v6" />
+                                  </svg>
                                 </Button>
                               )}
                             </div>
                           );
                         })}
-                        {(application.evaluation_managers ?? (application.evaluation_manager ? [application.evaluation_manager] : [])).map((mgr) => (
-                          <span key={mgr.id} className="text-sm font-medium text-green-600 dark:text-green-400">
-                            {mgr.full_name || "Unknown"}{" "}
-                            <span className="font-normal">(Accepted)</span>
-                          </span>
+                        {(application.evaluation_managers ??
+                          (application.evaluation_manager
+                            ? [application.evaluation_manager]
+                            : [])
+                        ).map((mgr) => (
+                          <div key={mgr.id} className="flex items-center gap-1 flex-wrap">
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                              {mgr.full_name || "Unknown"}{" "}
+                              <span className="font-normal">(Accepted)</span>
+                            </span>
+                            {!evaluatedReviewerIds.has(mgr.id) && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() =>
+                                  askRemoveAssignee(mgr.id, mgr.full_name || "Unknown")
+                                }
+                                title={`Remove ${mgr.full_name || "Unknown"}`}
+                                aria-label={`Remove ${mgr.full_name || "Unknown"}`}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="h-4 w-4"
+                                >
+                                  <path d="M3 6h18" />
+                                  <path d="M8 6V4h8v2" />
+                                  <path d="M19 6l-1 14H6L5 6" />
+                                  <path d="M10 11v6" />
+                                  <path d="M14 11v6" />
+                                </svg>
+                              </Button>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -1569,52 +1676,14 @@ export default function ApplicationDetailPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={async () => {
-                              try {
-                                const r = await fetch(
-                                  `/api/applications/${params.id}/reviewers/${reviewer.id}`,
-                                  { method: "DELETE" }
-                                );
-                                if (r.ok) {
-                                  setUpdateMessage("Reviewer removed. Invite a new reviewer below.");
-                                  setTimeout(() => setUpdateMessage(""), 3000);
-                                  fetchApplication();
-                                  fetchAllEvaluations();
-                                } else {
-                                  const d = await r.json();
-                                  setUpdateMessage(d.error || "Failed to remove");
-                                  setTimeout(() => setUpdateMessage(""), 3000);
-                                }
-                              } catch (e) {
-                                setUpdateMessage("Failed to remove reviewer");
-                                setTimeout(() => setUpdateMessage(""), 3000);
-                              }
-                            }}
+                            onClick={() =>
+                              askRemoveAssignee(
+                                reviewer.id,
+                                reviewer.full_name || "Unknown"
+                              )
+                            }
                           >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={async () => {
-                              try {
-                                const r = await fetch(
-                                  `/api/applications/${params.id}/reviewers/${reviewer.id}`,
-                                  { method: "DELETE" }
-                                );
-                                if (r.ok) {
-                                  fetchApplication();
-                                  setUpdateMessage("Reviewer removed. Select and invite a new reviewer below.");
-                                  setTimeout(() => setUpdateMessage(""), 3000);
-                                  fetchAllEvaluations();
-                                }
-                              } catch (e) {
-                                setUpdateMessage("Failed to remove reviewer");
-                                setTimeout(() => setUpdateMessage(""), 3000);
-                              }
-                            }}
-                          >
-                            Reassign
+                            Remove
                           </Button>
                         </li>
                       ))}
@@ -1903,6 +1972,45 @@ export default function ApplicationDetailPage() {
                 ) : (
                   "Reject Application"
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={!!assigneeToRemove}
+          onOpenChange={(open) => {
+            if (!open && !isRemovingAssignee) {
+              setAssigneeToRemove(null);
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Remove assignee?</DialogTitle>
+              <DialogDescription>
+                {assigneeToRemove
+                  ? `Are you sure you want to remove ${assigneeToRemove.name} from this application? This can only be done before evaluation is submitted.`
+                  : "Confirm removal."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                disabled={isRemovingAssignee}
+                onClick={() => setAssigneeToRemove(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={isRemovingAssignee || !assigneeToRemove}
+                onClick={() => {
+                  if (!assigneeToRemove) return;
+                  removeAssignee(assigneeToRemove.id);
+                }}
+              >
+                {isRemovingAssignee ? "Removing..." : "Remove"}
               </Button>
             </DialogFooter>
           </DialogContent>
