@@ -34,7 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserPlus, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { UserPlus, CheckCircle, AlertCircle, Trash2, Repeat } from "lucide-react";
 
 interface User {
   id: string;
@@ -59,6 +59,13 @@ interface CreatedUserResponse {
   emailSent: boolean;
 }
 
+interface RoleChangeTarget {
+  userId: string;
+  userName: string;
+  currentRole: string;
+  nextRole: string;
+}
+
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -74,6 +81,9 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [roleChangeTarget, setRoleChangeTarget] = useState<RoleChangeTarget | null>(null);
 
   const checkUserAndFetchUsers = useCallback(async () => {
     try {
@@ -211,6 +221,61 @@ export default function UsersPage() {
       console.error("Error deleting user:", err);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const openRoleChangeDialog = (userId: string, currentRole: string, userName: string) => {
+    const nextRole = currentRole === "manager" ? "reviewer" : "manager";
+    setRoleChangeTarget({
+      userId,
+      userName,
+      currentRole,
+      nextRole,
+    });
+    setIsRoleDialogOpen(true);
+  };
+
+  const handleConfirmRoleChange = async () => {
+    if (!roleChangeTarget) return;
+
+    setChangingRoleId(roleChangeTarget.userId);
+    setError(null);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch("/api/users/change-role", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          userId: roleChangeTarget.userId,
+          newRole: roleChangeTarget.nextRole,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to change role");
+      }
+
+      await fetchUsers();
+    } catch (err: unknown) {
+      const error = err as Error;
+      setError(error.message || "Failed to change role");
+      console.error("Error changing role:", err);
+    } finally {
+      setChangingRoleId(null);
+      setIsRoleDialogOpen(false);
+      setRoleChangeTarget(null);
     }
   };
 
@@ -356,6 +421,44 @@ export default function UsersPage() {
               )}
             </DialogContent>
           </Dialog>
+
+          <Dialog
+            open={isRoleDialogOpen}
+            onOpenChange={(open) => {
+              setIsRoleDialogOpen(open);
+              if (!open) setRoleChangeTarget(null);
+            }}
+          >
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <DialogTitle>Confirm Role Change</DialogTitle>
+                <DialogDescription>
+                  {roleChangeTarget
+                    ? `Change ${roleChangeTarget.userName} from ${roleChangeTarget.currentRole} to ${roleChangeTarget.nextRole}?`
+                    : "Are you sure you want to change this user role?"}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsRoleDialogOpen(false);
+                    setRoleChangeTarget(null);
+                  }}
+                  disabled={!!changingRoleId}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={handleConfirmRoleChange}
+                  disabled={!roleChangeTarget || !!changingRoleId}
+                >
+                  {changingRoleId ? "Changing..." : "Confirm"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {error && (
@@ -374,7 +477,7 @@ export default function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead className="w-[80px] text-right">Actions</TableHead>
+                  <TableHead className="w-[180px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,24 +503,45 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {currentUserId !== user.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                          disabled={deletingId === user.id}
-                          onClick={() =>
-                            handleDeleteUser(
-                              user.id,
-                              user.full_name || user.email_address
-                            )
-                          }
-                        >
-                          {deletingId === user.id ? (
-                            "Deleting..."
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/30"
+                            disabled={changingRoleId === user.id || deletingId === user.id}
+                            onClick={() =>
+                              openRoleChangeDialog(
+                                user.id,
+                                user.role,
+                                user.full_name || user.email_address
+                              )
+                            }
+                          >
+                            {changingRoleId === user.id ? (
+                              "Changing..."
+                            ) : (
+                              <Repeat className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            disabled={deletingId === user.id || changingRoleId === user.id}
+                            onClick={() =>
+                              handleDeleteUser(
+                                user.id,
+                                user.full_name || user.email_address
+                              )
+                            }
+                          >
+                            {deletingId === user.id ? (
+                              "Deleting..."
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
