@@ -55,7 +55,7 @@ interface Assignee {
   }>;
 }
 
-const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
+const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected", "unassigned"];
 const VALID_PAGE_SIZES = [10, 25, 50, 100, 150, 200];
 
 function DashboardContent() {
@@ -343,7 +343,7 @@ function DashboardContent() {
   const tabFilters =
     user?.role === "reviewer"
       ? ["all", "pending", "under_review", "evaluated", "rejected"]
-      : ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
+      : ["all", "draft", "pending", "unassigned", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
 
   const totalPages = totalPagesComputed;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -406,7 +406,7 @@ function DashboardContent() {
             variant={filterStatus === status ? "default" : "ghost"}
             onClick={() => setFilterStatus(status)}
           >
-            {formatStatus(status)}
+            {status === "unassigned" ? "Unassigned Reviewer" : formatStatus(status)}
             <span className="ml-1.5 opacity-90">
               ({statusCounts[status] ?? "—"})
             </span>

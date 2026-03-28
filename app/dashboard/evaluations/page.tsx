@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Download, Loader2 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase";
 import { formatStatus } from "@/lib/utils";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -39,13 +41,32 @@ interface AppItem {
   submitted_at?: string;
 }
 
+interface ExportRow {
+  applicationName: string;
+  reviewerName: string;
+  totalMark: number | null;
+  needMark: number | null;
+  needComment: string | null;
+  noveltyMark: number | null;
+  noveltyComment: string | null;
+  feasibilityScalabilityMark: number | null;
+  feasibilityScalabilityComment: string | null;
+  marketPotentialMark: number | null;
+  marketPotentialComment: string | null;
+  impactMark: number | null;
+  impactComment: string | null;
+  overallComment: string | null;
+  evaluationDate: string;
+}
+
 function EvaluationsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [user, setUser] = useState<{ id: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; role: string; fullName: string | null } | null>(null);
   const [applications, setApplications] = useState<AppItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const [currentPage, setCurrentPage] = useState(pageFromUrl);
@@ -133,7 +154,7 @@ function EvaluationsContent() {
         }
         const { data: profile } = await supabase
           .from("user_profiles")
-          .select("role")
+          .select("role, full_name")
           .eq("id", u.id)
           .single();
 
@@ -141,7 +162,7 @@ function EvaluationsContent() {
           router.push("/dashboard");
           return;
         }
-        setUser({ id: u.id, role: profile.role });
+        setUser({ id: u.id, role: profile.role, fullName: profile.full_name || null });
       } catch (error) {
         console.error("Auth error:", error);
         router.push("/login");
@@ -192,6 +213,102 @@ function EvaluationsContent() {
     return colors[status] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
   };
 
+  const handleExport = async () => {
+    if (!user) return;
+
+    try {
+      setIsExporting(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const exportRes = await fetch("/api/evaluations/export", {
+        cache: "no-store",
+        headers,
+      });
+      if (!exportRes.ok) {
+        throw new Error("Failed to fetch export data.");
+      }
+      const exportData = await exportRes.json();
+      const exportRows: ExportRow[] = exportData.rows ?? [];
+
+      const rows: Array<Array<string | number>> = [
+        [
+          "Application Name",
+          "Reviewer Name",
+          "Total Mark",
+          "Need Mark",
+          "Need Comment",
+          "Novelty Mark",
+          "Novelty Comment",
+          "Feasibility & Scalability Mark",
+          "Feasibility & Scalability Comment",
+          "Market Potential Mark",
+          "Market Potential Comment",
+          "Impact Mark",
+          "Impact Comment",
+          "Overall Comment",
+          "Evaluation Date",
+        ],
+      ];
+      for (const row of exportRows) {
+        rows.push([
+          row.applicationName,
+          row.reviewerName,
+          row.totalMark ?? "",
+          row.needMark ?? "",
+          row.needComment ?? "",
+          row.noveltyMark ?? "",
+          row.noveltyComment ?? "",
+          row.feasibilityScalabilityMark ?? "",
+          row.feasibilityScalabilityComment ?? "",
+          row.marketPotentialMark ?? "",
+          row.marketPotentialComment ?? "",
+          row.impactMark ?? "",
+          row.impactComment ?? "",
+          row.overallComment ?? "",
+          row.evaluationDate ? new Date(row.evaluationDate).toLocaleDateString() : "",
+        ]);
+      }
+
+      if (rows.length === 1) {
+        alert("No evaluation data available to export.");
+        return;
+      }
+
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      const columnWidths = rows[0].map((_, colIndex) => {
+        const maxLength = rows.reduce((max, row) => {
+          const cellValue = row[colIndex] ?? "";
+          return Math.max(max, String(cellValue).length);
+        }, 0);
+        return { wch: Math.min(Math.max(maxLength + 2, 14), 60) };
+      });
+      worksheet["!cols"] = columnWidths;
+
+      rows[0].forEach((_, colIndex) => {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+        if (!worksheet[cellAddress]) return;
+        worksheet[cellAddress].s = {
+          font: { bold: true },
+        };
+      });
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Evaluations");
+      XLSX.writeFile(workbook, `evaluations-export-${new Date().toISOString().slice(0, 10)}.xlsx`, {
+        cellStyles: true,
+      });
+    } catch (error) {
+      console.error("Error exporting evaluations:", error);
+      alert("Failed to export evaluation data. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading || !user) {
     return (
       <DashboardLayout>
@@ -207,14 +324,29 @@ function EvaluationsContent() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold mb-2 text-black dark:text-zinc-50">
-          Evaluations
-        </h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
-          {user.role === "reviewer"
-            ? "Applications you have evaluated. Click to view your evaluation results."
-            : "Applications that have been fully evaluated. Click to view evaluation results."}
-        </p>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-1 text-black dark:text-zinc-50">
+              Evaluations
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              {user.role === "reviewer"
+                ? "Applications you have evaluated. Click to view your evaluation results."
+                : "Applications that have been fully evaluated. Click to view evaluation results."}
+            </p>
+          </div>
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || isLoading}
+            size="icon"
+            variant="outline"
+            title={isExporting ? "Exporting..." : "Export to Excel"}
+            aria-label={isExporting ? "Exporting evaluations" : "Export evaluations to Excel"}
+            className="shrink-0"
+          >
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          </Button>
+        </div>
 
         <Card>
           {applications.length === 0 ? (
