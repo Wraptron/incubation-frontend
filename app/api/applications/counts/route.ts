@@ -112,6 +112,25 @@ export async function GET(request: NextRequest) {
           counts[status] = count ?? 0;
         })
       );
+      const { data: assignments } = await supabaseServer
+        .from("application_reviewers")
+        .select("application_id");
+      const assignedApplicationIds = [
+        ...new Set((assignments ?? []).map((a: { application_id: string }) => a.application_id)),
+      ];
+      if (assignedApplicationIds.length > 0) {
+        const quotedIds = assignedApplicationIds.map((id) => `"${id}"`).join(",");
+        const { count } = await supabaseServer
+          .from("new_application")
+          .select("*", { count: "exact", head: true })
+          .not("id", "in", `(${quotedIds})`);
+        counts.unassigned = count ?? 0;
+      } else {
+        const { count } = await supabaseServer
+          .from("new_application")
+          .select("*", { count: "exact", head: true });
+        counts.unassigned = count ?? 0;
+      }
       counts.all = MANAGER_STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0);
     }
 

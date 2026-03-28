@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     let reviewerApplicationIds: string[] = [];
     let reviewerUserId: string | null = null;
     let reviewerAssignmentsWithStatus: Array<{ application_id: string; invite_status: string | null }> = [];
+    const isUnassignedFilter = statusParam === "unassigned";
+    let assignedApplicationIds: string[] = [];
 
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace(/^Bearer\s+/i, "");
@@ -67,7 +69,7 @@ export async function GET(request: NextRequest) {
       .order("submitted_at", { ascending: false })
       .range(reviewerFetchOffset, reviewerFetchOffset + reviewerFetchLimit - 1);
 
-    if (statusParam && statusParam !== "all" && !isReviewer) {
+    if (statusParam && statusParam !== "all" && statusParam !== "unassigned" && !isReviewer) {
       query = query.eq("status", statusParam);
     }
 
@@ -77,6 +79,19 @@ export async function GET(request: NextRequest) {
       query = query.or(
         `team_name.ilike.${quoted},your_name.ilike.${quoted},email.ilike.${quoted}`
       );
+    }
+
+    if (!isReviewer && isUnassignedFilter) {
+      const { data: assignments } = await supabaseServer
+        .from("application_reviewers")
+        .select("application_id");
+      assignedApplicationIds = [
+        ...new Set((assignments ?? []).map((a: { application_id: string }) => a.application_id)),
+      ];
+      if (assignedApplicationIds.length > 0) {
+        const quotedIds = assignedApplicationIds.map((id) => `"${id}"`).join(",");
+        query = query.not("id", "in", `(${quotedIds})`);
+      }
     }
 
     if (isReviewer && reviewerApplicationIds.length === 0) {
@@ -163,8 +178,12 @@ export async function GET(request: NextRequest) {
       let countQuery = supabaseServer
         .from("new_application")
         .select("*", { count: "exact", head: true });
-      if (statusParam && statusParam !== "all") {
+      if (statusParam && statusParam !== "all" && statusParam !== "unassigned") {
         countQuery = countQuery.eq("status", statusParam);
+      }
+      if (isUnassignedFilter && assignedApplicationIds.length > 0) {
+        const quotedIds = assignedApplicationIds.map((id) => `"${id}"`).join(",");
+        countQuery = countQuery.not("id", "in", `(${quotedIds})`);
       }
       if (searchQuery) {
         const pattern = `%${searchQuery}%`;
