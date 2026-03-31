@@ -130,6 +130,60 @@ export async function DELETE(
       );
     }
 
+    // Recalculate application status after removal:
+    // if all remaining assignees have already evaluated, mark as evaluated.
+    const { data: remainingAssignments, error: remainingAssignmentsError } =
+      await supabaseServer
+        .from("application_reviewers")
+        .select("reviewer_id")
+        .eq("application_id", applicationId);
+
+    if (remainingAssignmentsError) {
+      return NextResponse.json(
+        {
+          error: "Reviewer removed, but failed to recalculate status",
+          details: remainingAssignmentsError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    const { data: evaluations, error: evaluationsError } = await supabaseServer
+      .from("application_evaluations")
+      .select("reviewer_id")
+      .eq("application_id", applicationId);
+
+    if (evaluationsError) {
+      return NextResponse.json(
+        {
+          error: "Reviewer removed, but failed to recalculate status",
+          details: evaluationsError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    const remainingCount = remainingAssignments?.length ?? 0;
+    const evaluatedReviewerIds = new Set(
+      (evaluations ?? []).map((evaluation: { reviewer_id: string }) => evaluation.reviewer_id)
+    );
+    if (remainingCount > 0 && evaluatedReviewerIds.size >= remainingCount) {
+      const { error: updateStatusError } = await supabaseServer
+        .from("new_application")
+        .update({ status: "evaluated" })
+        .eq("id", applicationId);
+
+      if (updateStatusError) {
+        return NextResponse.json(
+          {
+            error: "Reviewer removed, but failed to update application status",
+            details: updateStatusError.message,
+          },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json({
       message: "Assignee removed. You can assign someone else.",
     });
