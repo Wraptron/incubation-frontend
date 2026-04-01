@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { FileSpreadsheet, Loader2 } from "lucide-react";
 
 interface Application {
   id: string;
@@ -89,6 +90,8 @@ function DashboardContent() {
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [reviewersSearchInput, setReviewersSearchInput] = useState("");
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Search as you type: debounce and update URL so fetch runs.
   useEffect(() => {
@@ -384,10 +387,62 @@ function DashboardContent() {
 
   const showTabs = user?.role === "manager";
 
+  const handleExportApplicationsExcel = async () => {
+    setExportError(null);
+    setExportingExcel(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setExportError("You must be signed in to export.");
+        return;
+      }
+      const params = new URLSearchParams();
+      if (filterStatus !== "all") params.set("status", filterStatus);
+      if (searchFromUrl) params.set("search", searchFromUrl);
+      const q = params.toString();
+      const response = await fetch(`/api/applications/export${q ? `?${q}` : ""}`, {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (!response.ok) {
+        let message = "Export failed.";
+        try {
+          const err = await response.json();
+          message = err.details
+            ? `${err.error || message} ${err.details}`
+            : err.error || message;
+        } catch {
+          /* use default */
+        }
+        setExportError(message);
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const date = new Date().toISOString().slice(0, 10);
+      a.download = `pre-incubation-applications-${date}.xlsx`;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : "Export failed.");
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
   const statusTabContent = (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex flex-1 max-w-md">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-stretch sm:items-center">
+        <div className="flex flex-1 max-w-md min-w-0">
           <Input
             type="search"
             placeholder="Search by team name, founder, or email..."
@@ -396,7 +451,29 @@ function DashboardContent() {
             className="h-9"
           />
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0 h-9 w-9"
+          disabled={exportingExcel || totalCount === 0}
+          onClick={handleExportApplicationsExcel}
+          title="Download application details (Excel). Uses current status and search filters, up to 5000 teams."
+          aria-label={exportingExcel ? "Exporting…" : "Export applications to Excel"}
+          aria-busy={exportingExcel}
+        >
+          {exportingExcel ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <FileSpreadsheet className="h-4 w-4" aria-hidden />
+          )}
+        </Button>
       </div>
+      {exportError && (
+        <p className="text-sm text-red-600 dark:text-red-400 mb-4" role="alert">
+          {exportError}
+        </p>
+      )}
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {tabFilters.map((status) => (
