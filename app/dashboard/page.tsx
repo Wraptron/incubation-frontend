@@ -27,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { FileSpreadsheet, Loader2 } from "lucide-react";
 
 interface Application {
   id: string;
@@ -56,7 +55,7 @@ interface Assignee {
   }>;
 }
 
-const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected", "unassigned"];
+const VALID_STATUS_FILTERS = ["all", "draft", "pending", "under_review", "evaluated", "approved", "rejected", "unassigned"];
 const VALID_PAGE_SIZES = [10, 25, 50, 100, 150, 200];
 
 function DashboardContent() {
@@ -90,8 +89,12 @@ function DashboardContent() {
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [reviewersSearchInput, setReviewersSearchInput] = useState("");
-  const [exportingExcel, setExportingExcel] = useState(false);
-  const [exportError, setExportError] = useState<string | null>(null);
+  const [selectedApplicationIds, setSelectedApplicationIds] = useState<string[]>([]);
+  const [bulkRejectionReason, setBulkRejectionReason] = useState("");
+  const [bulkUpdateAction, setBulkUpdateAction] = useState<
+    null | "approve" | "reject"
+  >(null);
+  const [bulkUpdateMessage, setBulkUpdateMessage] = useState("");
 
   // Search as you type: debounce and update URL so fetch runs.
   useEffect(() => {
@@ -178,6 +181,7 @@ function DashboardContent() {
       const data = await response.json();
       setApplications(data.applications || []);
       setTotalCount(data.pagination?.total ?? 0);
+      setSelectedApplicationIds([]);
     } catch (error) {
       console.error("Error fetching applications:", error);
     }
@@ -332,10 +336,6 @@ function DashboardContent() {
       pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
       under_review: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
       evaluated: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      interview_scheduled:
-        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-      interview_completed:
-        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
       approved: "bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary font-semibold",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
       withdrawn: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
@@ -343,10 +343,11 @@ function DashboardContent() {
     return colors[status] || "bg-gray-100 text-gray-800";
   };
 
+  //["all", "draft", "pending", "unassigned", "under_review", "evaluated", "approved", "rejected"]
   const tabFilters =
     user?.role === "reviewer"
       ? ["all", "pending", "under_review", "evaluated", "rejected"]
-      : ["all", "draft", "pending", "unassigned", "under_review", "evaluated", "interview_scheduled", "interview_completed", "approved", "rejected"];
+      : ["all", "draft", "pending", "under_review", "evaluated", "approved", "rejected"];
 
   const totalPages = totalPagesComputed;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -386,63 +387,89 @@ function DashboardContent() {
   };
 
   const showTabs = user?.role === "manager";
+  const canBulkDecide = user?.role === "manager" && filterStatus === "evaluated";
+  const allVisibleSelected =
+    applications.length > 0 &&
+    applications.every((app) => selectedApplicationIds.includes(app.id));
 
-  const handleExportApplicationsExcel = async () => {
-    setExportError(null);
-    setExportingExcel(true);
+  const toggleApplicationSelection = (applicationId: string) => {
+    setSelectedApplicationIds((prev) =>
+      prev.includes(applicationId)
+        ? prev.filter((id) => id !== applicationId)
+        : [...prev, applicationId]
+    );
+  };
+
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedApplicationIds([]);
+      return;
+    }
+    setSelectedApplicationIds(applications.map((app) => app.id));
+  };
+
+  const runBulkStatusUpdate = async (newStatus: "approved" | "rejected") => {
+    if (selectedApplicationIds.length === 0) {
+      setBulkUpdateMessage("Please select at least one application.");
+      return;
+    }
+    setBulkUpdateAction(newStatus === "approved" ? "approve" : "reject");
+    setBulkUpdateMessage("");
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setExportError("You must be signed in to export.");
-        return;
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
       }
-      const params = new URLSearchParams();
-      if (filterStatus !== "all") params.set("status", filterStatus);
-      if (searchFromUrl) params.set("search", searchFromUrl);
-      const q = params.toString();
-      const response = await fetch(`/api/applications/export${q ? `?${q}` : ""}`, {
-        cache: "no-store",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      if (!response.ok) {
-        let message = "Export failed.";
-        try {
-          const err = await response.json();
-          message = err.details
-            ? `${err.error || message} ${err.details}`
-            : err.error || message;
-        } catch {
-          /* use default */
+
+      let successCount = 0;
+      let failedCount = 0;
+      const reason = bulkRejectionReason.trim();
+
+      for (const applicationId of selectedApplicationIds) {
+        const body: { status: "approved" | "rejected"; rejectionReason?: string } = {
+          status: newStatus,
+        };
+        if (newStatus === "rejected" && reason) {
+          body.rejectionReason = reason;
         }
-        setExportError(message);
-        return;
+
+        const response = await fetch(`/api/applications/${applicationId}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        if (response.ok) successCount += 1;
+        else failedCount += 1;
       }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const date = new Date().toISOString().slice(0, 10);
-      a.download = `pre-incubation-applications-${date}.xlsx`;
-      a.rel = "noopener";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      setExportError(e instanceof Error ? e.message : "Export failed.");
+
+      if (failedCount > 0) {
+        setBulkUpdateMessage(
+          `${successCount} application(s) updated, ${failedCount} failed.`
+        );
+      } else {
+        setBulkUpdateMessage(
+          `${successCount} application(s) ${newStatus} successfully.`
+        );
+      }
+
+      setSelectedApplicationIds([]);
+      if (newStatus === "rejected") setBulkRejectionReason("");
+      await fetchApplications();
+      await fetchStatusCounts();
+    } catch (error) {
+      console.error("Error updating applications in bulk:", error);
+      setBulkUpdateMessage("Failed to update selected applications.");
     } finally {
-      setExportingExcel(false);
+      setBulkUpdateAction(null);
     }
   };
 
   const statusTabContent = (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-stretch sm:items-center">
-        <div className="flex flex-1 max-w-md min-w-0">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-1 max-w-md">
           <Input
             type="search"
             placeholder="Search by team name, founder, or email..."
@@ -451,29 +478,7 @@ function DashboardContent() {
             className="h-9"
           />
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="shrink-0 h-9 w-9"
-          disabled={exportingExcel || totalCount === 0}
-          onClick={handleExportApplicationsExcel}
-          title="Download application details (Excel). Uses current status and search filters, up to 5000 teams."
-          aria-label={exportingExcel ? "Exporting…" : "Export applications to Excel"}
-          aria-busy={exportingExcel}
-        >
-          {exportingExcel ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          ) : (
-            <FileSpreadsheet className="h-4 w-4" aria-hidden />
-          )}
-        </Button>
       </div>
-      {exportError && (
-        <p className="text-sm text-red-600 dark:text-red-400 mb-4" role="alert">
-          {exportError}
-        </p>
-      )}
 
       <div className="flex gap-2 mb-6 flex-wrap">
         {tabFilters.map((status) => (
@@ -490,6 +495,69 @@ function DashboardContent() {
           </Button>
         ))}
       </div>
+      {canBulkDecide && applications.length > 0 && selectedApplicationIds.length === 0 && (
+        <p className="text-sm text-muted-foreground mb-4">
+          Select one or more teams using the checkboxes to approve or reject in bulk.
+        </p>
+      )}
+      {canBulkDecide && selectedApplicationIds.length > 0 && (
+        <div
+          className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 dark:bg-muted/20 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+          role="region"
+          aria-label="Bulk actions for selected applications"
+        >
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="text-sm font-semibold text-foreground">
+              {selectedApplicationIds.length} selected
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 text-muted-foreground"
+              onClick={() => {
+                setSelectedApplicationIds([]);
+                setBulkUpdateMessage("");
+              }}
+              disabled={bulkUpdateAction !== null}
+            >
+              Clear
+            </Button>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:max-w-xl sm:flex-row sm:items-center">
+            <Input
+              type="text"
+              placeholder="Optional reason (used if you reject)"
+              value={bulkRejectionReason}
+              onChange={(e) => setBulkRejectionReason(e.target.value)}
+              className="h-9"
+              disabled={bulkUpdateAction !== null}
+            />
+            <div className="flex shrink-0 gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => runBulkStatusUpdate("approved")}
+                disabled={bulkUpdateAction !== null}
+              >
+                {bulkUpdateAction === "approve" ? "Approving..." : "Approve"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={() => runBulkStatusUpdate("rejected")}
+                disabled={bulkUpdateAction !== null}
+              >
+                {bulkUpdateAction === "reject" ? "Rejecting..." : "Reject"}
+              </Button>
+            </div>
+          </div>
+          {bulkUpdateMessage && (
+            <p className="w-full text-sm text-muted-foreground sm:order-last">{bulkUpdateMessage}</p>
+          )}
+        </div>
+      )}
 
       <Card>
         {applications.length === 0 ? (
@@ -500,6 +568,17 @@ function DashboardContent() {
           <Table>
             <TableHeader>
               <TableRow>
+                {canBulkDecide && (
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border border-input accent-primary"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      aria-label="Select all visible applications"
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Team Name</TableHead>
                 <TableHead>Founder</TableHead>
                 <TableHead>Email</TableHead>
@@ -517,6 +596,17 @@ function DashboardContent() {
                     router.push(`/dashboard/applications/${app.id}?fromPage=${currentPage}&fromStatus=${filterStatus}&fromPageSize=${itemsPerPage}`)
                   }
                 >
+                  {canBulkDecide && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border border-input accent-primary"
+                        checked={selectedApplicationIds.includes(app.id)}
+                        onChange={() => toggleApplicationSelection(app.id)}
+                        aria-label={`Select ${app.company_name}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell>{app.company_name}</TableCell>
                   <TableCell>{app.founder_name}</TableCell>
                   <TableCell>{app.email}</TableCell>

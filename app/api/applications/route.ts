@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // For reviewers we fetch all assigned apps then filter by reviewer_status in memory
+    // For reviewers we fetch all assigned apps then filter by reviewer_status
     const reviewerFetchLimit = isReviewer ? 500 : limit;
     const reviewerFetchOffset = isReviewer ? 0 : offset;
 
