@@ -90,11 +90,14 @@ function DashboardContent() {
   const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [reviewersSearchInput, setReviewersSearchInput] = useState("");
   const [selectedApplicationIds, setSelectedApplicationIds] = useState<string[]>([]);
+  const [selectedApplicationsById, setSelectedApplicationsById] = useState<Record<string, Application>>({});
   const [bulkRejectionReason, setBulkRejectionReason] = useState("");
   const [bulkUpdateAction, setBulkUpdateAction] = useState<
-    null | "approve" | "reject"
+    null | "approve" | "send_mail" | "reject"
   >(null);
   const [bulkUpdateMessage, setBulkUpdateMessage] = useState("");
+  /** True when bulk Send Mail had any failure (red styling + team names). */
+  const [bulkMailHadError, setBulkMailHadError] = useState(false);
 
   // Search as you type: debounce and update URL so fetch runs.
   useEffect(() => {
@@ -181,11 +184,84 @@ function DashboardContent() {
       const data = await response.json();
       setApplications(data.applications || []);
       setTotalCount(data.pagination?.total ?? 0);
-      setSelectedApplicationIds([]);
     } catch (error) {
       console.error("Error fetching applications:", error);
     }
   }, [filterStatus, currentPage, itemsPerPage, searchFromUrl]);
+
+  useEffect(() => {
+    setSelectedApplicationsById((prev) => {
+      if (selectedApplicationIds.length === 0) {
+        return Object.keys(prev).length === 0 ? prev : {};
+      }
+
+      const visibleById = new Map(applications.map((app) => [app.id, app]));
+      const next: Record<string, Application> = {};
+      let changed = false;
+
+      for (const id of selectedApplicationIds) {
+        const fromVisible = visibleById.get(id);
+        const kept = fromVisible ?? prev[id];
+        if (kept) {
+          next[id] = kept;
+          if (prev[id] !== kept) changed = true;
+        } else {
+          changed = true;
+        }
+      }
+
+      if (Object.keys(prev).length !== Object.keys(next).length) changed = true;
+      return changed ? next : prev;
+    });
+  }, [applications, selectedApplicationIds]);
+
+  useEffect(() => {
+    const missingIds = selectedApplicationIds.filter((id) => !selectedApplicationsById[id]);
+    if (missingIds.length === 0) return;
+
+    let isCancelled = false;
+    const loadMissingSelectedApplications = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: HeadersInit = { "Content-Type": "application/json" };
+        if (session?.access_token) {
+          headers["Authorization"] = `Bearer ${session.access_token}`;
+        }
+
+        const responses = await Promise.all(
+          missingIds.map(async (applicationId) => {
+            const response = await fetch(`/api/applications/${applicationId}`, {
+              cache: "no-store",
+              headers,
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.application as Application;
+          })
+        );
+
+        if (isCancelled) return;
+        setSelectedApplicationsById((prev) => {
+          const next = { ...prev };
+          let changed = false;
+          responses.forEach((app) => {
+            if (app?.id && !next[app.id]) {
+              next[app.id] = app;
+              changed = true;
+            }
+          });
+          return changed ? next : prev;
+        });
+      } catch (error) {
+        console.error("Error fetching selected application details:", error);
+      }
+    };
+
+    loadMissingSelectedApplications();
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedApplicationIds, selectedApplicationsById]);
 
   /* =========================
      REFETCH ON PAGE OR FILTER CHANGE
@@ -351,7 +427,16 @@ function DashboardContent() {
 
   const totalPages = totalPagesComputed;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedApplications = applications;
+  const selectedPinnedApplications = selectedApplicationIds
+    .map((id) => selectedApplicationsById[id] ?? applications.find((app) => app.id === id))
+    .filter((app): app is Application => Boolean(app));
+  const selectedPinnedIds = new Set(selectedPinnedApplications.map((app) => app.id));
+  const unselectedVisibleApplications = applications.filter((app) => !selectedPinnedIds.has(app.id));
+  const remainingSlots = Math.max(itemsPerPage - selectedPinnedApplications.length, 0);
+  const paginatedApplications = [
+    ...selectedPinnedApplications,
+    ...unselectedVisibleApplications.slice(0, remainingSlots),
+  ];
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -402,10 +487,15 @@ function DashboardContent() {
 
   const toggleSelectAllVisible = () => {
     if (allVisibleSelected) {
-      setSelectedApplicationIds([]);
+      const visibleIds = new Set(applications.map((app) => app.id));
+      setSelectedApplicationIds((prev) => prev.filter((id) => !visibleIds.has(id)));
       return;
     }
-    setSelectedApplicationIds(applications.map((app) => app.id));
+    setSelectedApplicationIds((prev) => {
+      const merged = new Set(prev);
+      applications.forEach((app) => merged.add(app.id));
+      return Array.from(merged);
+    });
   };
 
   const runBulkStatusUpdate = async (newStatus: "approved" | "rejected") => {
@@ -415,6 +505,7 @@ function DashboardContent() {
     }
     setBulkUpdateAction(newStatus === "approved" ? "approve" : "reject");
     setBulkUpdateMessage("");
+    setBulkMailHadError(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -466,6 +557,106 @@ function DashboardContent() {
     }
   };
 
+  const runBulkSendMail = async () => {
+    if (selectedApplicationIds.length === 0) {
+      setBulkUpdateMessage("Please select at least one application.");
+      setBulkMailHadError(false);
+      return;
+    }
+    setBulkUpdateAction("send_mail");
+    setBulkUpdateMessage("");
+    setBulkMailHadError(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          action: "send_evaluated_mail_bulk",
+          applicationIds: selectedApplicationIds,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setBulkMailHadError(true);
+        setBulkUpdateMessage(
+          data.error || "Failed to send mail for selected applications."
+        );
+        return;
+      }
+
+      const failedIds = Array.isArray(data.failedApplicationIds)
+        ? (data.failedApplicationIds as string[])
+        : [];
+      const allSucceeded =
+        data.allMailSucceeded === true ||
+        (Number(data.failedCount ?? 0) === 0 && failedIds.length === 0);
+
+      if (allSucceeded) {
+        setBulkMailHadError(false);
+        setBulkUpdateMessage(
+          typeof data.message === "string" && data.message
+            ? data.message
+            : `Mail successful — all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s) were sent.`
+        );
+        setSelectedApplicationIds([]);
+        return;
+      }
+
+      setBulkMailHadError(true);
+      const failedList = Array.isArray(data.failedApplications)
+        ? (data.failedApplications as Array<{
+            teamName?: string;
+            error?: string;
+            applicationId?: string;
+          }>)
+        : [];
+
+      let detail =
+        failedList.length > 0
+          ? failedList
+              .map((f) => {
+                const name = f.teamName?.trim() || "Unknown team";
+                const err = f.error?.trim();
+                return err ? `${name} (${err})` : name;
+              })
+              .join("; ")
+          : "";
+
+      if (!detail && failedIds.length > 0) {
+        detail = failedIds
+          .map((id) => {
+            const app =
+              selectedApplicationsById[id] ??
+              applications.find((a) => a.id === id);
+            return app?.company_name?.trim() || id;
+          })
+          .join("; ");
+      }
+
+      setBulkUpdateMessage(
+        `Failed — mail did not reach: ${detail || "selected applications"}. Fix the issue and use Send Mail again; failed teams stay selected.`
+      );
+
+      if (failedIds.length > 0) {
+        setSelectedApplicationIds(failedIds);
+      }
+    } catch (error) {
+      console.error("Error sending evaluated mail in bulk:", error);
+      setBulkMailHadError(true);
+      setBulkUpdateMessage("Failed to send mail for selected applications.");
+    } finally {
+      setBulkUpdateAction(null);
+    }
+  };
+
   const statusTabContent = (
     <>
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -495,6 +686,19 @@ function DashboardContent() {
           </Button>
         ))}
       </div>
+      {canBulkDecide && applications.length > 0 && bulkUpdateMessage && (
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            bulkMailHadError
+              ? "border-destructive/50 bg-destructive/10 font-medium text-destructive"
+              : "border-border bg-muted/60 text-foreground dark:bg-muted/30"
+          }`}
+          role={bulkMailHadError ? "alert" : "status"}
+          aria-live="polite"
+        >
+          {bulkUpdateMessage}
+        </div>
+      )}
       {canBulkDecide && applications.length > 0 && selectedApplicationIds.length === 0 && (
         <p className="text-sm text-muted-foreground mb-4">
           Select one or more teams using the checkboxes to approve or reject in bulk.
@@ -518,6 +722,7 @@ function DashboardContent() {
               onClick={() => {
                 setSelectedApplicationIds([]);
                 setBulkUpdateMessage("");
+                setBulkMailHadError(false);
               }}
               disabled={bulkUpdateAction !== null}
             >
@@ -534,13 +739,21 @@ function DashboardContent() {
               disabled={bulkUpdateAction !== null}
             />
             <div className="flex shrink-0 gap-2">
-              <Button
+              {/* <Button
                 type="button"
                 size="sm"
                 onClick={() => runBulkStatusUpdate("approved")}
                 disabled={bulkUpdateAction !== null}
               >
                 {bulkUpdateAction === "approve" ? "Approving..." : "Approve"}
+              </Button> */}
+              <Button
+                type="button"
+                size="sm"
+                onClick={runBulkSendMail}
+                disabled={bulkUpdateAction !== null}
+              >
+                {bulkUpdateAction === "send_mail" ? "Sending..." : "Send Mail"}
               </Button>
               <Button
                 type="button"
@@ -553,9 +766,6 @@ function DashboardContent() {
               </Button>
             </div>
           </div>
-          {bulkUpdateMessage && (
-            <p className="w-full text-sm text-muted-foreground sm:order-last">{bulkUpdateMessage}</p>
-          )}
         </div>
       )}
 

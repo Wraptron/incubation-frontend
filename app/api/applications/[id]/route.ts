@@ -6,6 +6,17 @@ import nodemailer from "nodemailer";
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Optional CC for founder emails (approval, rejection, evaluated Send Mail). MAIL_CC or GMAIL_CC: comma- or semicolon-separated addresses. */
+function getFounderMailCc(): string | undefined {
+  const raw = process.env.MAIL_CC || process.env.GMAIL_CC;
+  if (!raw?.trim()) return undefined;
+  const parts = raw
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return parts.length ? parts.join(", ") : undefined;
+}
+
 const buildApplicationResponse = async (
   id: string,
   /** When set (reviewer viewing), only this reviewer is included in reviewers array */
@@ -225,15 +236,17 @@ Regards,
 Team Nirmaan
     `.trim();
 
+    const cc = getFounderMailCc();
     await transporter.sendMail({
       from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
       to: email,
+      ...(cc ? { cc } : {}),
       subject: `Update on your Pre-Incubation application${startupName ? ` – ${startupName}` : ""}`,
       text: emailText,
       html: emailHTML,
     });
 
-    console.log("Rejection email sent to founder at", email);
+    console.log("Rejection email sent to founder at", email, cc ? `(cc: ${cc})` : "");
     return { success: true };
   } catch (error: unknown) {
     const err = error as Error;
@@ -309,19 +322,107 @@ Regards,
 Team Nirmaan
     `.trim();
 
+    const cc = getFounderMailCc();
     await transporter.sendMail({
       from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
       to: email,
+      ...(cc ? { cc } : {}),
       subject: `Congratulations! You've been added to the Pre-Incubation cohort${startupName ? ` – ${startupName}` : ""}`,
       text: emailText,
       html: emailHTML,
     });
 
-    console.log("Approval email sent to founder at", email);
+    console.log("Approval email sent to founder at", email, cc ? `(cc: ${cc})` : "");
     return { success: true };
   } catch (error: unknown) {
     const err = error as Error;
     console.error("Error sending approval email:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/** Send evaluated-selection email without changing status. */
+async function sendEvaluatedSelectionEmail(
+  email: string,
+  founderName: string,
+  startupName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn(
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping evaluated-selection email"
+      );
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+
+    const safeFounderName = founderName || "Founder";
+    const safeStartupName = startupName || "your startup team";
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${safeFounderName},</p>
+            <p>We are delighted to let you know that your startup idea <strong>${safeStartupName}</strong> has been chosen for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations! 🎉</p>
+            <p>At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.</p>
+            <p>You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! 🌟 But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!</p>
+            <p>We shall organize an onboarding session soon where all the details shall be shared.</p>
+            <p>Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const emailText = `
+Dear ${safeFounderName},
+
+We are delighted to let you know that your startup idea ${safeStartupName} has been chosen for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations!
+
+At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.
+
+You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!
+
+We shall organize an onboarding session soon where all the details shall be shared.
+
+Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!
+    `.trim();
+
+    const cc = getFounderMailCc();
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      ...(cc ? { cc } : {}),
+      subject: `Congratulations from Nirmaan - ${safeStartupName}`,
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Evaluated-selection email sent to founder at", email, cc ? `(cc: ${cc})` : "");
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending evaluated-selection email:", err);
     return { success: false, error: err.message };
   }
 }
@@ -440,6 +541,55 @@ export async function PUT(
     }
 
     const body = await request.json();
+
+    if (body.sendEvaluatedMail === true) {
+      const { data: appRow, error: appError } = await supabaseServer
+        .from("new_application")
+        .select("email, your_name, team_name, status")
+        .eq("id", id)
+        .single();
+
+      if (appError || !appRow) {
+        return NextResponse.json(
+          { error: "Application not found" },
+          { status: 404 },
+        );
+      }
+
+      if (appRow.status !== "evaluated") {
+        return NextResponse.json(
+          { error: "Mail can only be sent when application is in evaluated status" },
+          { status: 400 },
+        );
+      }
+
+      const founderEmail = appRow.email?.trim();
+      if (!founderEmail) {
+        return NextResponse.json(
+          { error: "Application founder email is missing" },
+          { status: 400 },
+        );
+      }
+
+      const emailResult = await sendEvaluatedSelectionEmail(
+        founderEmail,
+        appRow.your_name || "Founder",
+        appRow.team_name || "your startup team",
+      );
+
+      if (!emailResult.success) {
+        return NextResponse.json(
+          { error: "Failed to send evaluated-selection email", details: emailResult.error },
+          { status: 500 },
+        );
+      }
+
+      const { application } = await buildApplicationResponse(id);
+      return NextResponse.json({
+        message: "Evaluated-selection email sent successfully",
+        application,
+      });
+    }
 
     // Assign reviewers
     if (Array.isArray(body.reviewerIds)) {
