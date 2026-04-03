@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+const MAIL_MAX_RETRIES = 3;
+const MAIL_RETRY_DELAY_MS = 500;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /* =========================
    GET: List applications
    If Authorization Bearer token is present and user is a reviewer,
@@ -59,7 +66,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // For reviewers we fetch all assigned apps then filter by reviewer_status in memory
+    // For reviewers we fetch all assigned apps then filter by reviewer_status
     const reviewerFetchLimit = isReviewer ? 500 : limit;
     const reviewerFetchOffset = isReviewer ? 0 : offset;
 
@@ -242,6 +249,132 @@ export async function GET(request: NextRequest) {
     console.error("Error in applications GET route:", error);
     return NextResponse.json(
       { error: "Failed to fetch applications" },
+      { status: 500 },
+    );
+  }
+}
+
+/* =========================
+   POST: Bulk actions
+   Currently supports: send evaluated mails in bulk with retries.
+========================= */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const action = body?.action;
+
+    if (action !== "send_evaluated_mail_bulk") {
+      return NextResponse.json(
+        { error: "Unsupported bulk action" },
+        { status: 400 },
+      );
+    }
+
+    const rawIds = Array.isArray(body?.applicationIds) ? body.applicationIds : [];
+    const applicationIds: string[] = rawIds.filter(
+      (id: unknown): id is string => typeof id === "string" && id.length > 0,
+    );
+
+    if (applicationIds.length === 0) {
+      return NextResponse.json(
+        { error: "Please provide at least one application ID" },
+        { status: 400 },
+      );
+    }
+
+    const uniqueIds = [...new Set(applicationIds)];
+    const baseUrl = new URL(request.url).origin;
+    const authHeader = request.headers.get("authorization");
+
+    const { data: nameRows } = await supabaseServer
+      .from("new_application")
+      .select("id, team_name")
+      .in("id", uniqueIds);
+
+    const teamNameById: Record<string, string> = {};
+    for (const row of nameRows ?? []) {
+      const r = row as { id: string; team_name: string | null };
+      teamNameById[r.id] = (r.team_name?.trim() || "Unnamed team");
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+    const failedApplicationIds: string[] = [];
+    const failedApplications: Array<{
+      applicationId: string;
+      teamName: string;
+      error: string;
+    }> = [];
+
+    for (const applicationId of uniqueIds) {
+      let sent = false;
+      let lastError = "";
+
+      for (let attempt = 1; attempt <= MAIL_MAX_RETRIES; attempt += 1) {
+        try {
+          const response = await fetch(`${baseUrl}/api/applications/${applicationId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              ...(authHeader ? { Authorization: authHeader } : {}),
+            },
+            body: JSON.stringify({ sendEvaluatedMail: true }),
+          });
+
+          if (response.ok) {
+            sent = true;
+            break;
+          }
+
+          const responseBody = await response.json().catch(() => ({}));
+          lastError =
+            responseBody?.error ||
+            responseBody?.details ||
+            `HTTP ${response.status}`;
+        } catch (error: any) {
+          lastError = error?.message || "Unknown network error";
+        }
+
+        if (attempt < MAIL_MAX_RETRIES) {
+          await wait(MAIL_RETRY_DELAY_MS * attempt);
+        }
+      }
+
+      if (sent) {
+        successCount += 1;
+      } else {
+        failedCount += 1;
+        failedApplicationIds.push(applicationId);
+        const teamName = teamNameById[applicationId] ?? "Unknown application";
+        failedApplications.push({
+          applicationId,
+          teamName,
+          error: lastError || "Mail could not be sent",
+        });
+        console.error(
+          `[bulk-mail] failed for ${teamName} (${applicationId}) after ${MAIL_MAX_RETRIES} attempts: ${lastError}`,
+        );
+      }
+    }
+
+    const allMailSucceeded = failedCount === 0;
+
+    return NextResponse.json({
+      allMailSucceeded,
+      message: allMailSucceeded
+        ? `Mail successful — all ${successCount} selected application(s) were sent.`
+        : `Mail failed for ${failedCount} application(s). ${successCount} sent successfully.`,
+      totalRequested: uniqueIds.length,
+      successCount,
+      failedCount,
+      failedApplicationIds,
+      failedApplications,
+      retriesPerApplication: MAIL_MAX_RETRIES,
+    });
+  } catch (error: any) {
+    console.error("Error in bulk applications POST route:", error);
+    return NextResponse.json(
+      { error: "Failed to process bulk mail request", details: error?.message },
       { status: 500 },
     );
   }
