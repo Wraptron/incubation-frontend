@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-const MAIL_MAX_RETRIES = 3;
-const MAIL_RETRY_DELAY_MS = 500;
+/** Hardcoded delay between each bulk mail send. */
+const BULK_MAIL_DELAY_MS = 2000;
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -256,10 +256,11 @@ export async function GET(request: NextRequest) {
 
 /* =========================
    POST: Bulk actions
-   Currently supports: send evaluated mails in bulk with retries.
+   Send evaluated mails in bulk: one attempt per app, delay between sends (no retries).
 ========================= */
 export async function POST(request: NextRequest) {
   try {
+    const bulkMailDelayMs = BULK_MAIL_DELAY_MS;
     const body = await request.json();
     const action = body?.action;
 
@@ -306,38 +307,36 @@ export async function POST(request: NextRequest) {
       error: string;
     }> = [];
 
-    for (const applicationId of uniqueIds) {
+    for (let i = 0; i < uniqueIds.length; i += 1) {
+      const applicationId = uniqueIds[i];
+      if (i > 0 && bulkMailDelayMs > 0) {
+        await wait(bulkMailDelayMs);
+      }
+
       let sent = false;
       let lastError = "";
 
-      for (let attempt = 1; attempt <= MAIL_MAX_RETRIES; attempt += 1) {
-        try {
-          const response = await fetch(`${baseUrl}/api/applications/${applicationId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              ...(authHeader ? { Authorization: authHeader } : {}),
-            },
-            body: JSON.stringify({ sendEvaluatedMail: true }),
-          });
+      try {
+        const response = await fetch(`${baseUrl}/api/applications/${applicationId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authHeader ? { Authorization: authHeader } : {}),
+          },
+          body: JSON.stringify({ sendEvaluatedMail: true }),
+        });
 
-          if (response.ok) {
-            sent = true;
-            break;
-          }
-
+        if (response.ok) {
+          sent = true;
+        } else {
           const responseBody = await response.json().catch(() => ({}));
           lastError =
             responseBody?.error ||
             responseBody?.details ||
             `HTTP ${response.status}`;
-        } catch (error: any) {
-          lastError = error?.message || "Unknown network error";
         }
-
-        if (attempt < MAIL_MAX_RETRIES) {
-          await wait(MAIL_RETRY_DELAY_MS * attempt);
-        }
+      } catch (error: any) {
+        lastError = error?.message || "Unknown network error";
       }
 
       if (sent) {
@@ -351,9 +350,7 @@ export async function POST(request: NextRequest) {
           teamName,
           error: lastError || "Mail could not be sent",
         });
-        console.error(
-          `[bulk-mail] failed for ${teamName} (${applicationId}) after ${MAIL_MAX_RETRIES} attempts: ${lastError}`,
-        );
+        console.error(`[bulk-mail] failed for ${teamName} (${applicationId}): ${lastError}`);
       }
     }
 
@@ -369,7 +366,7 @@ export async function POST(request: NextRequest) {
       failedCount,
       failedApplicationIds,
       failedApplications,
-      retriesPerApplication: MAIL_MAX_RETRIES,
+      delayMsBetweenSends: bulkMailDelayMs,
     });
   } catch (error: any) {
     console.error("Error in bulk applications POST route:", error);
