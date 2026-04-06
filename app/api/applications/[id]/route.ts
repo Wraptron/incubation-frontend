@@ -383,11 +383,16 @@ async function sendEvaluatedSelectionEmail(
         <div class="container">
           <div class="content">
             <p>Dear ${safeFounderName},</p>
-            <p>We are delighted to let you know that your startup idea <strong>${safeStartupName}</strong> has been chosen for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations! 🎉</p>
-            <p>At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.</p>
-            <p>You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! 🌟 But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!</p>
-            <p>We shall organize an onboarding session soon where all the details shall be shared.</p>
-            <p>Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!</p>
+            <p>We are pleased to inform you that your startup idea, <strong>${safeStartupName}</strong>, has been provisionally selected for the April 2026 Cohort of the Pratham Program under Nirmaan. Congratulations.</p>
+            <p>Your application stood out, and we are encouraged by the potential of your idea. As part of the program, your progress will be closely monitored through regular reviews and milestone-based evaluations.</p>
+            <p>Please note that this is a provisional selection. Your continuation in the program will be based on your performance, commitment, and progress during the cohort. Teams that do not meet the expected milestones may be discontinued from the program.</p>
+            <p>We will be sharing further details regarding the onboarding process, orientation sessions, and required documentation shortly.</p>
+            <p>Should you have any questions, please feel free to reach out.</p>
+            <p>We look forward to working with you and supporting your entrepreneurial journey.</p>
+            <p>Best Regards,<br><br>
+            Team Nirmaan,<br>
+            The Pre-Incubator<br>
+            Indian Institute of Technology, Madras</p>
           </div>
         </div>
       </body>
@@ -397,15 +402,23 @@ async function sendEvaluatedSelectionEmail(
     const emailText = `
 Dear ${safeFounderName},
 
-We are delighted to let you know that your startup idea ${safeStartupName} has been chosen for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations!
+We are pleased to inform you that your startup idea, ${safeStartupName}, has been provisionally selected for the April 2026 Cohort of the Pratham Program under Nirmaan. Congratulations.
 
-At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.
+Your application stood out, and we are encouraged by the potential of your idea. As part of the program, your progress will be closely monitored through regular reviews and milestone-based evaluations.
 
-You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!
+Please note that this is a provisional selection. Your continuation in the program will be based on your performance, commitment, and progress during the cohort. Teams that do not meet the expected milestones may be discontinued from the program.
 
-We shall organize an onboarding session soon where all the details shall be shared.
+We will be sharing further details regarding the onboarding process, orientation sessions, and required documentation shortly.
 
-Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!
+Should you have any questions, please feel free to reach out.
+
+We look forward to working with you and supporting your entrepreneurial journey.
+
+Best Regards,
+
+Team Nirmaan,
+The Pre-Incubator
+Indian Institute of Technology, Madras
     `.trim();
 
     const cc = getFounderMailCc();
@@ -413,7 +426,7 @@ Looking forward to meeting you in person at the Workspace so that we can ideate,
       from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
       to: email,
       ...(cc ? { cc } : {}),
-      subject: `Congratulations from Nirmaan - ${safeStartupName}`,
+      subject: "Welcome to the Nirmaan April 2026 Cohort – Provisional Selection",
       text: emailText,
       html: emailHTML,
     });
