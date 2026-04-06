@@ -341,8 +341,8 @@ Team Nirmaan
   }
 }
 
-/** Send evaluated-selection email without changing status. */
-async function sendEvaluatedSelectionEmail(
+/** Send provisional-selection email without changing status. */
+async function sendProvisionalSelectionEmail(
   email: string,
   founderName: string,
   startupName: string
@@ -352,7 +352,7 @@ async function sendEvaluatedSelectionEmail(
     const gmailPass = process.env.GMAIL_APP_PASSWORD;
     if (!gmailUser || !gmailPass) {
       console.warn(
-        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping evaluated-selection email"
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping provisional-selection email"
       );
       return { success: false, error: "Email not configured" };
     }
@@ -431,11 +431,107 @@ Indian Institute of Technology, Madras
       html: emailHTML,
     });
 
-    console.log("Evaluated-selection email sent to founder at", email, cc ? `(cc: ${cc})` : "");
+    console.log("Provisional-selection email sent to founder at", email, cc ? `(cc: ${cc})` : "");
     return { success: true };
   } catch (error: unknown) {
     const err = error as Error;
-    console.error("Error sending evaluated-selection email:", err);
+    console.error("Error sending provisional-selection email:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/** Send final-selection email without changing status. */
+async function sendFinalSelectionEmail(
+  email: string,
+  founderName: string,
+  startupName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass) {
+      console.warn(
+        "GMAIL_USER or GMAIL_APP_PASSWORD not set - skipping final-selection email"
+      );
+      return { success: false, error: "Email not configured" };
+    }
+    const transporter = nodemailer.createTransport({
+      host: "smtpout.secureserver.net",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+
+    const safeFounderName = founderName || "Founder";
+    const safeStartupName = startupName || "your startup team";
+
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+          .content { padding: 20px; background-color: #fff; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="content">
+            <p>Dear ${safeFounderName},</p>
+            <p>We are delighted to let you know that your startup idea <strong>${safeStartupName}</strong> has been selected for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations! 🎉</p>
+            <p>At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick-start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.</p>
+            <p>You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! 🌟 But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!</p>
+            <p>We shall organize an onboarding session soon where all the details will be shared.</p>
+            <p>Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!</p>
+            <p>Best Regards,<br><br>
+            Team Nirmaan,<br>
+            The Pre-Incubator<br>
+            Indian Institute of Technology, Madras</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const emailText = `
+Dear ${safeFounderName},
+
+We are delighted to let you know that your startup idea ${safeStartupName} has been selected for the April 2026 Cohort of the Pratham program under Nirmaan. Congratulations!
+
+At Nirmaan, we are dedicated to nurturing the entrepreneurial spirit within students and helping them bring their ideas to life. To kick-start this journey, we are introducing "Pratham," a series of engaging workshops and enlightening talks that will be invaluable to your startup journey. We will share the schedule of the workshops with you soon.
+
+You've already achieved a significant milestone, so go ahead and give yourself a pat on the back! But remember, this is just the beginning of your exciting new journey. We're here to support you every step of the way and will be your biggest cheerleaders. Welcome to the Nirmaan family!
+
+We shall organize an onboarding session soon where all the details will be shared.
+
+Looking forward to meeting you in person at the Workspace so that we can ideate, innovate, and grow together!
+
+Best Regards,
+
+Team Nirmaan,
+The Pre-Incubator
+Indian Institute of Technology, Madras
+    `.trim();
+
+    const cc = getFounderMailCc();
+    await transporter.sendMail({
+      from: `"Nirmaan Pre-Incubation" <${gmailUser}>`,
+      to: email,
+      ...(cc ? { cc } : {}),
+      subject: `Congratulations from Nirmaan - ${safeStartupName}`,
+      text: emailText,
+      html: emailHTML,
+    });
+
+    console.log("Final-selection email sent to founder at", email, cc ? `(cc: ${cc})` : "");
+    return { success: true };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Error sending final-selection email:", err);
     return { success: false, error: err.message };
   }
 }
@@ -555,7 +651,9 @@ export async function PUT(
 
     const body = await request.json();
 
-    if (body.sendEvaluatedMail === true) {
+    if (body.sendEvaluatedMail === true || body.sendSelectionMail === true) {
+      const selectionType: "provisional" | "final" =
+        body.selectionType === "final" ? "final" : "provisional";
       const { data: appRow, error: appError } = await supabaseServer
         .from("new_application")
         .select("email, your_name, team_name, status")
@@ -584,22 +682,31 @@ export async function PUT(
         );
       }
 
-      const emailResult = await sendEvaluatedSelectionEmail(
-        founderEmail,
-        appRow.your_name || "Founder",
-        appRow.team_name || "your startup team",
-      );
+      const emailResult =
+        selectionType === "final"
+          ? await sendFinalSelectionEmail(
+              founderEmail,
+              appRow.your_name || "Founder",
+              appRow.team_name || "your startup team",
+            )
+          : await sendProvisionalSelectionEmail(
+              founderEmail,
+              appRow.your_name || "Founder",
+              appRow.team_name || "your startup team",
+            );
 
       if (!emailResult.success) {
         return NextResponse.json(
-          { error: "Failed to send evaluated-selection email", details: emailResult.error },
+          { error: `Failed to send ${selectionType}-selection email`, details: emailResult.error },
           { status: 500 },
         );
       }
 
       const { application } = await buildApplicationResponse(id);
       return NextResponse.json({
-        message: "Evaluated-selection email sent successfully",
+        message: `${
+          selectionType === "final" ? "Final-selection" : "Provisional-selection"
+        } email sent successfully`,
         application,
       });
     }

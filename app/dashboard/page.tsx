@@ -93,10 +93,10 @@ function DashboardContent() {
   const [selectedApplicationsById, setSelectedApplicationsById] = useState<Record<string, Application>>({});
   const [bulkRejectionReason, setBulkRejectionReason] = useState("");
   const [bulkUpdateAction, setBulkUpdateAction] = useState<
-    null | "approve" | "send_mail" | "reject"
+    null | "approve" | "send_provisional_mail" | "send_final_mail" | "reject"
   >(null);
   const [bulkUpdateMessage, setBulkUpdateMessage] = useState("");
-  /** True when bulk Send Mail had any failure (red styling + team names). */
+  /** True when bulk selection mail had any failure (red styling + team names). */
   const [bulkMailHadError, setBulkMailHadError] = useState(false);
 
   // Search as you type: debounce and update URL so fetch runs.
@@ -557,13 +557,15 @@ function DashboardContent() {
     }
   };
 
-  const runBulkSendMail = async () => {
+  const runBulkSendMail = async (selectionType: "provisional" | "final") => {
     if (selectedApplicationIds.length === 0) {
       setBulkUpdateMessage("Please select at least one application.");
       setBulkMailHadError(false);
       return;
     }
-    setBulkUpdateAction("send_mail");
+    const actionType =
+      selectionType === "provisional" ? "send_provisional_mail" : "send_final_mail";
+    setBulkUpdateAction(actionType);
     setBulkUpdateMessage("");
     setBulkMailHadError(false);
     try {
@@ -577,7 +579,10 @@ function DashboardContent() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          action: "send_evaluated_mail_bulk",
+          action:
+            selectionType === "provisional"
+              ? "send_provisional_selection_mail_bulk"
+              : "send_final_selection_mail_bulk",
           applicationIds: selectedApplicationIds,
         }),
       });
@@ -587,7 +592,7 @@ function DashboardContent() {
       if (!response.ok) {
         setBulkMailHadError(true);
         setBulkUpdateMessage(
-          data.error || "Failed to send mail for selected applications."
+          data.error || "Failed to send selection mail for selected applications."
         );
         return;
       }
@@ -604,7 +609,7 @@ function DashboardContent() {
         setBulkUpdateMessage(
           typeof data.message === "string" && data.message
             ? data.message
-            : `Mail successful — all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s) were sent.`
+            : `Selection mail sent successfully for all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s).`
         );
         setSelectedApplicationIds([]);
         return;
@@ -642,16 +647,16 @@ function DashboardContent() {
       }
 
       setBulkUpdateMessage(
-        `Failed — mail did not reach: ${detail || "selected applications"}. Fix the issue and use Send Mail again; failed teams stay selected.`
+        `Failed — selection mail did not reach: ${detail || "selected applications"}. Fix the issue and try again; failed teams stay selected.`
       );
 
       if (failedIds.length > 0) {
         setSelectedApplicationIds(failedIds);
       }
     } catch (error) {
-      console.error("Error sending evaluated mail in bulk:", error);
+      console.error("Error sending selection mail in bulk:", error);
       setBulkMailHadError(true);
-      setBulkUpdateMessage("Failed to send mail for selected applications.");
+      setBulkUpdateMessage("Failed to send selection mail for selected applications.");
     } finally {
       setBulkUpdateAction(null);
     }
@@ -750,10 +755,22 @@ function DashboardContent() {
               <Button
                 type="button"
                 size="sm"
-                onClick={runBulkSendMail}
+                onClick={() => runBulkSendMail("provisional")}
                 disabled={bulkUpdateAction !== null}
               >
-                {bulkUpdateAction === "send_mail" ? "Sending..." : "Send Mail"}
+                {bulkUpdateAction === "send_provisional_mail"
+                  ? "Sending..."
+                  : "Provisional Selection Email"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => runBulkSendMail("final")}
+                disabled={bulkUpdateAction !== null}
+              >
+                {bulkUpdateAction === "send_final_mail"
+                  ? "Sending..."
+                  : "Final Selection Email"}
               </Button>
               <Button
                 type="button"
