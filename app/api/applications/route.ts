@@ -264,12 +264,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const action = body?.action;
 
-    if (action !== "send_evaluated_mail_bulk") {
+    if (
+      action !== "send_provisional_selection_mail_bulk" &&
+      action !== "send_final_selection_mail_bulk" &&
+      action !== "send_evaluated_mail_bulk"
+    ) {
       return NextResponse.json(
         { error: "Unsupported bulk action" },
         { status: 400 },
       );
     }
+    const selectionType: "provisional" | "final" =
+      action === "send_final_selection_mail_bulk" ? "final" : "provisional";
 
     const rawIds = Array.isArray(body?.applicationIds) ? body.applicationIds : [];
     const applicationIds: string[] = rawIds.filter(
@@ -323,7 +329,7 @@ export async function POST(request: NextRequest) {
             "Content-Type": "application/json",
             ...(authHeader ? { Authorization: authHeader } : {}),
           },
-          body: JSON.stringify({ sendEvaluatedMail: true }),
+          body: JSON.stringify({ sendSelectionMail: true, selectionType }),
         });
 
         if (response.ok) {
@@ -359,8 +365,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       allMailSucceeded,
       message: allMailSucceeded
-        ? `Mail successful — all ${successCount} selected application(s) were sent.`
-        : `Mail failed for ${failedCount} application(s). ${successCount} sent successfully.`,
+        ? `Selection mail sent successfully for all ${successCount} selected application(s).`
+        : `Selection mail failed for ${failedCount} application(s). ${successCount} sent successfully.`,
       totalRequested: uniqueIds.length,
       successCount,
       failedCount,
