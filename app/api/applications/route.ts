@@ -276,6 +276,7 @@ export async function POST(request: NextRequest) {
     }
     const selectionType: "provisional" | "final" =
       action === "send_final_selection_mail_bulk" ? "final" : "provisional";
+    const mailLabel = selectionType === "final" ? "Orientation" : "Selection";
 
     const rawIds = Array.isArray(body?.applicationIds) ? body.applicationIds : [];
     const applicationIds: string[] = rawIds.filter(
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest) {
         failedApplications.push({
           applicationId,
           teamName,
-          error: lastError || "Mail could not be sent",
+          error: lastError || `${mailLabel} mail could not be sent`,
         });
         console.error(`[bulk-mail] failed for ${teamName} (${applicationId}): ${lastError}`);
       }
@@ -365,8 +366,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       allMailSucceeded,
       message: allMailSucceeded
-        ? `Selection mail sent successfully for all ${successCount} selected application(s).`
-        : `Selection mail failed for ${failedCount} application(s). ${successCount} sent successfully.`,
+        ? `${mailLabel} mail sent successfully for all ${successCount} selected application(s).`
+        : `${mailLabel} mail failed for ${failedCount} application(s). ${successCount} sent successfully.`,
       totalRequested: uniqueIds.length,
       successCount,
       failedCount,

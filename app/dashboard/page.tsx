@@ -557,14 +557,13 @@ function DashboardContent() {
     }
   };
 
-  const runBulkSendMail = async (selectionType: "provisional" | "final") => {
+  const runBulkSendMail = async () => {
     if (selectedApplicationIds.length === 0) {
       setBulkUpdateMessage("Please select at least one application.");
       setBulkMailHadError(false);
       return;
     }
-    const actionType =
-      selectionType === "provisional" ? "send_provisional_mail" : "send_final_mail";
+    const actionType = "send_final_mail";
     setBulkUpdateAction(actionType);
     setBulkUpdateMessage("");
     setBulkMailHadError(false);
@@ -579,10 +578,7 @@ function DashboardContent() {
         method: "POST",
         headers,
         body: JSON.stringify({
-          action:
-            selectionType === "provisional"
-              ? "send_provisional_selection_mail_bulk"
-              : "send_final_selection_mail_bulk",
+          action: "send_final_selection_mail_bulk",
           applicationIds: selectedApplicationIds,
         }),
       });
@@ -592,7 +588,7 @@ function DashboardContent() {
       if (!response.ok) {
         setBulkMailHadError(true);
         setBulkUpdateMessage(
-          data.error || "Failed to send selection mail for selected applications."
+          data.error || "Failed to send orientation mail for selected applications."
         );
         return;
       }
@@ -609,7 +605,7 @@ function DashboardContent() {
         setBulkUpdateMessage(
           typeof data.message === "string" && data.message
             ? data.message
-            : `Selection mail sent successfully for all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s).`
+            : `Orientation mail sent successfully for all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s).`
         );
         setSelectedApplicationIds([]);
         return;
@@ -647,16 +643,16 @@ function DashboardContent() {
       }
 
       setBulkUpdateMessage(
-        `Failed — selection mail did not reach: ${detail || "selected applications"}. Fix the issue and try again; failed teams stay selected.`
+        `Failed — orientation mail did not reach: ${detail || "selected applications"}. Fix the issue and try again; failed teams stay selected.`
       );
 
       if (failedIds.length > 0) {
         setSelectedApplicationIds(failedIds);
       }
     } catch (error) {
-      console.error("Error sending selection mail in bulk:", error);
+      console.error("Error sending orientation mail in bulk:", error);
       setBulkMailHadError(true);
-      setBulkUpdateMessage("Failed to send selection mail for selected applications.");
+      setBulkUpdateMessage("Failed to send orientation mail for selected applications.");
     } finally {
       setBulkUpdateAction(null);
     }
@@ -755,22 +751,12 @@ function DashboardContent() {
               <Button
                 type="button"
                 size="sm"
-                onClick={() => runBulkSendMail("provisional")}
-                disabled={bulkUpdateAction !== null}
-              >
-                {bulkUpdateAction === "send_provisional_mail"
-                  ? "Sending..."
-                  : "Provisional Selection Email"}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => runBulkSendMail("final")}
+                onClick={runBulkSendMail}
                 disabled={bulkUpdateAction !== null}
               >
                 {bulkUpdateAction === "send_final_mail"
                   ? "Sending..."
-                  : "Final Selection Email"}
+                  : "Send Orientation Mail"}
               </Button>
               <Button
                 type="button"
