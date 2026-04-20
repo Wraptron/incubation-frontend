@@ -93,11 +93,9 @@ function DashboardContent() {
   const [selectedApplicationsById, setSelectedApplicationsById] = useState<Record<string, Application>>({});
   const [bulkRejectionReason, setBulkRejectionReason] = useState("");
   const [bulkUpdateAction, setBulkUpdateAction] = useState<
-    null | "approve" | "send_provisional_mail" | "send_final_mail" | "reject"
+    null | "approve" | "reject"
   >(null);
   const [bulkUpdateMessage, setBulkUpdateMessage] = useState("");
-  /** True when bulk selection mail had any failure (red styling + team names). */
-  const [bulkMailHadError, setBulkMailHadError] = useState(false);
 
   // Search as you type: debounce and update URL so fetch runs.
   useEffect(() => {
@@ -505,7 +503,6 @@ function DashboardContent() {
     }
     setBulkUpdateAction(newStatus === "approved" ? "approve" : "reject");
     setBulkUpdateMessage("");
-    setBulkMailHadError(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -557,107 +554,6 @@ function DashboardContent() {
     }
   };
 
-  const runBulkSendMail = async () => {
-    if (selectedApplicationIds.length === 0) {
-      setBulkUpdateMessage("Please select at least one application.");
-      setBulkMailHadError(false);
-      return;
-    }
-    const actionType = "send_final_mail";
-    setBulkUpdateAction(actionType);
-    setBulkUpdateMessage("");
-    setBulkMailHadError(false);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
-      }
-
-      const response = await fetch("/api/applications", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          action: "send_final_selection_mail_bulk",
-          applicationIds: selectedApplicationIds,
-        }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setBulkMailHadError(true);
-        setBulkUpdateMessage(
-          data.error || "Failed to send orientation mail for selected applications."
-        );
-        return;
-      }
-
-      const failedIds = Array.isArray(data.failedApplicationIds)
-        ? (data.failedApplicationIds as string[])
-        : [];
-      const allSucceeded =
-        data.allMailSucceeded === true ||
-        (Number(data.failedCount ?? 0) === 0 && failedIds.length === 0);
-
-      if (allSucceeded) {
-        setBulkMailHadError(false);
-        setBulkUpdateMessage(
-          typeof data.message === "string" && data.message
-            ? data.message
-            : `Orientation mail sent successfully for all ${Number(data.successCount ?? selectedApplicationIds.length)} selected application(s).`
-        );
-        setSelectedApplicationIds([]);
-        return;
-      }
-
-      setBulkMailHadError(true);
-      const failedList = Array.isArray(data.failedApplications)
-        ? (data.failedApplications as Array<{
-            teamName?: string;
-            error?: string;
-            applicationId?: string;
-          }>)
-        : [];
-
-      let detail =
-        failedList.length > 0
-          ? failedList
-              .map((f) => {
-                const name = f.teamName?.trim() || "Unknown team";
-                const err = f.error?.trim();
-                return err ? `${name} (${err})` : name;
-              })
-              .join("; ")
-          : "";
-
-      if (!detail && failedIds.length > 0) {
-        detail = failedIds
-          .map((id) => {
-            const app =
-              selectedApplicationsById[id] ??
-              applications.find((a) => a.id === id);
-            return app?.company_name?.trim() || id;
-          })
-          .join("; ");
-      }
-
-      setBulkUpdateMessage(
-        `Failed — orientation mail did not reach: ${detail || "selected applications"}. Fix the issue and try again; failed teams stay selected.`
-      );
-
-      if (failedIds.length > 0) {
-        setSelectedApplicationIds(failedIds);
-      }
-    } catch (error) {
-      console.error("Error sending orientation mail in bulk:", error);
-      setBulkMailHadError(true);
-      setBulkUpdateMessage("Failed to send orientation mail for selected applications.");
-    } finally {
-      setBulkUpdateAction(null);
-    }
-  };
-
   const statusTabContent = (
     <>
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -689,12 +585,8 @@ function DashboardContent() {
       </div>
       {canBulkDecide && applications.length > 0 && bulkUpdateMessage && (
         <div
-          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
-            bulkMailHadError
-              ? "border-destructive/50 bg-destructive/10 font-medium text-destructive"
-              : "border-border bg-muted/60 text-foreground dark:bg-muted/30"
-          }`}
-          role={bulkMailHadError ? "alert" : "status"}
+          className="mb-4 rounded-lg border border-border bg-muted/60 px-4 py-3 text-sm text-foreground dark:bg-muted/30"
+          role="status"
           aria-live="polite"
         >
           {bulkUpdateMessage}
@@ -723,7 +615,6 @@ function DashboardContent() {
               onClick={() => {
                 setSelectedApplicationIds([]);
                 setBulkUpdateMessage("");
-                setBulkMailHadError(false);
               }}
               disabled={bulkUpdateAction !== null}
             >
@@ -740,23 +631,13 @@ function DashboardContent() {
               disabled={bulkUpdateAction !== null}
             />
             <div className="flex shrink-0 gap-2">
-              {/* <Button
+              <Button
                 type="button"
                 size="sm"
                 onClick={() => runBulkStatusUpdate("approved")}
                 disabled={bulkUpdateAction !== null}
               >
                 {bulkUpdateAction === "approve" ? "Approving..." : "Approve"}
-              </Button> */}
-              <Button
-                type="button"
-                size="sm"
-                onClick={runBulkSendMail}
-                disabled={bulkUpdateAction !== null}
-              >
-                {bulkUpdateAction === "send_final_mail"
-                  ? "Sending..."
-                  : "Send Orientation Mail"}
               </Button>
               <Button
                 type="button"
