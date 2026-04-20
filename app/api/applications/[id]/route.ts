@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabaseServer";
-import { backendUrl } from "@/lib/config";
+import { syncApprovedApplicationToNirmaan } from "@/lib/nirmaanStartupSync";
 import nodemailer from "nodemailer";
 
 const uuidRegex =
@@ -505,32 +505,62 @@ export async function PUT(
         );
       }
 
-      const backendStatusUrl = `${backendUrl}/api/applications/${id}/status`;
-      const upstream = await fetch(backendStatusUrl, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status,
-          rejectionReason:
-            typeof body.rejectionReason === "string"
-              ? body.rejectionReason
-              : undefined,
-        }),
-      });
+      const rejectionReason =
+        typeof body.rejectionReason === "string" ? body.rejectionReason.trim() : null;
 
-      const upstreamData = await upstream
-        .json()
-        .catch(() => ({ error: "Invalid response from backend status API" }));
+      if (status === "approved") {
+        const { data: appToSync, error: appToSyncError } = await supabaseServer
+          .from("new_application")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-      if (!upstream.ok) {
+        if (appToSyncError || !appToSync) {
+          return NextResponse.json(
+            {
+              error: "Failed to load application for Nirmaan sync",
+              details: appToSyncError?.message ?? "Application not found",
+            },
+            { status: 500 },
+          );
+        }
+
+        const syncResult = await syncApprovedApplicationToNirmaan(
+          appToSync as Record<string, unknown>
+        );
+        if (!syncResult.success) {
+          return NextResponse.json(
+            {
+              error: "Failed to sync approved application to Nirmaan",
+              details: syncResult.error,
+            },
+            { status: 502 },
+          );
+        }
+      }
+
+      const updatePayload: { status: string; rejection_reason?: string | null } = {
+        status,
+      };
+      if (status === "rejected") {
+        updatePayload.rejection_reason = rejectionReason || null;
+      } else {
+        // Clear stale rejection reason once a decision changes away from rejected.
+        updatePayload.rejection_reason = null;
+      }
+
+      const { error: updateStatusError } = await supabaseServer
+        .from("new_application")
+        .update(updatePayload)
+        .eq("id", id);
+
+      if (updateStatusError) {
         return NextResponse.json(
           {
-            error:
-              (upstreamData as { error?: string }).error ||
-              "Failed to update application status",
-            details: (upstreamData as { details?: string }).details,
+            error: "Failed to update application status",
+            details: updateStatusError.message,
           },
-          { status: upstream.status || 500 },
+          { status: 500 },
         );
       }
 
@@ -586,57 +616,6 @@ export async function PUT(
       //   }
       // }
 
-      // When manager rejects, send email to team founder
-      if (body.status === "rejected") {
-        const { data: appRow } = await supabaseServer
-          .from("new_application")
-          .select("email, your_name, team_name, rejection_reason")
-          .eq("id", id)
-          .single();
-
-        const founderEmail = appRow?.email?.trim();
-        if (founderEmail) {
-          const founderName = appRow?.your_name || "Founder";
-          const startupName = appRow?.team_name || "";
-          const reason = appRow?.rejection_reason || body.rejectionReason || "";
-          const emailResult = await sendRejectionEmail(
-            founderEmail,
-            founderName,
-            startupName,
-            reason,
-          );
-          if (!emailResult.success) {
-            console.warn("Rejection email not sent to founder:", emailResult.error);
-          }
-        } else {
-          console.warn("Application has no founder email; rejection email skipped.");
-        }
-      }
-
-      // Approval email intentionally disabled.
-      // if (status === "approved") {
-      //   const { data: appRow } = await supabaseServer
-      //     .from("new_application")
-      //     .select("email, your_name, team_name")
-      //     .eq("id", id)
-      //     .single();
-      //
-      //   const founderEmail = appRow?.email?.trim();
-      //   if (founderEmail) {
-      //     const founderName = appRow?.your_name || "Founder";
-      //     const startupName = appRow?.team_name || "";
-      //     const emailResult = await sendApprovalEmail(
-      //       founderEmail,
-      //       founderName,
-      //       startupName,
-      //     );
-      //     if (!emailResult.success) {
-      //       console.warn("Approval email not sent to founder:", emailResult.error);
-      //     }
-      //   } else {
-      //     console.warn("Application has no founder email; approval email skipped.");
-      //   }
-      // }
     }
 
     const { application } = await buildApplicationResponse(id);
