@@ -6,6 +6,57 @@
 
 type TeamMemberRow = Record<string, unknown>;
 
+function trimTrailingSlash(input: string): string {
+  return input.replace(/\/+$/, "");
+}
+
+function resolveNirmaanSyncUrl(): { url: string | null; error?: string } {
+  const rawBase =
+    process.env.APP_Y_API_URL?.trim() ||
+    process.env.NIRMAAN_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_APP_Y_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_NIRMAAN_API_URL?.trim() ||
+    "";
+
+  if (!rawBase) {
+    return {
+      url: null,
+      error:
+        "Missing Nirmaan API base URL. Set APP_Y_API_URL (or NIRMAAN_API_URL).",
+    };
+  }
+
+  const normalized = trimTrailingSlash(rawBase);
+  // Support all common styles:
+  // - https://host
+  // - https://host/api/v1
+  // - https://host/api/v1/sync/startup
+  // - https://host/sync/startup
+  let url: string;
+  if (/\/api\/v1\/sync\/startup$/i.test(normalized)) {
+    url = normalized;
+  } else if (/\/sync\/startup$/i.test(normalized)) {
+    url = normalized;
+  } else if (/\/api\/v1$/i.test(normalized)) {
+    url = `${normalized}/sync/startup`;
+  } else {
+    url = `${normalized}/api/v1/sync/startup`;
+  }
+
+  try {
+    // Validate URL early so production misconfig is surfaced clearly.
+    // eslint-disable-next-line no-new
+    new URL(url);
+  } catch {
+    return {
+      url: null,
+      error: `Invalid Nirmaan API URL: ${rawBase}`,
+    };
+  }
+
+  return { url };
+}
+
 function strField(v: unknown): string {
   if (typeof v === "string") return v.trim();
   if (v == null) return "";
@@ -177,11 +228,11 @@ export function buildNirmaanStartupPayloadFromApplication(
 export async function syncApprovedApplicationToNirmaan(
   application: Record<string, unknown>,
 ): Promise<{ success: boolean; error?: string }> {
-  const appYBaseUrl = process.env.APP_Y_API_URL?.trim();
-  if (!appYBaseUrl) {
+  const { url: syncUrl, error: syncUrlError } = resolveNirmaanSyncUrl();
+  if (!syncUrl) {
     return {
       success: false,
-      error: "APP_Y_API_URL is not configured",
+      error: syncUrlError,
     };
   }
 
@@ -192,20 +243,29 @@ export async function syncApprovedApplicationToNirmaan(
 
   const payload = buildNirmaanStartupPayloadFromApplication(application);
   const secret = process.env.APP_Y_API_SECRET?.trim();
-  const response = await fetch(`${appYBaseUrl}/api/v1/sync/startup`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(secret
-        ? {
-            "x-api-key": secret,
-            "x-app-secret": secret,
-            Authorization: `Bearer ${secret}`,
-          }
-        : {}),
-    },
-    body: JSON.stringify(payload),
-  });
+  let response: Response;
+  try {
+    response = await fetch(syncUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(secret
+          ? {
+              "x-api-key": secret,
+              "x-app-secret": secret,
+              Authorization: `Bearer ${secret}`,
+            }
+          : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return {
+      success: false,
+      error: `Failed to reach Nirmaan API (${syncUrl}): ${err.message}`,
+    };
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
