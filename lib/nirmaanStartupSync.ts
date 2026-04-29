@@ -18,6 +18,8 @@ function resolveNirmaanSyncUrl(): { url: string | null; error?: string } {
     process.env.NEXT_PUBLIC_NIRMAAN_API_URL?.trim() ||
     "";
 
+    console.log(rawBase)
+
   if (!rawBase) {
     return {
       url: null,
