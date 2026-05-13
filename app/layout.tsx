@@ -12,11 +12,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const nirmaanLogo = encodeURI("/nirmaan logo.png");
+
 export const metadata: Metadata = {
   title: "Nirmaan LaunchPad | IITM Pre-Incubation Center",
   description:
     "IITM Nirmaan - A platform for managing startup applications to our pre-incubation program. Get access to mentorship, funding, and resources to build your startup.",
   keywords: "IITM, Nirmaan, Pre-Incubation, Startup, Incubation, Funding, Mentorship",
+  icons: {
+    icon: [{ url: nirmaanLogo, type: "image/png" }],
+    apple: [{ url: nirmaanLogo, type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
@@ -26,9 +32,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/nirmaan logo.png" type="image/png" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
