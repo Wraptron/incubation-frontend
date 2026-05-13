@@ -177,7 +177,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
         {isMinimized ? (
           <div className="flex items-center justify-center">
             <img
-              src="/nirmaan logo.png"
+              src={encodeURI("/nirmaan logo.png")}
               alt="Nirmaan logo"
               className="w-12 h-12 rounded-lg object-contain"
             />
@@ -185,7 +185,7 @@ export default function Sidebar({ userRole }: SidebarProps) {
         ) : (
           <div className="flex items-center gap-3">
             <img
-              src="/nirmaan logo.png"
+              src={encodeURI("/nirmaan logo.png")}
               alt="Nirmaan logo"
               className="w-12 h-12 rounded-lg shadow-md object-contain"
             />

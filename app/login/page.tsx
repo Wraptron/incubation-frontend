@@ -101,7 +101,7 @@ export default function LoginPage() {
               className="h-20 w-auto object-contain"
             />
             <img
-              src="/nirmaan logo.png"
+              src={encodeURI("/nirmaan logo.png")}
               alt="Nirmaan logo"
               className="w-24 h-24 rounded-2xl shadow-lg object-contain"
             />

@@ -56,7 +56,7 @@ export default function Home() {
               className="h-12 sm:h-14 w-auto object-contain"
             />
              <Image
-            src="/nirmaan logo.png"
+            src={encodeURI("/nirmaan logo.png")}
             alt="Nirmaan"
             width={90}
             height={90}
