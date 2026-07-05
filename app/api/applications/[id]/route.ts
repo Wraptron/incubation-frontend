@@ -591,30 +591,30 @@ export async function PUT(
         }
       }
 
-      // Approval email intentionally disabled.
-      // if (status === "approved") {
-      //   const { data: appRow } = await supabaseServer
-      //     .from("new_application")
-      //     .select("email, your_name, team_name")
-      //     .eq("id", id)
-      //     .single();
-      //
-      //   const founderEmail = appRow?.email?.trim();
-      //   if (founderEmail) {
-      //     const founderName = appRow?.your_name || "Founder";
-      //     const startupName = appRow?.team_name || "";
-      //     const emailResult = await sendApprovalEmail(
-      //       founderEmail,
-      //       founderName,
-      //       startupName,
-      //     );
-      //     if (!emailResult.success) {
-      //       console.warn("Approval email not sent to founder:", emailResult.error);
-      //     }
-      //   } else {
-      //     console.warn("Application has no founder email; approval email skipped.");
-      //   }
-      // }
+      // When manager approves, send email to team founder
+      if (status === "approved") {
+        const { data: appRow } = await supabaseServer
+          .from("new_application")
+          .select("email, your_name, team_name")
+          .eq("id", id)
+          .single();
+
+        const founderEmail = appRow?.email?.trim();
+        if (founderEmail) {
+          const founderName = appRow?.your_name || "Founder";
+          const startupName = appRow?.team_name || "";
+          const emailResult = await sendApprovalEmail(
+            founderEmail,
+            founderName,
+            startupName,
+          );
+          if (!emailResult.success) {
+            console.warn("Approval email not sent to founder:", emailResult.error);
+          }
+        } else {
+          console.warn("Application has no founder email; approval email skipped.");
+        }
+      }
 
     }
 
