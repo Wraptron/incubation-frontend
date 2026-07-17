@@ -11,6 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { ProgramFormField } from "@/lib/program-forms/types";
 import { groupBySection, widthClass } from "@/lib/program-forms/utils";
 import { cn } from "@/lib/utils";
@@ -168,9 +174,9 @@ export function FieldControl({
     case "image":
     case "file":
       return (
-        <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500">
+        <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
           {readOnly && str ? (
-            <span className="text-zinc-700">{str}</span>
+            <span className="text-zinc-700 dark:text-zinc-200">{str}</span>
           ) : (
             <>
               {field.field_type === "image" ? "Image upload" : "File upload"}{" "}
@@ -233,42 +239,46 @@ export function FormRenderer({
   }
 
   return (
-    <div className={cn("space-y-8", className)}>
+    <div className={cn("space-y-6", className)}>
       {sections.map(({ section, items }) => {
         const visible = items.filter((f) => isVisible(f, answers));
         if (visible.length === 0) return null;
         return (
-          <section key={section}>
-            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-              {section}
-            </h3>
-            <div className="grid grid-cols-12 gap-x-4 gap-y-5">
-              {visible.map((field) => (
-                <div
-                  key={field.id}
-                  className={cn(widthClass(field.width), "space-y-1.5")}
-                >
-                  <Label>
-                    {field.label}
-                    {field.required && <span className="text-red-500"> *</span>}
-                  </Label>
-                  {field.help_text && (
-                    <p className="text-xs text-zinc-500">{field.help_text}</p>
-                  )}
-                  <FieldControl
-                    field={field}
-                    value={answers[field.field_key]}
-                    readOnly={readOnly}
-                    onChange={
-                      onChange
-                        ? (v) => onChange(field.field_key, v)
-                        : undefined
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
+          <Card key={section}>
+            <CardHeader>
+              <CardTitle>{section}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-12 gap-x-4 gap-y-4">
+                {visible.map((field) => (
+                  <div
+                    key={field.id}
+                    className={cn(widthClass(field.width), "space-y-2")}
+                  >
+                    <Label>
+                      {field.label}
+                      {field.required && (
+                        <span className="text-red-500"> *</span>
+                      )}
+                    </Label>
+                    {field.help_text && (
+                      <p className="text-sm text-zinc-500">{field.help_text}</p>
+                    )}
+                    <FieldControl
+                      field={field}
+                      value={answers[field.field_key]}
+                      readOnly={readOnly}
+                      onChange={
+                        onChange
+                          ? (v) => onChange(field.field_key, v)
+                          : undefined
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

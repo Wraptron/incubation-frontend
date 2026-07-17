@@ -78,15 +78,6 @@ export default function ProgramsListPage() {
     }
   };
 
-  const handleArchive = async (id: string) => {
-    try {
-      const updated = await api.archiveForm(id);
-      setForms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Failed to archive");
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -126,7 +117,6 @@ export default function ProgramsListPage() {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Version</TableHead>
                 <TableHead>Responses</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead className="w-12" />
@@ -135,13 +125,13 @@ export default function ProgramsListPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-zinc-500">
+                  <TableCell colSpan={5} className="py-10 text-center text-zinc-500">
                     Loading forms…
                   </TableCell>
                 </TableRow>
               ) : forms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-zinc-500">
+                  <TableCell colSpan={5} className="py-10 text-center text-zinc-500">
                     No program forms yet. Create one to get started.
                   </TableCell>
                 </TableRow>
@@ -164,7 +154,6 @@ export default function ProgramsListPage() {
                         {form.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>v{form.version}</TableCell>
                     <TableCell>{form.response_count}</TableCell>
                     <TableCell className="text-zinc-500">
                       {formatDateTime(form.updated_at)}
@@ -195,12 +184,6 @@ export default function ProgramsListPage() {
                           >
                             Duplicate
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={form.status === "archived"}
-                            onClick={() => void handleArchive(form.id)}
-                          >
-                            Archive
-                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() =>
@@ -210,19 +193,6 @@ export default function ProgramsListPage() {
                             }
                           >
                             View applications
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!form.public_slug}
-                            onClick={() => {
-                              if (form.public_slug) {
-                                window.open(
-                                  `/apply/program/${form.public_slug}`,
-                                  "_blank"
-                                );
-                              }
-                            }}
-                          >
-                            Open public link
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

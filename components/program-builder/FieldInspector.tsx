@@ -4,53 +4,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { ProgramEvaluationCriteria } from "@/lib/program-forms/types";
+import type { ProgramFormField } from "@/lib/program-forms/types";
 import { slugify } from "@/lib/program-forms/utils";
 
-export function CriteriaInspector({
-  criterion,
+export function FieldInspector({
+  field,
   readOnly,
   onChange,
 }: {
-  criterion: ProgramEvaluationCriteria;
+  field: ProgramFormField;
   readOnly?: boolean;
-  onChange: (id: string, data: Partial<ProgramEvaluationCriteria>) => void;
+  onChange: (id: string, data: Partial<ProgramFormField>) => void;
 }) {
-  const patch = (data: Partial<ProgramEvaluationCriteria>) =>
-    onChange(criterion.id, data);
+  const patch = (data: Partial<ProgramFormField>) => onChange(field.id, data);
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="space-y-5">
         <div>
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            Question settings
+            Field settings
           </h3>
           <p className="mt-1 text-xs text-zinc-500">
-            Reviewers enter a score from 0 to 10 (decimals allowed).
+            Edit how this question appears to applicants.
           </p>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="crit-label">Question</Label>
+          <Label htmlFor="field-label">Label</Label>
           <Input
-            id="crit-label"
-            value={criterion.label}
+            id="field-label"
+            value={field.label}
             disabled={readOnly}
             onChange={(e) => {
               const label = e.target.value;
-              const data: Partial<ProgramEvaluationCriteria> = { label };
-              if (!criterion.key_locked) {
-                data.criteria_key = slugify(label) || criterion.criteria_key;
+              const data: Partial<ProgramFormField> = { label };
+              if (!field.key_locked) {
+                data.field_key = slugify(label) || field.field_key;
               }
               patch(data);
             }}
             onBlur={() => {
-              if (!criterion.key_locked && criterion.label) {
+              if (!field.key_locked && field.label) {
                 patch({
                   key_locked: true,
-                  criteria_key:
-                    slugify(criterion.label) || criterion.criteria_key,
+                  field_key: slugify(field.label) || field.field_key,
                 });
               }
             }}
@@ -58,22 +56,22 @@ export function CriteriaInspector({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="crit-desc">Description</Label>
+          <Label htmlFor="field-help">Help text</Label>
           <Textarea
-            id="crit-desc"
-            value={criterion.description ?? ""}
+            id="field-help"
+            value={field.help_text ?? ""}
             disabled={readOnly}
             rows={2}
-            placeholder="Helper text shown to the reviewer"
-            onChange={(e) => patch({ description: e.target.value || null })}
+            placeholder="Helper text shown under the label"
+            onChange={(e) => patch({ help_text: e.target.value || null })}
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="crit-required">Required</Label>
+          <Label htmlFor="field-required">Required</Label>
           <Switch
-            id="crit-required"
-            checked={criterion.required}
+            id="field-required"
+            checked={field.required}
             disabled={readOnly}
             onCheckedChange={(checked) => patch({ required: checked })}
           />

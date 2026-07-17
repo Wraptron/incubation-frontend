@@ -94,12 +94,12 @@ export function formatAnswer(
 export function statusBadgeClass(status: string): string {
   switch (status) {
     case "draft":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200";
     case "published":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-200";
     case "archived":
-      return "border-zinc-200 bg-zinc-100 text-zinc-600";
+      return "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200";
     default:
-      return "border-zinc-200 bg-zinc-50 text-zinc-700";
+      return "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200";
   }
 }

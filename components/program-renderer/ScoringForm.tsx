@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
-import { Star } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import type {
   EvaluationScore,
   ProgramEvaluationCriteria,
 } from "@/lib/program-forms/types";
 import { groupBySection } from "@/lib/program-forms/utils";
 import { cn } from "@/lib/utils";
+
+const RANK_MIN = 0;
+const RANK_MAX = 10;
 
 interface ScoringFormProps {
   criteria: ProgramEvaluationCriteria[];
@@ -46,49 +47,113 @@ function setScore(
   return [...others, next];
 }
 
-function RatingInput({
-  min,
-  max,
+function clampRank(n: number): number {
+  return Math.min(RANK_MAX, Math.max(RANK_MIN, n));
+}
+
+function RankInput({
   value,
   disabled,
   onChange,
 }: {
-  min: number;
-  max: number;
   value: number | null;
   disabled?: boolean;
-  onChange: (v: number) => void;
+  onChange: (v: number | null) => void;
 }) {
-  const count = Math.max(1, max - min + 1);
+  const [draft, setDraft] = useState(
+    value === null || value === undefined ? "" : String(value)
+  );
+
+  useEffect(() => {
+    setDraft(value === null || value === undefined ? "" : String(value));
+  }, [value]);
+
+  const commit = (raw: string) => {
+    const trimmed = raw.trim();
+    if (trimmed === "" || trimmed === "." || trimmed === "-") {
+      setDraft("");
+      onChange(null);
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed)) {
+      setDraft(value === null || value === undefined ? "" : String(value));
+      return;
+    }
+    const clamped = clampRank(parsed);
+    setDraft(String(clamped));
+    onChange(clamped);
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      {Array.from({ length: count }, (_, i) => {
-        const n = min + i;
-        const active = value !== null && value >= n;
-        return (
-          <button
-            key={n}
-            type="button"
-            disabled={disabled}
-            aria-label={`Rate ${n}`}
-            onClick={() => onChange(n)}
-            className="disabled:opacity-50"
-          >
-            <Star
-              className={cn(
-                "h-6 w-6 transition-colors",
-                active
-                  ? "fill-amber-400 text-amber-400"
-                  : "text-zinc-300 hover:text-amber-300"
-              )}
-            />
-          </button>
-        );
-      })}
-      {value !== null && (
-        <span className="ml-2 text-sm text-zinc-600">
-          {value} / {max}
-        </span>
+    <div className="flex max-w-xs items-center gap-2">
+      <Input
+        type="number"
+        inputMode="decimal"
+        min={RANK_MIN}
+        max={RANK_MAX}
+        step="any"
+        disabled={disabled}
+        value={draft}
+        placeholder="0 – 10"
+        className="h-9 w-28"
+        onChange={(e) => {
+          const next = e.target.value;
+          setDraft(next);
+          if (next.trim() === "") {
+            onChange(null);
+            return;
+          }
+          const parsed = Number(next);
+          if (Number.isFinite(parsed) && parsed >= RANK_MIN && parsed <= RANK_MAX) {
+            onChange(parsed);
+          }
+        }}
+        onBlur={() => commit(draft)}
+      />
+      <span className="text-sm text-zinc-500">/ {RANK_MAX}</span>
+    </div>
+  );
+}
+
+export function CriteriaControl({
+  value,
+  comment,
+  readOnly,
+  onChange,
+  onCommentChange,
+  showComment = true,
+}: {
+  criterion?: ProgramEvaluationCriteria;
+  value?: number | string | boolean | null;
+  comment?: string;
+  readOnly?: boolean;
+  onChange?: (value: number | string | boolean | null) => void;
+  onCommentChange?: (comment: string) => void;
+  showComment?: boolean;
+}) {
+  const disabled = readOnly || !onChange;
+  const numValue = typeof value === "number" ? value : null;
+
+  return (
+    <div className="space-y-3">
+      <RankInput
+        value={numValue}
+        disabled={disabled}
+        onChange={(v) => onChange?.(v)}
+      />
+
+      {showComment && (
+        <div className="space-y-1.5">
+          <Label className="text-xs text-zinc-500">Comment (optional)</Label>
+          <Textarea
+            rows={2}
+            value={comment ?? ""}
+            disabled={readOnly || !onCommentChange}
+            placeholder="Optional notes…"
+            onChange={(e) => onCommentChange?.(e.target.value)}
+          />
+        </div>
       )}
     </div>
   );
@@ -103,7 +168,6 @@ export function ScoringForm({
   className,
 }: ScoringFormProps) {
   const sections = useMemo(() => groupBySection(criteria), [criteria]);
-  const disabled = readOnly || !onChange;
 
   const update = (criteriaId: string, patch: Partial<EvaluationScore>) => {
     if (!onChange) return;
@@ -117,7 +181,7 @@ export function ScoringForm({
   if (criteria.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-zinc-500">
-        No evaluation criteria defined.
+        No evaluation questions defined.
       </p>
     );
   }
@@ -132,108 +196,46 @@ export function ScoringForm({
           <div className="space-y-6">
             {items.map((crit) => {
               const score = getScore(scores, crit.id);
-              const numValue =
-                typeof score.value === "number" ? score.value : null;
 
               return (
                 <div
                   key={crit.id}
-                  className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4"
+                  className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
                   onBlur={blurSave}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <Label className="text-base">
-                        {crit.label}
-                        {crit.required && (
-                          <span className="text-red-500"> *</span>
-                        )}
-                      </Label>
-                      {crit.description && (
-                        <p className="mt-0.5 text-sm text-zinc-500">
-                          {crit.description}
-                        </p>
+                  <div>
+                    <Label className="text-base">
+                      {crit.label}
+                      {crit.required && (
+                        <span className="text-red-500"> *</span>
                       )}
-                    </div>
-                    {crit.weight > 0 && (
-                      <span className="shrink-0 text-xs text-zinc-400">
-                        weight {crit.weight}
-                      </span>
+                    </Label>
+                    {crit.description && (
+                      <p className="mt-0.5 text-sm text-zinc-500">
+                        {crit.description}
+                      </p>
                     )}
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Enter a score from 0 to 10 (decimals allowed)
+                    </p>
                   </div>
 
-                  {crit.criteria_type === "rating_scale" && (
-                    <RatingInput
-                      min={crit.scale_min ?? 1}
-                      max={crit.scale_max ?? 5}
-                      value={numValue}
-                      disabled={disabled}
-                      onChange={(v) => update(crit.id, { value: v })}
-                    />
-                  )}
-
-                  {crit.criteria_type === "number" && (
-                    <Input
-                      type="number"
-                      value={numValue ?? ""}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        update(crit.id, {
-                          value:
-                            e.target.value === ""
-                              ? null
-                              : Number(e.target.value),
-                        })
-                      }
-                    />
-                  )}
-
-                  {crit.criteria_type === "text" && (
-                    <Textarea
-                      rows={3}
-                      value={typeof score.value === "string" ? score.value : ""}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        update(crit.id, { value: e.target.value })
-                      }
-                    />
-                  )}
-
-                  {crit.criteria_type === "yes_no" && (
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        checked={score.value === true}
-                        disabled={disabled}
-                        onCheckedChange={(checked) =>
-                          update(crit.id, { value: checked })
-                        }
-                      />
-                      <span className="text-sm text-zinc-600">
-                        {score.value === true
-                          ? "Yes"
-                          : score.value === false
-                            ? "No"
-                            : "Not set"}
-                      </span>
-                    </div>
-                  )}
-
-                  {crit.criteria_type !== "text" && (
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-zinc-500">
-                        Comment (optional)
-                      </Label>
-                      <Textarea
-                        rows={2}
-                        value={score.comment ?? ""}
-                        disabled={disabled}
-                        placeholder="Optional notes…"
-                        onChange={(e) =>
-                          update(crit.id, { comment: e.target.value })
-                        }
-                      />
-                    </div>
-                  )}
+                  <CriteriaControl
+                    criterion={crit}
+                    value={score.value}
+                    comment={score.comment}
+                    readOnly={readOnly || !onChange}
+                    onChange={
+                      onChange
+                        ? (value) => update(crit.id, { value })
+                        : undefined
+                    }
+                    onCommentChange={
+                      onChange
+                        ? (comment) => update(crit.id, { comment })
+                        : undefined
+                    }
+                  />
                 </div>
               );
             })}

@@ -3,18 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Eye, FileText, Loader2 } from "lucide-react";
+import { Eye, FileText, Loader2, X } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +20,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AddFieldDialog } from "@/components/program-builder/AddFieldDialog";
+import { AddCriteriaDialog } from "@/components/program-builder/AddCriteriaDialog";
 import { FieldCanvas } from "@/components/program-builder/FieldCanvas";
-import { CriteriaList } from "@/components/program-builder/CriteriaList";
+import { FieldInspector } from "@/components/program-builder/FieldInspector";
+import { CriteriaCanvas } from "@/components/program-builder/CriteriaCanvas";
 import { CriteriaInspector } from "@/components/program-builder/CriteriaInspector";
 import { FormRenderer } from "@/components/program-renderer/FormRenderer";
 import { ScoringForm } from "@/components/program-renderer/ScoringForm";
@@ -37,6 +33,7 @@ import type {
   FieldType,
   FieldWidth,
   ProgramEvaluationCriteria,
+  ProgramFormField,
 } from "@/lib/program-forms/types";
 
 export default function ProgramBuilderPage() {
@@ -64,7 +61,11 @@ export default function ProgramBuilderPage() {
   );
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTab, setPreviewTab] = useState<"fields" | "criteria">("fields");
+  const [previewAnswers, setPreviewAnswers] = useState<Record<string, unknown>>(
+    {}
+  );
   const [addFieldOpen, setAddFieldOpen] = useState(false);
+  const [addCriteriaOpen, setAddCriteriaOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -72,10 +73,24 @@ export default function ProgramBuilderPage() {
 
   const readOnly = form?.status !== "draft";
 
+  const selectedField = useMemo(
+    () => form?.fields.find((f) => f.id === selectedFieldId) ?? null,
+    [form, selectedFieldId]
+  );
+
   const selectedCriterion = useMemo(
     () => form?.criteria.find((c) => c.id === selectedCriteriaId) ?? null,
     [form, selectedCriteriaId]
   );
+
+  const handleFieldChange = (
+    id: string,
+    data: Partial<ProgramFormField>
+  ) => {
+    void saveField(id, data).catch((err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Save failed");
+    });
+  };
 
   const handleCriteriaChange = (
     id: string,
@@ -89,33 +104,34 @@ export default function ProgramBuilderPage() {
   const handleAddField = async (data: {
     field_type: FieldType;
     label: string;
+    required?: boolean;
     options?: { label: string; value: string }[];
   }) => {
     const created = await addField({
       section: "General",
       label: data.label,
       field_type: data.field_type,
+      required: data.required ?? true,
       ...(data.options ? { options: data.options } : {}),
     });
     if (created) setSelectedFieldId(created.id);
   };
 
-  const handleAddCriteria = async () => {
-    try {
-      const created = await addCriteria({
-        section: "General",
-        label: "New Criterion",
-        criteria_type: "rating_scale",
-        scale_min: 1,
-        scale_max: 5,
-        weight: 1,
-      });
-      if (created) setSelectedCriteriaId(created.id);
-    } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : "Failed to add criterion"
-      );
-    }
+  const handleAddCriteria = async (data: {
+    label: string;
+    description?: string;
+  }) => {
+    const created = await addCriteria({
+      section: "General",
+      label: data.label,
+      description: data.description ?? null,
+      criteria_type: "rating_scale",
+      scale_min: 0,
+      scale_max: 10,
+      weight: 1,
+      required: true,
+    });
+    if (created) setSelectedCriteriaId(created.id);
   };
 
   const handlePublish = async () => {
@@ -164,7 +180,7 @@ export default function ProgramBuilderPage() {
               <Input
                 value={titleDraft ?? form.title}
                 disabled={readOnly}
-                className="h-9 max-w-md border-transparent bg-transparent text-lg font-semibold shadow-none focus-visible:border-zinc-200 focus-visible:bg-white"
+                className="h-9 max-w-md border-transparent bg-transparent text-lg font-semibold text-zinc-900 shadow-none focus-visible:border-zinc-200 focus-visible:bg-white dark:text-zinc-50 dark:focus-visible:border-zinc-700 dark:focus-visible:bg-zinc-950"
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onBlur={() => {
                   if (titleDraft !== null && titleDraft !== form.title) {
@@ -181,7 +197,6 @@ export default function ProgramBuilderPage() {
               <Badge variant="outline" className={statusBadgeClass(form.status)}>
                 {form.status}
               </Badge>
-              <span className="text-sm text-zinc-400">v{form.version}</span>
             </div>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -243,7 +258,7 @@ export default function ProgramBuilderPage() {
                 value="criteria"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
-                Evaluation Criteria
+                Evaluation Questions
               </TabsTrigger>
             </TabsList>
           </div>
@@ -252,7 +267,7 @@ export default function ProgramBuilderPage() {
             value="fields"
             className="mt-0 min-h-0 flex-1 overflow-y-auto bg-white data-[state=inactive]:hidden dark:bg-zinc-950"
           >
-            <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
+            <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6">
               <FieldCanvas
                 fields={form.fields}
                 selectedId={selectedFieldId}
@@ -272,32 +287,40 @@ export default function ProgramBuilderPage() {
                   if (selectedFieldId === id) setSelectedFieldId(null);
                 }}
               />
+              {selectedField && (
+                <FieldInspector
+                  field={selectedField}
+                  readOnly={readOnly}
+                  onChange={handleFieldChange}
+                />
+              )}
             </div>
           </TabsContent>
 
           <TabsContent
             value="criteria"
-            className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
+            className="mt-0 min-h-0 flex-1 overflow-y-auto bg-white data-[state=inactive]:hidden dark:bg-zinc-950"
           >
-            <div className="grid h-full min-h-[480px] grid-cols-1 lg:grid-cols-[30%_1fr]">
-              <CriteriaList
+            <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6">
+              <CriteriaCanvas
                 criteria={form.criteria}
                 selectedId={selectedCriteriaId}
                 readOnly={readOnly}
                 onSelect={setSelectedCriteriaId}
                 onReorder={(ids) => void reorderCriteria(ids)}
-                onAddCriteria={() => void handleAddCriteria()}
+                onAddCriteria={() => setAddCriteriaOpen(true)}
                 onDeleteCriteria={(id) => {
                   void removeCriteria(id);
                   if (selectedCriteriaId === id) setSelectedCriteriaId(null);
                 }}
               />
-              <CriteriaInspector
-                criterion={selectedCriterion}
-                readOnly={readOnly}
-                onChange={handleCriteriaChange}
-                onAddCriteria={() => void handleAddCriteria()}
-              />
+              {selectedCriterion && (
+                <CriteriaInspector
+                  criterion={selectedCriterion}
+                  readOnly={readOnly}
+                  onChange={handleCriteriaChange}
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -309,36 +332,82 @@ export default function ProgramBuilderPage() {
         onSubmit={handleAddField}
       />
 
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Preview — {form.title}</DialogTitle>
-          </DialogHeader>
-          <div className="mb-3 flex gap-2">
+      <AddCriteriaDialog
+        open={addCriteriaOpen}
+        onOpenChange={setAddCriteriaOpen}
+        onSubmit={handleAddCriteria}
+      />
+
+      {previewOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-white to-zinc-50 dark:from-black dark:to-zinc-900">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={previewTab === "fields" ? "default" : "outline"}
+                onClick={() => setPreviewTab("fields")}
+              >
+                Applicant Form
+              </Button>
+              <Button
+                size="sm"
+                variant={previewTab === "criteria" ? "default" : "outline"}
+                onClick={() => setPreviewTab("criteria")}
+              >
+                Ranking Form
+              </Button>
+            </div>
             <Button
               size="sm"
-              variant={previewTab === "fields" ? "default" : "outline"}
-              onClick={() => setPreviewTab("fields")}
+              variant="outline"
+              onClick={() => {
+                setPreviewOpen(false);
+                setPreviewAnswers({});
+              }}
             >
-              Applicant Form
-            </Button>
-            <Button
-              size="sm"
-              variant={previewTab === "criteria" ? "default" : "outline"}
-              onClick={() => setPreviewTab("criteria")}
-            >
-              Scoring Form
+              <X className="mr-1 h-4 w-4" />
+              Close preview
             </Button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-zinc-100 bg-zinc-50 p-4">
+
+          <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+            <div className="mb-8 text-center">
+              <div className="mb-6 flex w-full items-center justify-between">
+                <img
+                  src="/iitm-sie-logo.png"
+                  alt="School of Innovation & Entrepreneurship IIT Madras"
+                  className="h-16 w-auto object-contain sm:h-20"
+                />
+                <img
+                  src="/nirmaan logo.png"
+                  alt="Nirmaan logo"
+                  className="h-16 w-16 rounded-2xl shadow-lg sm:h-20 sm:w-20"
+                />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-black sm:text-3xl dark:text-zinc-50">
+                {form.title}
+              </h1>
+              <p className="mt-2 text-base text-zinc-600 dark:text-zinc-400">
+                {previewTab === "fields"
+                  ? "This is how applicants will see and fill your form."
+                  : "This is how reviewers will score applications."}
+              </p>
+            </div>
+
             {previewTab === "fields" ? (
-              <FormRenderer fields={form.fields} readOnly />
+              <FormRenderer
+                fields={form.fields}
+                answers={previewAnswers}
+                onChange={(key, value) =>
+                  setPreviewAnswers((prev) => ({ ...prev, [key]: value }))
+                }
+              />
             ) : (
               <ScoringForm criteria={form.criteria} scores={[]} readOnly />
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
       <AlertDialog open={publishOpen} onOpenChange={setPublishOpen}>
         <AlertDialogContent>

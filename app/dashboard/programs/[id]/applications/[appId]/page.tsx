@@ -51,9 +51,7 @@ export default function ProgramApplicationDetailPage() {
     }
     return {
       avg: application.avg_score,
-      perCriterion: criteria
-        .filter((c) => c.criteria_type !== "text")
-        .map((c) => ({ label: c.label, weight: c.weight })),
+      perCriterion: criteria.map((c) => ({ label: c.label, weight: c.weight })),
     };
   }, [application]);
 

@@ -94,45 +94,45 @@ let mockForms: ProgramForm[] = [
         id: "crit_1",
         form_id: "form_demo_1",
         criteria_key: "problem_clarity",
-        label: "Problem Clarity",
-        description: "How clearly is the problem articulated?",
+        label: "How clear is the problem statement?",
+        description: "Rank how clearly the problem is articulated.",
         criteria_type: "rating_scale",
-        scale_min: 1,
-        scale_max: 5,
+        scale_min: 0,
+        scale_max: 10,
         weight: 1,
         required: true,
         sort_order: 0,
-        section: "Product",
+        section: "General",
         key_locked: true,
       },
       {
         id: "crit_2",
         form_id: "form_demo_1",
         criteria_key: "market_size",
-        label: "Market Size",
-        description: "Is the market large enough?",
+        label: "How strong is the market opportunity?",
+        description: "Rank market size and potential.",
         criteria_type: "rating_scale",
-        scale_min: 1,
-        scale_max: 5,
-        weight: 1.5,
+        scale_min: 0,
+        scale_max: 10,
+        weight: 1,
         required: true,
         sort_order: 1,
-        section: "Product",
+        section: "General",
         key_locked: true,
       },
       {
         id: "crit_3",
         form_id: "form_demo_1",
-        criteria_key: "notes",
-        label: "Additional Notes",
-        description: "Anything else to capture",
-        criteria_type: "text",
-        scale_min: null,
-        scale_max: null,
-        weight: 0,
-        required: false,
+        criteria_key: "team_strength",
+        label: "How strong is the founding team?",
+        description: "Rank team capability and fit.",
+        criteria_type: "rating_scale",
+        scale_min: 0,
+        scale_max: 10,
+        weight: 1,
+        required: true,
         sort_order: 2,
-        section: "Overall",
+        section: "General",
         key_locked: true,
       },
     ],
@@ -370,12 +370,12 @@ export async function addCriteria(
     id: generateId("crit"),
     form_id: formId,
     criteria_key: criteria.criteria_key || `criteria_${form.criteria.length + 1}`,
-    label: criteria.label || "New Criterion",
+    label: criteria.label || "New Question",
     description: criteria.description ?? null,
-    criteria_type: criteria.criteria_type || "rating_scale",
-    scale_min: criteria.scale_min ?? 1,
-    scale_max: criteria.scale_max ?? 5,
-    weight: criteria.weight ?? 1,
+    criteria_type: "rating_scale",
+    scale_min: 0,
+    scale_max: 10,
+    weight: 1,
     required: criteria.required ?? true,
     sort_order: criteria.sort_order ?? form.criteria.length,
     section: criteria.section || "General",
@@ -399,6 +399,10 @@ export async function updateCriteria(
   form.criteria[idx] = {
     ...form.criteria[idx],
     ...data,
+    criteria_type: "rating_scale",
+    scale_min: 0,
+    scale_max: 10,
+    weight: 1,
     id: criteriaId,
     form_id: formId,
   };
@@ -543,24 +547,18 @@ export async function submitEvaluation(
   if (app) {
     const form = mockForms.find((f) => f.id === app.form_id);
     if (form) {
-      let weighted = 0;
-      let totalWeight = 0;
+      let total = 0;
+      let count = 0;
       for (const s of stored.scores) {
         const crit = form.criteria.find((c) => c.id === s.criteria_id);
-        if (!crit || crit.criteria_type === "text") continue;
-        const num =
-          typeof s.value === "number"
-            ? s.value
-            : typeof s.value === "boolean"
-              ? s.value
-                ? 1
-                : 0
-              : Number(s.value);
+        if (!crit) continue;
+        const num = typeof s.value === "number" ? s.value : Number(s.value);
         if (!Number.isFinite(num)) continue;
-        weighted += num * crit.weight;
-        totalWeight += crit.weight;
+        total += num;
+        count += 1;
       }
-      app.avg_score = totalWeight > 0 ? Math.round((weighted / totalWeight) * 100) / 100 : null;
+      app.avg_score =
+        count > 0 ? Math.round((total / count) * 100) / 100 : null;
       app.status = "evaluated";
     }
   }

@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,7 @@ interface AddFieldDialogProps {
   onSubmit: (data: {
     field_type: FieldType;
     label: string;
+    required?: boolean;
     options?: FieldOption[];
   }) => Promise<void>;
 }
@@ -59,6 +61,7 @@ export function AddFieldDialog({
   const [step, setStep] = useState<"type" | "name">("type");
   const [fieldType, setFieldType] = useState<FieldType | null>(null);
   const [label, setLabel] = useState("");
+  const [required, setRequired] = useState(true);
   const [optionLabels, setOptionLabels] = useState<string[]>(["", ""]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +71,7 @@ export function AddFieldDialog({
       setStep("type");
       setFieldType(null);
       setLabel("");
+      setRequired(true);
       setOptionLabels(["", ""]);
       setSubmitting(false);
       setError(null);
@@ -125,6 +129,7 @@ export function AddFieldDialog({
       await onSubmit({
         field_type: fieldType,
         label: trimmed,
+        required,
         ...(options ? { options } : {}),
       });
       onOpenChange(false);
@@ -260,6 +265,25 @@ export function AddFieldDialog({
                     void handleCreate();
                   }
                 }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border border-zinc-200/90 bg-zinc-50/70 px-3.5 py-3 dark:border-zinc-800 dark:bg-zinc-900/60">
+              <div>
+                <Label
+                  htmlFor="new-field-required"
+                  className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  Required
+                </Label>
+                <p className="mt-0.5 text-[12px] text-zinc-500 dark:text-zinc-400">
+                  Applicants must fill this before submitting
+                </p>
+              </div>
+              <Switch
+                id="new-field-required"
+                checked={required}
+                onCheckedChange={setRequired}
               />
             </div>
 
