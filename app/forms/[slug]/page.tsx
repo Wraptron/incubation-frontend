@@ -15,6 +15,7 @@ import {
 import { backendUrl } from "@/lib/config";
 import * as api from "@/lib/program-forms/api";
 import type { ProgramFormField } from "@/lib/program-forms/types";
+import { validateFormAnswers } from "@/lib/program-forms/utils";
 
 type PublicForm = {
   id: string;
@@ -99,6 +100,13 @@ export default function PublicProgramFormPage() {
 
   const handleSubmit = async () => {
     if (!form) return;
+
+    const validationError = validateFormAnswers(form.fields, answers);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {

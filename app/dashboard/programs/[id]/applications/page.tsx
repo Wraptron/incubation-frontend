@@ -34,10 +34,8 @@ export default function ProgramApplicationsPage() {
     if (!q) return applications;
 
     return applications.filter((app) => {
-      const { teamName, founderName, email } = applicationTableRow(app);
-      const haystack = [teamName, founderName, email]
-        .join(" ")
-        .toLowerCase();
+      const { name, phone, email } = applicationTableRow(app);
+      const haystack = [name, phone, email].join(" ").toLowerCase();
       return haystack.includes(q);
     });
   }, [applications, searchInput]);
@@ -62,7 +60,7 @@ export default function ProgramApplicationsPage() {
           <div className="flex flex-1 max-w-md">
             <Input
               type="search"
-              placeholder="Search by team name, founder, or email..."
+              placeholder="Search by name, phone, or email..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="h-9"
@@ -92,8 +90,8 @@ export default function ProgramApplicationsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Team Name</TableHead>
-                  <TableHead>Founder</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Phone</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Submitted</TableHead>
@@ -102,8 +100,7 @@ export default function ProgramApplicationsPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((app) => {
-                  const { teamName, founderName, email } =
-                    applicationTableRow(app);
+                  const { name, phone, email } = applicationTableRow(app);
                   const detailHref = `/dashboard/programs/${formId}/applications/${app.id}`;
 
                   return (
@@ -112,8 +109,8 @@ export default function ProgramApplicationsPage() {
                       className="cursor-pointer"
                       onClick={() => router.push(detailHref)}
                     >
-                      <TableCell>{teamName}</TableCell>
-                      <TableCell>{founderName}</TableCell>
+                      <TableCell>{name}</TableCell>
+                      <TableCell>{phone}</TableCell>
                       <TableCell>{email}</TableCell>
                       <TableCell>
                         <Badge

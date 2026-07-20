@@ -2,20 +2,74 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Download, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { FormRenderer } from "@/components/program-renderer/FormRenderer";
 import { ScoringForm } from "@/components/program-renderer/ScoringForm";
 import {
   useProgramApplication,
   useProgramEvaluation,
 } from "@/lib/program-forms/hooks";
-import type { EvaluationScore } from "@/lib/program-forms/types";
+import type { EvaluationScore, ProgramFormField } from "@/lib/program-forms/types";
+import {
+  formatAnswer,
+  groupBySection,
+  isAnswerFileUrl,
+} from "@/lib/program-forms/utils";
+
+function FieldValue({
+  field,
+  value,
+}: {
+  field: ProgramFormField;
+  value: unknown;
+}) {
+  if (isAnswerFileUrl(field, value)) {
+    return (
+      <a
+        href={value}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+      >
+        <Download className="h-3.5 w-3.5" />
+        {field.field_type === "image" ? "View image" : "Download file"}
+      </a>
+    );
+  }
+
+  const formatted = formatAnswer(field, value);
+  const isEmail = field.field_type === "email" && typeof value === "string" && value;
+  const isPhone = field.field_type === "phone" && typeof value === "string" && value;
+
+  if (isEmail) {
+    return (
+      <a
+        href={`mailto:${value}`}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {formatted}
+      </a>
+    );
+  }
+
+  if (isPhone) {
+    return (
+      <a
+        href={`tel:${value}`}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {formatted}
+      </a>
+    );
+  }
+
+  return <span>{formatted}</span>;
+}
 
 export default function ProgramEvaluatePage() {
+  const router = useRouter();
   const params = useParams();
   const formId = String(params.id);
   const appId = String(params.appId);
@@ -35,7 +89,6 @@ export default function ProgramEvaluatePage() {
   } = useProgramEvaluation(appId);
 
   const [scores, setScores] = useState<EvaluationScore[] | null>(null);
-  const [answersOpen, setAnswersOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -43,6 +96,21 @@ export default function ProgramEvaluatePage() {
 
   const activeScores = scores ?? evaluation?.scores ?? [];
   const locked = evaluation?.status === "completed";
+
+  const sections = useMemo(() => {
+    if (!application) return [];
+    return groupBySection(application.field_schema);
+  }, [application]);
+
+  const totalScore = useMemo(() => {
+    const sum = activeScores.reduce((acc, s) => {
+      const num = typeof s.value === "number" ? s.value : Number(s.value);
+      return acc + (Number.isFinite(num) ? num : 0);
+    }, 0);
+    return sum.toFixed(1);
+  }, [activeScores]);
+
+  const maxScore = (application?.criteria_schema.length ?? 0) * 10;
 
   const handleScoresChange = (next: EvaluationScore[]) => {
     setScores(next);
@@ -54,26 +122,10 @@ export default function ProgramEvaluatePage() {
     setErrorMsg(null);
     try {
       await saveScores(next);
-      setMessage("Saved");
-      setTimeout(() => setMessage(null), 1500);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Autosave failed");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (locked) return;
-    setSubmitting(true);
-    setErrorMsg(null);
-    try {
-      await submit(activeScores);
-      setMessage("Evaluation submitted");
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Submit failed");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -85,6 +137,27 @@ export default function ProgramEvaluatePage() {
       return s === undefined || s.value === null || s.value === "";
     });
   }, [application, activeScores]);
+
+  const handleSave = async () => {
+    if (locked) return;
+    if (requiredMissing) {
+      setErrorMsg("Please provide scores for all required criteria (0–10)");
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMsg(null);
+    setMessage(null);
+    try {
+      await submit(activeScores);
+      setMessage("Evaluation saved successfully");
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to save evaluation");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (appLoading || evalLoading) {
     return (
@@ -116,100 +189,136 @@ export default function ProgramEvaluatePage() {
     );
   }
 
+  const displayTitle =
+    application.team_name || application.applicant_name || "Application";
+
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
-          <Link href={`/dashboard/programs/${formId}/applications/${appId}`}>
-            <ArrowLeft className="h-4 w-4" />
-            Back to application
-          </Link>
-        </Button>
-
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-zinc-900">
-              Evaluate — {application.team_name || application.applicant_name}
-            </h2>
-            <div className="mt-2 flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className={
-                  locked
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                    : "border-amber-200 bg-amber-50 text-amber-800"
-                }
-              >
-                {locked ? "completed" : "in progress"}
-              </Badge>
-              {saving && (
-                <span className="text-xs text-zinc-400">Saving…</span>
-              )}
-              {message && (
-                <span className="text-xs text-emerald-600">{message}</span>
-              )}
-            </div>
+      <div className="mx-auto max-w-full px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/dashboard/programs/${formId}/applications/${appId}`
+                )
+              }
+              className="text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
+            >
+              ← Back
+            </button>
+            <h1 className="text-xl font-bold text-black dark:text-zinc-50">
+              Evaluate Application
+            </h1>
           </div>
-          <Button
-            disabled={locked || submitting || requiredMissing}
-            onClick={() => void handleSubmit()}
-          >
-            {submitting
-              ? "Submitting…"
-              : locked
-                ? "Submitted"
-                : "Submit Evaluation"}
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+              Total Score:{" "}
+              <span className="font-bold text-black dark:text-zinc-50">
+                {totalScore}/{maxScore.toFixed(1)}
+              </span>
+            </div>
+            <Button
+              onClick={() => void handleSave()}
+              disabled={locked || submitting || requiredMissing}
+              variant="default"
+            >
+              {submitting
+                ? "Saving..."
+                : locked
+                  ? "Saved"
+                  : "Save Evaluation"}
+            </Button>
+          </div>
         </div>
 
-        {errorMsg && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMsg}
+        {(message || errorMsg || saving) && (
+          <div className="mb-4">
+            <div
+              className={`rounded-lg p-4 ${
+                errorMsg
+                  ? "border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
+                  : "border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  errorMsg
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-green-800 dark:text-green-200"
+                }`}
+              >
+                {errorMsg ||
+                  message ||
+                  (saving ? "Saving..." : null)}
+              </p>
+            </div>
           </div>
         )}
 
         {locked && (
-          <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-            This evaluation is locked. Further edits are disabled.
+          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+            <p className="text-sm text-green-800 dark:text-green-200">
+              This evaluation is locked. Further edits are disabled.
+            </p>
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-          <div>
-            <ScoringForm
-              criteria={application.criteria_schema}
-              scores={activeScores}
-              readOnly={locked}
-              onChange={locked ? undefined : handleScoresChange}
-              onBlurSave={locked ? undefined : (s) => void handleBlurSave(s)}
-            />
-          </div>
+        <div className="py-6">
+          <div className="grid h-[calc(100vh-180px)] grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <h2 className="mb-4 text-2xl font-bold text-black dark:text-zinc-50">
+                {displayTitle}
+              </h2>
 
-          <aside>
-            <div className="sticky top-4 rounded-lg border border-zinc-200 bg-white">
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 border-b border-zinc-100 px-4 py-3 text-left font-semibold text-zinc-900"
-                onClick={() => setAnswersOpen((o) => !o)}
-              >
-                {answersOpen ? (
-                  <ChevronDown className="h-4 w-4" />
+              <div className="space-y-6">
+                {sections.length === 0 ? (
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    No application answers available.
+                  </p>
                 ) : (
-                  <ChevronRight className="h-4 w-4" />
+                  sections.map(({ section, items }) => (
+                    <div key={section}>
+                      <h3 className="mb-3 text-lg font-semibold text-black dark:text-zinc-50">
+                        {section}
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {items.map((field) => (
+                          <div key={field.id}>
+                            <span className="font-medium text-zinc-600 dark:text-zinc-400">
+                              {field.label}:{" "}
+                            </span>
+                            <span className="text-black dark:text-zinc-50">
+                              <FieldValue
+                                field={field}
+                                value={application.answers[field.field_key]}
+                              />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
                 )}
-                Applicant answers
-              </button>
-              {answersOpen && (
-                <div className="max-h-[70vh] overflow-y-auto p-4">
-                  <FormRenderer
-                    fields={application.field_schema}
-                    answers={application.answers}
-                    readOnly
-                  />
-                </div>
-              )}
+              </div>
             </div>
-          </aside>
+
+            <div className="overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <h2 className="mb-4 text-2xl font-bold text-black dark:text-zinc-50">
+                Evaluation Sheet
+              </h2>
+
+              <ScoringForm
+                variant="sheet"
+                criteria={application.criteria_schema}
+                scores={activeScores}
+                readOnly={locked}
+                onChange={locked ? undefined : handleScoresChange}
+                onBlurSave={locked ? undefined : (s) => void handleBlurSave(s)}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>

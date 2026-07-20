@@ -17,6 +17,13 @@ import { generateId, uniqueSlug } from "./utils";
  */
 const USE_MOCK = true;
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 const programFormsUrl = (path: string) =>
   `${backendUrl.replace(/\/$/, "")}/api/program-forms${path}`;
 
@@ -26,122 +33,7 @@ function deepClone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
 }
 
-let mockForms: ProgramForm[] = [
-  {
-    id: "form_demo_1",
-    title: "Demo Program Application",
-    status: "draft",
-    version: 1,
-    response_count: 0,
-    public_slug: null,
-    created_at: now(),
-    updated_at: now(),
-    fields: [
-      {
-        id: "field_1",
-        form_id: "form_demo_1",
-        field_key: "team_name",
-        label: "Team Name",
-        help_text: "Official name of your startup team",
-        placeholder: "Acme Labs",
-        field_type: "text",
-        required: true,
-        options: null,
-        validation: null,
-        conditional: null,
-        sort_order: 0,
-        section: "Basics",
-        width: "full",
-        key_locked: true,
-      },
-      {
-        id: "field_2",
-        form_id: "form_demo_1",
-        field_key: "founder_email",
-        label: "Founder Email",
-        help_text: null,
-        placeholder: "you@example.com",
-        field_type: "email",
-        required: true,
-        options: null,
-        validation: null,
-        conditional: null,
-        sort_order: 1,
-        section: "Basics",
-        width: "half",
-        key_locked: true,
-      },
-      {
-        id: "field_3",
-        form_id: "form_demo_1",
-        field_key: "stage",
-        label: "Current Stage",
-        help_text: null,
-        placeholder: null,
-        field_type: "select",
-        required: true,
-        options: [
-          { label: "Idea", value: "idea" },
-          { label: "MVP", value: "mvp" },
-          { label: "Revenue", value: "revenue" },
-        ],
-        validation: null,
-        conditional: null,
-        sort_order: 2,
-        section: "Basics",
-        width: "half",
-        key_locked: true,
-      },
-    ],
-    criteria: [
-      {
-        id: "crit_1",
-        form_id: "form_demo_1",
-        criteria_key: "problem_clarity",
-        label: "How clear is the problem statement?",
-        description: "Rank how clearly the problem is articulated.",
-        criteria_type: "rating_scale",
-        scale_min: 0,
-        scale_max: 10,
-        weight: 1,
-        required: true,
-        sort_order: 0,
-        section: "General",
-        key_locked: true,
-      },
-      {
-        id: "crit_2",
-        form_id: "form_demo_1",
-        criteria_key: "market_size",
-        label: "How strong is the market opportunity?",
-        description: "Rank market size and potential.",
-        criteria_type: "rating_scale",
-        scale_min: 0,
-        scale_max: 10,
-        weight: 1,
-        required: true,
-        sort_order: 1,
-        section: "General",
-        key_locked: true,
-      },
-      {
-        id: "crit_3",
-        form_id: "form_demo_1",
-        criteria_key: "team_strength",
-        label: "How strong is the founding team?",
-        description: "Rank team capability and fit.",
-        criteria_type: "rating_scale",
-        scale_min: 0,
-        scale_max: 10,
-        weight: 1,
-        required: true,
-        sort_order: 2,
-        section: "General",
-        key_locked: true,
-      },
-    ],
-  },
-];
+let mockForms: ProgramForm[] = [];
 
 let mockApplications: ProgramApplication[] = [
   {
@@ -166,13 +58,6 @@ let mockApplications: ProgramApplication[] = [
 
 const mockEvaluations = new Map<string, ProgramEvaluation>();
 
-const mockUsers: AssignableUser[] = [
-  { id: "user_r1", full_name: "Riya Sharma", email: "riya@example.com", role: "reviewer" },
-  { id: "user_r2", full_name: "Arjun Mehta", email: "arjun@example.com", role: "reviewer" },
-  { id: "user_r3", full_name: "Priya Nair", email: "priya@example.com", role: "reviewer" },
-  { id: "user_m1", full_name: "Karan Singh", email: "karan@example.com", role: "manager" },
-];
-
 function delay(ms = 120): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -195,9 +80,26 @@ function attachSchemas(app: ProgramApplication): ProgramApplication {
 // ── Forms ──────────────────────────────────────────────────────────────────
 
 export async function getForms(): Promise<ProgramForm[]> {
-  await delay();
-  if (!USE_MOCK) throw new Error("Live API not wired yet");
-  return deepClone(mockForms);
+  const res = await fetch(programFormsUrl(""));
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Failed to load forms"
+    );
+  }
+
+  const remoteForms = (body as ProgramForm[]).map(deepClone);
+  const remoteIds = new Set(remoteForms.map((f) => f.id));
+
+  // Keep unsaved local drafts that are not yet in Supabase.
+  const localDrafts = mockForms
+    .filter((f) => !remoteIds.has(f.id))
+    .map(deepClone);
+
+  return [...localDrafts, ...remoteForms].sort(
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  );
 }
 
 export async function createForm(): Promise<ProgramForm> {
@@ -220,8 +122,19 @@ export async function createForm(): Promise<ProgramForm> {
 }
 
 export async function getForm(id: string): Promise<ProgramForm> {
-  await delay();
-  return deepClone(findForm(id));
+  if (!isUuid(id)) {
+    await delay();
+    return deepClone(findForm(id));
+  }
+
+  const res = await fetch(programFormsUrl(`/${id}`));
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Form not found"
+    );
+  }
+  return body as ProgramForm;
 }
 
 export async function updateForm(
@@ -256,8 +169,8 @@ export async function publishForm(id: string): Promise<ProgramForm> {
   }
 
   const published = body as ProgramForm;
-  // Remap in-memory mock id → real UUID returned by Supabase
-  mockForms = mockForms.map((f) => (f.id === id ? deepClone(published) : f));
+  mockForms = mockForms.filter((f) => f.id !== id && f.id !== published.id);
+  mockForms = [deepClone(published), ...mockForms];
   mockApplications = mockApplications.map((a) =>
     a.form_id === id ? { ...a, form_id: published.id } : a
   );
@@ -296,7 +209,7 @@ export async function submitApplication(
 
 export async function duplicateForm(id: string): Promise<ProgramForm> {
   await delay();
-  const source = findForm(id);
+  const source = isUuid(id) ? await getForm(id) : findForm(id);
   const newId = generateId("form");
   const copy: ProgramForm = {
     ...deepClone(source),
@@ -541,24 +454,44 @@ export async function assignReviewer(
   appId: string,
   reviewerId: string
 ): Promise<ProgramApplication> {
-  await delay();
-  const app = mockApplications.find((a) => a.id === appId);
-  if (!app) throw new Error("Application not found");
-  const user = mockUsers.find((u) => u.id === reviewerId);
-  if (!user) throw new Error("User not found");
-  if (!app.reviewers.some((r) => r.id === reviewerId)) {
-    app.reviewers.push({
-      id: user.id,
-      full_name: user.full_name,
-      email: user.email,
-    });
+  const res = await fetch(programFormsUrl(`/applications/${appId}/reviewers`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reviewerId }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Failed to assign reviewer"
+    );
   }
-  return attachSchemas(app);
+  return body as ProgramApplication;
 }
 
 export async function getAssignableUsers(): Promise<AssignableUser[]> {
-  await delay();
-  return deepClone(mockUsers.filter((u) => u.role === "reviewer" || u.role === "manager"));
+  const res = await fetch("/api/users");
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Failed to load reviewers"
+    );
+  }
+
+  const users = (body.users ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    email_address?: string | null;
+    role: string;
+  }>;
+
+  return users
+    .filter((user) => user.role === "reviewer")
+    .map((user) => ({
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email_address ?? null,
+      role: user.role,
+    }));
 }
 
 export async function getEvaluation(

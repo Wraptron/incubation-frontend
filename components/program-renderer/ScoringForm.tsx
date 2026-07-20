@@ -21,6 +21,7 @@ interface ScoringFormProps {
   onBlurSave?: (scores: EvaluationScore[]) => void;
   readOnly?: boolean;
   className?: string;
+  variant?: "default" | "sheet";
 }
 
 function getScore(
@@ -55,10 +56,12 @@ function RankInput({
   value,
   disabled,
   onChange,
+  fullWidth = false,
 }: {
   value: number | null;
   disabled?: boolean;
   onChange: (v: number | null) => void;
+  fullWidth?: boolean;
 }) {
   const [draft, setDraft] = useState(
     value === null || value === undefined ? "" : String(value)
@@ -86,7 +89,12 @@ function RankInput({
   };
 
   return (
-    <div className="flex max-w-xs items-center gap-2">
+    <div
+      className={cn(
+        "flex items-center gap-2",
+        fullWidth ? "w-full" : "max-w-xs"
+      )}
+    >
       <Input
         type="number"
         inputMode="decimal"
@@ -96,7 +104,7 @@ function RankInput({
         disabled={disabled}
         value={draft}
         placeholder="0 – 10"
-        className="h-9 w-28"
+        className={cn("h-9", fullWidth ? "w-full" : "w-28")}
         onChange={(e) => {
           const next = e.target.value;
           setDraft(next);
@@ -166,8 +174,10 @@ export function ScoringForm({
   onBlurSave,
   readOnly,
   className,
+  variant = "default",
 }: ScoringFormProps) {
   const sections = useMemo(() => groupBySection(criteria), [criteria]);
+  const isSheet = variant === "sheet";
 
   const update = (criteriaId: string, patch: Partial<EvaluationScore>) => {
     if (!onChange) return;
@@ -187,55 +197,113 @@ export function ScoringForm({
   }
 
   return (
-    <div className={cn("space-y-8", className)}>
+    <div className={cn(isSheet ? "space-y-6" : "space-y-8", className)}>
       {sections.map(({ section, items }) => (
         <section key={section}>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            {section}
-          </h3>
-          <div className="space-y-6">
+          {!isSheet && (
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+              {section}
+            </h3>
+          )}
+          <div className={cn(isSheet ? "space-y-0" : "space-y-6")}>
             {items.map((crit) => {
               const score = getScore(scores, crit.id);
 
               return (
                 <div
                   key={crit.id}
-                  className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                  className={cn(
+                    isSheet
+                      ? "border-b border-zinc-200 pb-6 last:border-b-0 dark:border-zinc-800"
+                      : "space-y-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                  )}
                   onBlur={blurSave}
                 >
-                  <div>
-                    <Label className="text-base">
+                  <div className={isSheet ? "mb-4" : undefined}>
+                    <Label
+                      className={cn(
+                        isSheet
+                          ? "mb-2 block text-base font-semibold text-black dark:text-zinc-50"
+                          : "text-base"
+                      )}
+                    >
                       {crit.label}
                       {crit.required && (
                         <span className="text-red-500"> *</span>
                       )}
                     </Label>
                     {crit.description && (
-                      <p className="mt-0.5 text-sm text-zinc-500">
+                      <p
+                        className={cn(
+                          "text-sm text-zinc-600 dark:text-zinc-400",
+                          isSheet ? "mb-4" : "mt-0.5"
+                        )}
+                      >
                         {crit.description}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-zinc-400">
-                      Enter a score from 0 to 10 (decimals allowed)
-                    </p>
+                    {!isSheet && (
+                      <p className="mt-1 text-xs text-zinc-400">
+                        Enter a score from 0 to 10 (decimals allowed)
+                      </p>
+                    )}
                   </div>
 
-                  <CriteriaControl
-                    criterion={crit}
-                    value={score.value}
-                    comment={score.comment}
-                    readOnly={readOnly || !onChange}
-                    onChange={
-                      onChange
-                        ? (value) => update(crit.id, { value })
-                        : undefined
-                    }
-                    onCommentChange={
-                      onChange
-                        ? (comment) => update(crit.id, { comment })
-                        : undefined
-                    }
-                  />
+                  {isSheet ? (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="mb-2 block text-sm text-zinc-700 dark:text-zinc-300">
+                          Score (0.0 - 10.0){" "}
+                          {crit.required && (
+                            <span className="text-red-500">*</span>
+                          )}
+                        </Label>
+                        <RankInput
+                          value={
+                            typeof score.value === "number" ? score.value : null
+                          }
+                          disabled={readOnly || !onChange}
+                          onChange={(v) => update(crit.id, { value: v })}
+                          fullWidth
+                        />
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          Type a score between 0.0 and 10.0 (decimals allowed)
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm text-zinc-700 dark:text-zinc-300">
+                          Comment
+                        </Label>
+                        <Textarea
+                          rows={4}
+                          value={score.comment ?? ""}
+                          disabled={readOnly || !onChange}
+                          placeholder="Enter your evaluation comment..."
+                          className="mt-1"
+                          onChange={(e) =>
+                            update(crit.id, { comment: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <CriteriaControl
+                      criterion={crit}
+                      value={score.value}
+                      comment={score.comment}
+                      readOnly={readOnly || !onChange}
+                      onChange={
+                        onChange
+                          ? (value) => update(crit.id, { value })
+                          : undefined
+                      }
+                      onCommentChange={
+                        onChange
+                          ? (comment) => update(crit.id, { comment })
+                          : undefined
+                      }
+                    />
+                  )}
                 </div>
               );
             })}

@@ -43,6 +43,57 @@ export function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export const PHONE_DIGIT_LENGTH = 10;
+const PHONE_DIGIT_REGEX = /^\d{10}$/;
+
+export function normalizePhoneDigits(value: string): string {
+  return value.replace(/\D/g, "").slice(0, PHONE_DIGIT_LENGTH);
+}
+
+export function isValidPhoneNumber(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  return PHONE_DIGIT_REGEX.test(value.trim());
+}
+
+export function getFieldValidationError(
+  field: ProgramFormField,
+  value: unknown
+): string | null {
+  if (field.field_type === "phone") {
+    const str = typeof value === "string" ? value.trim() : "";
+    if (!str) {
+      return field.required ? `${field.label} is required` : null;
+    }
+    if (!isValidPhoneNumber(str)) {
+      return `${field.label} must be exactly 10 digits`;
+    }
+    return null;
+  }
+
+  if (field.required) {
+    if (value === null || value === undefined) return `${field.label} is required`;
+    if (typeof value === "string" && value.trim() === "") {
+      return `${field.label} is required`;
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      return `${field.label} is required`;
+    }
+  }
+
+  return null;
+}
+
+export function validateFormAnswers(
+  fields: ProgramFormField[],
+  answers: Record<string, unknown>
+): string | null {
+  for (const field of fields) {
+    const error = getFieldValidationError(field, answers[field.field_key]);
+    if (error) return error;
+  }
+  return null;
+}
+
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",
@@ -189,20 +240,36 @@ export function applicationTableRow(app: {
   field_schema?: Array<{ field_key: string; field_type: string }>;
 }) {
   const answers = app.answers ?? {};
-  const teamName =
-    app.team_name ||
-    answerString(answers, ["team_name", "company_name", "startup_name"]) ||
-    app.applicant_name;
 
-  const founderName =
-    (app.team_name ? app.applicant_name : "") ||
+  const name =
     answerString(answers, [
-      "founder_name",
-      "full_name",
       "name",
+      "full_name",
       "applicant_name",
+      "founder_name",
+      "your_name",
     ]) ||
-    app.applicant_name;
+    app.applicant_name ||
+    "—";
+
+  let phone = answerString(answers, [
+    "phone",
+    "phone_number",
+    "contact_number",
+    "founder_phone",
+    "mobile",
+  ]);
+
+  if (!phone && app.field_schema) {
+    for (const field of app.field_schema) {
+      if (field.field_type !== "phone") continue;
+      const value = answers[field.field_key];
+      if (typeof value === "string" && value.trim()) {
+        phone = value.trim();
+        break;
+      }
+    }
+  }
 
   let email = answerString(answers, [
     "founder_email",
@@ -222,5 +289,9 @@ export function applicationTableRow(app: {
     }
   }
 
-  return { teamName, founderName, email: email || "—" };
+  return {
+    name,
+    phone: phone || "—",
+    email: email || "—",
+  };
 }

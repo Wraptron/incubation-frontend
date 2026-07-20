@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { ProgramFormField } from "@/lib/program-forms/types";
-import { groupBySection, widthClass } from "@/lib/program-forms/utils";
+import { groupBySection, normalizePhoneDigits, widthClass } from "@/lib/program-forms/utils";
 import { cn } from "@/lib/utils";
 
 interface FormRendererProps {
@@ -82,17 +82,23 @@ export function FieldControl({
       );
     case "phone":
       return (
-        <div className="flex gap-2">
-          {field.validation?.countryCodePrefix && (
-            <Input className="w-20" disabled value="+91" readOnly />
-          )}
-          <Input
-            type="tel"
-            value={str}
-            disabled={disabled}
-            placeholder={field.placeholder ?? "Phone number"}
-            onChange={(e) => onChange?.(e.target.value)}
-          />
+        <div className="space-y-1">
+          <div className="flex gap-2">
+            {field.validation?.countryCodePrefix && (
+              <Input className="w-20" disabled value="+91" readOnly />
+            )}
+            <Input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]{10}"
+              maxLength={10}
+              value={str}
+              disabled={disabled}
+              placeholder={field.placeholder ?? "10-digit phone number"}
+              onChange={(e) => onChange?.(normalizePhoneDigits(e.target.value))}
+            />
+          </div>
+          <p className="text-xs text-zinc-500">Enter exactly 10 digits</p>
         </div>
       );
     case "date":

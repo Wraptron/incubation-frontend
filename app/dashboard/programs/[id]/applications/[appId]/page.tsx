@@ -2,36 +2,142 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, Download, Loader2, UserPlus } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Download, Loader2 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormRenderer } from "@/components/program-renderer/FormRenderer";
-import { useProgramApplication } from "@/lib/program-forms/hooks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProgramApplication, useProgramEvaluation } from "@/lib/program-forms/hooks";
 import * as api from "@/lib/program-forms/api";
 import type { AssignableUser } from "@/lib/program-forms/types";
-import { formatAnswer, formatDateTime, isAnswerFileUrl, applicationStatusBadgeClass } from "@/lib/program-forms/utils";
+import {
+  formatAnswer,
+  groupBySection,
+  isAnswerFileUrl,
+} from "@/lib/program-forms/utils";
 import { formatStatus } from "@/lib/utils";
 
+function getStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    pending:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800",
+    under_review:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+    evaluated:
+      "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
+    approved:
+      "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200 border-green-200 dark:border-green-800",
+    rejected:
+      "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200 border-red-200 dark:border-red-800",
+  };
+  return (
+    colors[status] ||
+    "bg-gray-100 text-gray-800 border-gray-200 dark:border-gray-800 dark:bg-gray-900/20 dark:text-gray-200"
+  );
+}
+
+function FieldValue({
+  field,
+  value,
+}: {
+  field: { field_type: string; label: string };
+  value: unknown;
+}) {
+  if (isAnswerFileUrl(field as Parameters<typeof isAnswerFileUrl>[0], value)) {
+    return (
+      <a
+        href={value}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1 text-blue-600 hover:underline dark:text-blue-400"
+      >
+        <Download className="h-3.5 w-3.5" />
+        {field.field_type === "image" ? "View image" : "Download file"}
+      </a>
+    );
+  }
+
+  const formatted = formatAnswer(
+    field as Parameters<typeof formatAnswer>[0],
+    value
+  );
+  const isEmail = field.field_type === "email" && typeof value === "string" && value;
+  const isPhone = field.field_type === "phone" && typeof value === "string" && value;
+
+  if (isEmail) {
+    return (
+      <a
+        href={`mailto:${value}`}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {formatted}
+      </a>
+    );
+  }
+
+  if (isPhone) {
+    return (
+      <a
+        href={`tel:${value}`}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+      >
+        {formatted}
+      </a>
+    );
+  }
+
+  return <span>{formatted}</span>;
+}
+
 export default function ProgramApplicationDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const formId = String(params.id);
   const appId = String(params.appId);
   const { application, loading, error, setApplication } =
     useProgramApplication(appId);
+  const {
+    evaluation,
+    loading: evalLoading,
+    error: evalError,
+    refresh: refreshEvaluation,
+  } = useProgramEvaluation(appId);
 
   const [users, setUsers] = useState<AssignableUser[]>([]);
-  const [assignOpen, setAssignOpen] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [showAssignReviewer, setShowAssignReviewer] = useState(false);
   const [userFilter, setUserFilter] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"application-form" | "evaluations">(
+    "application-form"
+  );
+
+  const loadAssignableUsers = async () => {
+    setUsersLoading(true);
+    setAssignError(null);
+    try {
+      const data = await api.getAssignableUsers();
+      setUsers(data);
+    } catch (err) {
+      setUsers([]);
+      setAssignError(
+        err instanceof Error ? err.message : "Failed to load reviewers"
+      );
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   useEffect(() => {
-    void api.getAssignableUsers().then(setUsers).catch(() => setUsers([]));
-  }, []);
+    if (showAssignReviewer) {
+      void loadAssignableUsers();
+    }
+  }, [showAssignReviewer]);
 
   const filteredUsers = useMemo(() => {
     const q = userFilter.trim().toLowerCase();
@@ -43,17 +149,21 @@ export default function ProgramApplicationDetailPage() {
     );
   }, [users, userFilter]);
 
-  const evaluationSummary = useMemo(() => {
-    if (!application) return null;
-    const criteria = application.criteria_schema;
-    if (!criteria.length || application.avg_score === null) {
-      return { avg: application?.avg_score ?? null, perCriterion: [] as Array<{ label: string; weight: number }> };
-    }
-    return {
-      avg: application.avg_score,
-      perCriterion: criteria.map((c) => ({ label: c.label, weight: c.weight })),
-    };
+  const sections = useMemo(() => {
+    if (!application) return [];
+    return groupBySection(application.field_schema);
   }, [application]);
+
+  const submittedEvaluations = useMemo(() => {
+    if (
+      !evaluation ||
+      evaluation.status !== "completed" ||
+      evaluation.scores.length === 0
+    ) {
+      return [];
+    }
+    return [evaluation];
+  }, [evaluation]);
 
   const handleAssign = async (reviewerId: string) => {
     setAssigning(true);
@@ -61,7 +171,7 @@ export default function ProgramApplicationDetailPage() {
     try {
       const updated = await api.assignReviewer(appId, reviewerId);
       setApplication(updated);
-      setAssignOpen(false);
+      setShowAssignReviewer(false);
       setUserFilter("");
     } catch (err) {
       setAssignError(err instanceof Error ? err.message : "Assign failed");
@@ -96,207 +206,291 @@ export default function ProgramApplicationDetailPage() {
     );
   }
 
+  const displayTitle =
+    application.team_name || application.applicant_name || "Application";
+
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
-          <Link href={`/dashboard/programs/${formId}/applications`}>
-            <ArrowLeft className="h-4 w-4" />
-            Back to applications
-          </Link>
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <Button
+          variant="link"
+          onClick={() =>
+            router.push(`/dashboard/programs/${formId}/applications`)
+          }
+          className="mb-4"
+        >
+          ← Back to Applications
         </Button>
 
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-zinc-900">
-              {application.team_name || application.applicant_name}
-            </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-              <Badge
-                variant="outline"
-                className={applicationStatusBadgeClass(application.status)}
-              >
-                {formatStatus(application.status || "pending")}
-              </Badge>
-              <span>Form v{application.form_version}</span>
-              {application.submitted_at && (
-                <span>· Submitted {formatDateTime(application.submitted_at)}</span>
-              )}
-            </div>
-          </div>
-          <Button asChild variant="outline">
-            <Link
-              href={`/dashboard/programs/${formId}/applications/${appId}/evaluate`}
-            >
-              Open scoring screen
-            </Link>
-          </Button>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Answers — schema-driven */}
-          <div className="space-y-6">
-            <div className="rounded-lg border border-zinc-200 bg-white p-6">
-              <h3 className="mb-4 text-lg font-semibold text-zinc-900">
-                Applicant answers
-              </h3>
-              {application.field_schema.length === 0 ? (
-                <p className="text-sm text-zinc-500">No field schema available.</p>
-              ) : (
-                <dl className="space-y-4">
-                  {[...application.field_schema]
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((field) => {
-                      const value = application.answers[field.field_key];
-                      return (
-                        <div
-                          key={field.id}
-                          className="border-b border-zinc-100 pb-3 last:border-0"
-                        >
-                          <dt className="text-sm font-medium text-zinc-700">
-                            {field.label}
-                          </dt>
-                          <dd className="mt-1 text-sm text-zinc-900">
-                            {isAnswerFileUrl(field, value) ? (
-                              <a
-                                href={value}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-primary hover:underline"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                                {field.field_type === "image"
-                                  ? "View image"
-                                  : "Download file"}
-                              </a>
-                            ) : (
-                              formatAnswer(field, value)
-                            )}
-                          </dd>
-                        </div>
-                      );
-                    })}
-                </dl>
-              )}
-            </div>
-
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-                Form preview
-              </h3>
-              <FormRenderer
-                fields={application.field_schema}
-                answers={application.answers}
-                readOnly
-              />
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="space-y-4">
-            <div className="rounded-lg border border-zinc-200 bg-white p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold text-zinc-900">Reviewers</h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setAssignOpen((o) => !o)}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Assign
-                </Button>
-              </div>
-              {application.reviewers.length === 0 ? (
-                <p className="text-sm text-zinc-500">No reviewers assigned.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {application.reviewers.map((r) => (
-                    <li
-                      key={r.id}
-                      className="rounded-md bg-zinc-50 px-3 py-2 text-sm"
-                    >
-                      <div className="font-medium">
-                        {r.full_name || "Reviewer"}
-                      </div>
-                      {r.email && (
-                        <div className="text-xs text-zinc-500">{r.email}</div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {assignOpen && (
-                <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3">
-                  <Label htmlFor="user-filter">Search users</Label>
-                  <Input
-                    id="user-filter"
-                    value={userFilter}
-                    onChange={(e) => setUserFilter(e.target.value)}
-                    placeholder="Type a name or email…"
-                    autoFocus
-                  />
-                  <div className="max-h-48 overflow-y-auto rounded-md border border-zinc-200">
-                    {filteredUsers.length === 0 ? (
-                      <p className="px-3 py-4 text-center text-xs text-zinc-500">
-                        No matching users
-                      </p>
-                    ) : (
-                      filteredUsers.map((u) => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          disabled={
-                            assigning ||
-                            application.reviewers.some((r) => r.id === u.id)
-                          }
-                          className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-zinc-50 disabled:opacity-40"
-                          onClick={() => void handleAssign(u.id)}
-                        >
-                          <span className="font-medium">
-                            {u.full_name || "User"}
-                          </span>
-                          <span className="text-xs text-zinc-500">
-                            {u.email} · {u.role}
-                          </span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                  {assignError && (
-                    <p className="text-xs text-red-600">{assignError}</p>
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <CardTitle className="mb-2 text-2xl">{displayTitle}</CardTitle>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Status:
+                  </span>
+                  <Badge className={getStatusColor(application.status)}>
+                    {formatStatus(application.status || "pending")}
+                  </Badge>
+                </div>
+                <div className="mt-2">
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Assigned Reviewer
+                    {application.reviewers.length !== 1 ? "s" : ""}:{" "}
+                  </span>
+                  {application.reviewers.length === 0 ? (
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                      No reviewers assigned
+                    </span>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {application.reviewers.map((r) => (
+                        <Badge key={r.id} variant="secondary" className="text-xs">
+                          {r.full_name || "Reviewer"}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
-              )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={showAssignReviewer ? "outline" : "default"}
+                  onClick={() => setShowAssignReviewer((open) => !open)}
+                >
+                  {showAssignReviewer
+                    ? "Close"
+                    : application.reviewers.length > 0
+                      ? "Manage Reviewers"
+                      : "Assign Reviewers"}
+                </Button>
+              </div>
             </div>
+          </CardHeader>
+        </Card>
 
-            <div className="rounded-lg border border-zinc-200 bg-white p-4">
-              <h3 className="mb-3 font-semibold text-zinc-900">
-                Evaluation summary
-              </h3>
-              <p className="text-2xl font-bold text-zinc-900">
-                {evaluationSummary?.avg !== null &&
-                evaluationSummary?.avg !== undefined
-                  ? evaluationSummary.avg
-                  : "—"}
+        {showAssignReviewer && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Manage Reviewers</CardTitle>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Search and assign a reviewer to this application.
               </p>
-              <p className="text-xs text-zinc-500">Weighted average</p>
-              {evaluationSummary && evaluationSummary.perCriterion.length > 0 && (
-                <ul className="mt-3 space-y-1 border-t border-zinc-100 pt-3">
-                  {evaluationSummary.perCriterion.map((c) => (
-                    <li
-                      key={c.label}
-                      className="flex justify-between text-xs text-zinc-600"
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label htmlFor="user-filter">Search users</Label>
+                <Input
+                  id="user-filter"
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                  placeholder="Type a name or email…"
+                  className="mt-1"
+                  autoFocus
+                />
+              </div>
+              <div className="max-h-96 overflow-y-auto rounded-md border border-zinc-200 dark:border-zinc-700">
+                {usersLoading ? (
+                  <p className="px-4 py-3 text-center text-sm text-zinc-500">
+                    Loading reviewers…
+                  </p>
+                ) : filteredUsers.length === 0 ? (
+                  <p className="px-4 py-3 text-center text-sm text-zinc-500">
+                    {users.length === 0
+                      ? "No reviewers found"
+                      : "No matching users"}
+                  </p>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      disabled={
+                        assigning ||
+                        application.reviewers.some((r) => r.id === u.id)
+                      }
+                      className="flex w-full flex-col items-start px-4 py-2 text-left text-sm hover:bg-zinc-50 disabled:opacity-40 dark:hover:bg-zinc-800"
+                      onClick={() => void handleAssign(u.id)}
                     >
-                      <span>{c.label}</span>
-                      <span className="text-zinc-400">w{c.weight}</span>
-                    </li>
-                  ))}
-                </ul>
+                      <span className="font-medium">
+                        {u.full_name || "User"}
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        {u.email} · {u.role}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+              {assignError && (
+                <p className="text-sm text-red-600">{assignError}</p>
               )}
-            </div>
-          </aside>
-        </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) =>
+                setActiveTab(value as "application-form" | "evaluations")
+              }
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="application-form">
+                  Application Form
+                </TabsTrigger>
+                <TabsTrigger value="evaluations">Evaluations</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="application-form" className="mt-6 space-y-6">
+                {application.field_schema.length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        No field schema available.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  sections.map(({ section, items }) => (
+                    <Card key={section}>
+                      <CardHeader>
+                        <CardTitle>{section}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          {items.map((field) => (
+                            <div key={field.id}>
+                              <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                {field.label}
+                              </label>
+                              <p className="text-black dark:text-zinc-50">
+                                <FieldValue
+                                  field={field}
+                                  value={application.answers[field.field_key]}
+                                />
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="evaluations" className="mt-6 space-y-6">
+                {evalLoading ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        Loading evaluations...
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : evalError ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="mb-4 text-red-600 dark:text-red-400">
+                        {evalError}
+                      </p>
+                      <Button
+                        onClick={() => void refreshEvaluation()}
+                        variant="default"
+                      >
+                        Retry
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : submittedEvaluations.length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-zinc-600 dark:text-zinc-400">
+                        No evaluations have been submitted yet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  submittedEvaluations.map((evaln) => {
+                    const reviewer = application.reviewers.find(
+                      (r) => r.id === evaln.reviewer_id
+                    );
+                    const totalScore = evaln.scores.reduce((sum, s) => {
+                      const num =
+                        typeof s.value === "number" ? s.value : Number(s.value);
+                      return sum + (Number.isFinite(num) ? num : 0);
+                    }, 0);
+                    const maxScore = application.criteria_schema.length * 10;
+
+                    return (
+                      <Card key={evaln.id}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <CardTitle>
+                              Evaluation
+                              {reviewer && (
+                                <span className="ml-2 text-sm font-normal text-zinc-600 dark:text-zinc-400">
+                                  by {reviewer.full_name || "Unknown"}
+                                </span>
+                              )}
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-lg">
+                              Total: {totalScore.toFixed(1)}/{maxScore}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                            Submitted:{" "}
+                            {new Date(evaln.updated_at).toLocaleDateString()}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {application.criteria_schema.map((crit, idx) => {
+                              const score = evaln.scores.find(
+                                (s) => s.criteria_id === crit.id
+                              );
+                              const value = score?.value;
+                              if (
+                                value === null ||
+                                value === undefined ||
+                                value === ""
+                              ) {
+                                return null;
+                              }
+
+                              return (
+                                <div key={crit.id}>
+                                  <div className="mb-1 flex items-center justify-between">
+                                    <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                      {idx + 1}. {crit.label}
+                                    </label>
+                                    <Badge variant="secondary">
+                                      {value}/10
+                                    </Badge>
+                                  </div>
+                                  {score?.comment && (
+                                    <p className="mt-1 text-sm text-black dark:text-zinc-50">
+                                      {score.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
