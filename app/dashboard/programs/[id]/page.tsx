@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Eye, FileText, Loader2, X } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { Eye, FileText, Link2, Loader2, X } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,7 @@ import { CriteriaInspector } from "@/components/program-builder/CriteriaInspecto
 import { FormRenderer } from "@/components/program-renderer/FormRenderer";
 import { ScoringForm } from "@/components/program-renderer/ScoringForm";
 import { useProgramForm } from "@/lib/program-forms/hooks";
-import { statusBadgeClass } from "@/lib/program-forms/utils";
+import { statusBadgeClass, copyPublicFormLink, getPublicFormUrl } from "@/lib/program-forms/utils";
 import type {
   FieldType,
   FieldWidth,
@@ -38,6 +38,7 @@ import type {
 
 export default function ProgramBuilderPage() {
   const params = useParams();
+  const router = useRouter();
   const formId = String(params.id);
   const {
     form,
@@ -69,6 +70,7 @@ export default function ProgramBuilderPage() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copyNotice, setCopyNotice] = useState<string | null>(null);
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
 
   const readOnly = form?.status !== "draft";
@@ -138,12 +140,30 @@ export default function ProgramBuilderPage() {
     setPublishing(true);
     setActionError(null);
     try {
-      await publish();
+      const updated = await publish();
       setPublishOpen(false);
+      // Mock drafts receive a real UUID from Supabase — update the URL.
+      if (updated && updated.id !== formId) {
+        router.replace(`/dashboard/programs/${updated.id}`);
+      }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Publish failed");
     } finally {
       setPublishing(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!form?.public_slug) return;
+    setActionError(null);
+    try {
+      await copyPublicFormLink(form.public_slug);
+      setCopyNotice("Form link copied to clipboard");
+      window.setTimeout(() => setCopyNotice(null), 3000);
+    } catch {
+      setActionError(
+        `Could not copy automatically. Link: ${getPublicFormUrl(form.public_slug)}`
+      );
     }
   };
 
@@ -216,6 +236,12 @@ export default function ProgramBuilderPage() {
             <Eye className="h-4 w-4" />
             Preview
           </Button>
+          {form.status === "published" && form.public_slug && (
+            <Button variant="outline" size="sm" onClick={() => void handleCopyLink()}>
+              <Link2 className="h-4 w-4" />
+              Copy link
+            </Button>
+          )}
           <Button
             size="sm"
             disabled={readOnly}
@@ -229,6 +255,24 @@ export default function ProgramBuilderPage() {
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             This form is <strong>{form.status}</strong>. Fields and criteria are
             read-only. Duplicate the form to create a new editable draft.
+            {form.public_slug && (
+              <span className="ml-1">
+                Share link:{" "}
+                <button
+                  type="button"
+                  className="font-medium underline"
+                  onClick={() => void handleCopyLink()}
+                >
+                  {getPublicFormUrl(form.public_slug)}
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {copyNotice && (
+          <div className="border-b border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+            {copyNotice}
           </div>
         )}
 

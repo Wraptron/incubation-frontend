@@ -106,6 +106,36 @@ export function FieldControl({
           onChange={(e) => onChange?.(e.target.value)}
         />
       );
+    case "number":
+      return (
+        <Input
+          type="number"
+          value={str}
+          disabled={disabled}
+          placeholder={field.placeholder ?? undefined}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === "") {
+              onChange?.(null);
+              return;
+            }
+            const n = Number(raw);
+            onChange?.(Number.isFinite(n) ? n : raw);
+          }}
+        />
+      );
+    case "boolean":
+      return (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={value === true || value === "true"}
+            disabled={disabled}
+            onChange={(e) => onChange?.(e.target.checked)}
+          />
+          {field.placeholder || "Yes"}
+        </label>
+      );
     case "select":
       return (
         <Select
@@ -176,7 +206,18 @@ export function FieldControl({
       return (
         <div className="rounded-md border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
           {readOnly && str ? (
-            <span className="text-zinc-700 dark:text-zinc-200">{str}</span>
+            /^https?:\/\//i.test(str) ? (
+              <a
+                href={str}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline"
+              >
+                {field.field_type === "image" ? "View image" : "Download file"}
+              </a>
+            ) : (
+              <span className="text-zinc-700 dark:text-zinc-200">{str}</span>
+            )
           ) : (
             <>
               {field.field_type === "image" ? "Image upload" : "File upload"}{" "}
@@ -200,7 +241,7 @@ export function FieldControl({
                   }
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) onChange?.(file.name);
+                    if (file) onChange?.(file);
                   }}
                 />
               )}

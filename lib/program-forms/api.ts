@@ -1,3 +1,4 @@
+import { backendUrl } from "@/lib/config";
 import type {
   AssignableUser,
   EvaluationScore,
@@ -7,14 +8,17 @@ import type {
   ProgramForm,
   ProgramFormField,
 } from "./types";
-import { generateId, slugify } from "./utils";
+import { generateId, uniqueSlug } from "./utils";
 
 /**
- * Frontend stubs against future Express /api/program-forms endpoints.
- * In-memory mock store so the UI works before the backend lands.
- * Set USE_MOCK=false and wire to backendUrl when APIs exist.
+ * Frontend API for program forms.
+ * Most CRUD stays on the in-memory mock (USE_MOCK).
+ * publishForm and submitApplication call the Express backend directly.
  */
 const USE_MOCK = true;
+
+const programFormsUrl = (path: string) =>
+  `${backendUrl.replace(/\/$/, "")}/api/program-forms${path}`;
 
 const now = () => new Date().toISOString();
 
@@ -155,7 +159,6 @@ let mockApplications: ProgramApplication[] = [
     reviewers: [],
     avg_score: null,
     submitted_at: now(),
-    files: [],
     field_schema: [],
     criteria_schema: [],
   },
@@ -232,13 +235,63 @@ export async function updateForm(
 }
 
 export async function publishForm(id: string): Promise<ProgramForm> {
-  await delay();
+  // Real Supabase publish path (dynamic table creation + freeze).
+  // Mock drafts use non-UUID ids — send the full snapshot so the API can persist them.
   const form = findForm(id);
-  if (form.status === "published") throw new Error("Form is already published");
-  form.status = "published";
-  form.public_slug = form.public_slug ?? (slugify(form.title) || form.id);
-  form.updated_at = now();
-  return deepClone(form);
+  const res = await fetch(programFormsUrl(`/${id}/publish`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: form.title,
+      public_slug: form.public_slug,
+      fields: form.fields,
+      criteria: form.criteria,
+    }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Failed to publish form"
+    );
+  }
+
+  const published = body as ProgramForm;
+  // Remap in-memory mock id → real UUID returned by Supabase
+  mockForms = mockForms.map((f) => (f.id === id ? deepClone(published) : f));
+  mockApplications = mockApplications.map((a) =>
+    a.form_id === id ? { ...a, form_id: published.id } : a
+  );
+  return deepClone(published);
+}
+
+/**
+ * Submit an application to a published form (dual-write to dynamic table + registry).
+ * Use FormData when uploading file/image fields; otherwise JSON is fine.
+ */
+export async function submitApplication(
+  formId: string,
+  payload:
+    | {
+        answers: Record<string, unknown>;
+        applicant_name?: string;
+        team_name?: string | null;
+      }
+    | FormData
+): Promise<ProgramApplication> {
+  const isFormData =
+    typeof FormData !== "undefined" && payload instanceof FormData;
+  const res = await fetch(programFormsUrl(`/${formId}/applications`), {
+    method: "POST",
+    headers: isFormData ? undefined : { "Content-Type": "application/json" },
+    body: isFormData ? payload : JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Failed to submit application"
+    );
+  }
+  return body as ProgramApplication;
 }
 
 export async function duplicateForm(id: string): Promise<ProgramForm> {
@@ -289,11 +342,19 @@ export async function addField(
   await delay();
   const form = findForm(formId);
   assertDraft(form);
+  const label = field.label || "New Field";
+  const fieldKey =
+    field.field_key ||
+    uniqueSlug(
+      label,
+      form.fields.map((f) => f.field_key),
+      `field_${form.fields.length + 1}`
+    );
   const next: ProgramFormField = {
     id: generateId("field"),
     form_id: formId,
-    field_key: field.field_key || `field_${form.fields.length + 1}`,
-    label: field.label || "New Field",
+    field_key: fieldKey,
+    label,
     help_text: field.help_text ?? null,
     placeholder: field.placeholder ?? null,
     field_type: field.field_type || "text",
@@ -304,7 +365,8 @@ export async function addField(
     sort_order: field.sort_order ?? form.fields.length,
     section: field.section || "General",
     width: field.width ?? "full",
-    key_locked: field.key_locked ?? false,
+    // Label chosen at create time — lock key so later renames don't break columns.
+    key_locked: field.key_locked ?? true,
   };
   form.fields.push(next);
   form.updated_at = now();
@@ -366,11 +428,19 @@ export async function addCriteria(
   await delay();
   const form = findForm(formId);
   assertDraft(form);
+  const label = criteria.label || "New Question";
+  const criteriaKey =
+    criteria.criteria_key ||
+    uniqueSlug(
+      label,
+      form.criteria.map((c) => c.criteria_key),
+      `criteria_${form.criteria.length + 1}`
+    );
   const next: ProgramEvaluationCriteria = {
     id: generateId("crit"),
     form_id: formId,
-    criteria_key: criteria.criteria_key || `criteria_${form.criteria.length + 1}`,
-    label: criteria.label || "New Question",
+    criteria_key: criteriaKey,
+    label,
     description: criteria.description ?? null,
     criteria_type: "rating_scale",
     scale_min: 0,
@@ -379,7 +449,7 @@ export async function addCriteria(
     required: criteria.required ?? true,
     sort_order: criteria.sort_order ?? form.criteria.length,
     section: criteria.section || "General",
-    key_locked: criteria.key_locked ?? false,
+    key_locked: criteria.key_locked ?? true,
   };
   form.criteria.push(next);
   form.updated_at = now();
@@ -444,17 +514,27 @@ export async function reorderCriteria(
 // ── Applications / evaluations ─────────────────────────────────────────────
 
 export async function getApplications(formId: string): Promise<ProgramApplication[]> {
-  await delay();
-  return mockApplications
-    .filter((a) => a.form_id === formId)
-    .map(attachSchemas);
+  const res = await fetch(programFormsUrl(`/${formId}/applications`));
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string"
+        ? body.error
+        : "Failed to load applications"
+    );
+  }
+  return body as ProgramApplication[];
 }
 
 export async function getApplication(appId: string): Promise<ProgramApplication> {
-  await delay();
-  const app = mockApplications.find((a) => a.id === appId);
-  if (!app) throw new Error("Application not found");
-  return attachSchemas(app);
+  const res = await fetch(programFormsUrl(`/applications/${appId}`));
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(
+      typeof body.error === "string" ? body.error : "Application not found"
+    );
+  }
+  return body as ProgramApplication;
 }
 
 export async function assignReviewer(

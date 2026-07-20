@@ -10,7 +10,9 @@ export type FieldType =
   | "multi_select"
   | "image"
   | "file"
-  | "date";
+  | "date"
+  | "number"
+  | "boolean";
 
 export type CriteriaType = "rating_scale" | "number" | "text" | "yes_no";
 
@@ -81,23 +83,19 @@ export interface ProgramForm {
   version: number;
   response_count: number;
   public_slug: string | null;
+  response_table_name?: string | null;
+  published_field_schema?: ProgramFormField[] | null;
   created_at: string;
   updated_at: string;
   fields: ProgramFormField[];
   criteria: ProgramEvaluationCriteria[];
 }
 
-export interface ProgramApplicationFile {
-  id: string;
-  field_key: string;
-  url: string;
-  filename: string;
-}
-
 export interface ProgramApplication {
   id: string;
   form_id: string;
   form_version: number;
+  response_row_id?: string | null;
   applicant_name: string;
   team_name: string | null;
   status: string;
@@ -105,7 +103,6 @@ export interface ProgramApplication {
   reviewers: Array<{ id: string; full_name: string | null; email?: string | null }>;
   avg_score: number | null;
   submitted_at: string | null;
-  files: ProgramApplicationFile[];
   field_schema: ProgramFormField[];
   criteria_schema: ProgramEvaluationCriteria[];
 }

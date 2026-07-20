@@ -5,10 +5,12 @@ import {
   CheckSquare,
   CircleDot,
   File,
+  Hash,
   Image as ImageIcon,
   List,
   Mail,
   Phone,
+  ToggleLeft,
   Type,
 } from "lucide-react";
 import type { FieldType } from "@/lib/program-forms/types";
@@ -58,6 +60,20 @@ export const FIELD_TYPES: Array<{
     description: "Phone number",
     category: "input",
     icon: <Phone className="h-4 w-4" strokeWidth={1.75} />,
+  },
+  {
+    value: "number",
+    label: "Number",
+    description: "Numeric value",
+    category: "input",
+    icon: <Hash className="h-4 w-4" strokeWidth={1.75} />,
+  },
+  {
+    value: "boolean",
+    label: "Yes / No",
+    description: "True or false",
+    category: "choice",
+    icon: <ToggleLeft className="h-4 w-4" strokeWidth={1.75} />,
   },
   {
     value: "radio",

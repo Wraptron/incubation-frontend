@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useProgramForms } from "@/lib/program-forms/hooks";
 import * as api from "@/lib/program-forms/api";
-import { formatDateTime, statusBadgeClass } from "@/lib/program-forms/utils";
+import { formatDateTime, statusBadgeClass, copyPublicFormLink, getPublicFormUrl } from "@/lib/program-forms/utils";
 import type { ProgramForm } from "@/lib/program-forms/types";
 
 export default function ProgramsListPage() {
@@ -43,6 +43,7 @@ export default function ProgramsListPage() {
   const [creating, setCreating] = useState(false);
   const [publishTarget, setPublishTarget] = useState<ProgramForm | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   const handleCreate = async () => {
     setCreating(true);
@@ -58,9 +59,15 @@ export default function ProgramsListPage() {
 
   const handlePublish = async () => {
     if (!publishTarget) return;
+    const previousId = publishTarget.id;
     try {
-      const updated = await api.publishForm(publishTarget.id);
-      setForms((prev) => prev.map((f) => (f.id === updated.id ? updated : f)));
+      const updated = await api.publishForm(previousId);
+      // Mock drafts get a new UUID on publish — replace by either id.
+      setForms((prev) =>
+        prev.map((f) =>
+          f.id === previousId || f.id === updated.id ? updated : f
+        )
+      );
       setPublishTarget(null);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to publish");
@@ -75,6 +82,23 @@ export default function ProgramsListPage() {
       router.push(`/dashboard/programs/${copy.id}`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to duplicate");
+    }
+  };
+
+  const handleCopyLink = async (form: ProgramForm) => {
+    if (!form.public_slug) {
+      setActionError("This form has no public link yet.");
+      return;
+    }
+    setActionError(null);
+    try {
+      await copyPublicFormLink(form.public_slug);
+      setCopyNotice(`Form link copied for "${form.title}"`);
+      window.setTimeout(() => setCopyNotice(null), 3000);
+    } catch {
+      setActionError(
+        `Could not copy automatically. Link: ${getPublicFormUrl(form.public_slug)}`
+      );
     }
   };
 
@@ -108,6 +132,12 @@ export default function ProgramsListPage() {
                 Retry
               </button>
             )}
+          </div>
+        )}
+
+        {copyNotice && (
+          <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {copyNotice}
           </div>
         )}
 
@@ -179,6 +209,13 @@ export default function ProgramsListPage() {
                           >
                             Publish
                           </DropdownMenuItem>
+                          {form.status === "published" && form.public_slug && (
+                            <DropdownMenuItem
+                              onClick={() => void handleCopyLink(form)}
+                            >
+                              Copy form link
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => void handleDuplicate(form.id)}
                           >

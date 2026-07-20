@@ -13,7 +13,7 @@ import { FormRenderer } from "@/components/program-renderer/FormRenderer";
 import { useProgramApplication } from "@/lib/program-forms/hooks";
 import * as api from "@/lib/program-forms/api";
 import type { AssignableUser } from "@/lib/program-forms/types";
-import { formatAnswer, formatDateTime } from "@/lib/program-forms/utils";
+import { formatAnswer, formatDateTime, isAnswerFileUrl, applicationStatusBadgeClass } from "@/lib/program-forms/utils";
 import { formatStatus } from "@/lib/utils";
 
 export default function ProgramApplicationDetailPage() {
@@ -112,7 +112,12 @@ export default function ProgramApplicationDetailPage() {
               {application.team_name || application.applicant_name}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
-              <Badge variant="outline">{formatStatus(application.status)}</Badge>
+              <Badge
+                variant="outline"
+                className={applicationStatusBadgeClass(application.status)}
+              >
+                {formatStatus(application.status || "pending")}
+              </Badge>
               <span>Form v{application.form_version}</span>
               {application.submitted_at && (
                 <span>· Submitted {formatDateTime(application.submitted_at)}</span>
@@ -141,52 +146,39 @@ export default function ProgramApplicationDetailPage() {
                 <dl className="space-y-4">
                   {[...application.field_schema]
                     .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((field) => (
-                      <div key={field.id} className="border-b border-zinc-100 pb-3 last:border-0">
-                        <dt className="text-sm font-medium text-zinc-700">
-                          {field.label}
-                        </dt>
-                        <dd className="mt-1 text-sm text-zinc-900">
-                          {formatAnswer(
-                            field,
-                            application.answers[field.field_key]
-                          )}
-                        </dd>
-                      </div>
-                    ))}
+                    .map((field) => {
+                      const value = application.answers[field.field_key];
+                      return (
+                        <div
+                          key={field.id}
+                          className="border-b border-zinc-100 pb-3 last:border-0"
+                        >
+                          <dt className="text-sm font-medium text-zinc-700">
+                            {field.label}
+                          </dt>
+                          <dd className="mt-1 text-sm text-zinc-900">
+                            {isAnswerFileUrl(field, value) ? (
+                              <a
+                                href={value}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:underline"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                {field.field_type === "image"
+                                  ? "View image"
+                                  : "Download file"}
+                              </a>
+                            ) : (
+                              formatAnswer(field, value)
+                            )}
+                          </dd>
+                        </div>
+                      );
+                    })}
                 </dl>
               )}
             </div>
-
-            {application.files.length > 0 && (
-              <div className="rounded-lg border border-zinc-200 bg-white p-6">
-                <h3 className="mb-4 text-lg font-semibold text-zinc-900">
-                  Files
-                </h3>
-                <ul className="space-y-2">
-                  {application.files.map((file) => (
-                    <li
-                      key={file.id}
-                      className="flex items-center justify-between rounded-md border border-zinc-100 px-3 py-2 text-sm"
-                    >
-                      <span>
-                        <span className="text-zinc-400">{file.field_key}: </span>
-                        {file.filename}
-                      </span>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-primary hover:underline"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        Download
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-6">
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
