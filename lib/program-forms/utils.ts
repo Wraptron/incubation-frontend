@@ -295,3 +295,157 @@ export function applicationTableRow(app: {
     email: email || "—",
   };
 }
+
+/** Built-in applicants-table columns that are not form fields. */
+export const APPLICATION_META_COLUMNS = [
+  { id: "__status", label: "Status" },
+  { id: "__submitted", label: "Submitted" },
+] as const;
+
+export type ApplicationTableColumn = {
+  id: string;
+  label: string;
+  kind: "meta" | "field";
+  field?: ProgramFormField;
+};
+
+export function buildApplicationTableColumns(
+  fields: ProgramFormField[]
+): ApplicationTableColumn[] {
+  const sorted = [...fields].sort((a, b) => a.sort_order - b.sort_order);
+  return [
+    ...APPLICATION_META_COLUMNS.map((col) => ({
+      id: col.id,
+      label: col.label,
+      kind: "meta" as const,
+    })),
+    ...sorted.map((field) => ({
+      id: field.field_key,
+      label: field.label,
+      kind: "field" as const,
+      field,
+    })),
+  ];
+}
+
+const NAME_FIELD_KEYS = new Set([
+  "name",
+  "full_name",
+  "applicant_name",
+  "founder_name",
+  "your_name",
+]);
+const PHONE_FIELD_KEYS = new Set([
+  "phone",
+  "phone_number",
+  "contact_number",
+  "founder_phone",
+  "mobile",
+]);
+const EMAIL_FIELD_KEYS = new Set([
+  "founder_email",
+  "email",
+  "applicant_email",
+  "contact_email",
+]);
+
+/** Sensible default visible columns for a form's applicants table. */
+export function defaultVisibleApplicationColumns(
+  fields: ProgramFormField[]
+): string[] {
+  const sorted = [...fields].sort((a, b) => a.sort_order - b.sort_order);
+  const picked: string[] = [];
+
+  const pickBy = (predicate: (field: ProgramFormField) => boolean) => {
+    const match = sorted.find(
+      (field) => !picked.includes(field.field_key) && predicate(field)
+    );
+    if (match) picked.push(match.field_key);
+  };
+
+  pickBy((f) => NAME_FIELD_KEYS.has(f.field_key));
+  pickBy((f) => PHONE_FIELD_KEYS.has(f.field_key) || f.field_type === "phone");
+  pickBy((f) => EMAIL_FIELD_KEYS.has(f.field_key) || f.field_type === "email");
+
+  for (const field of sorted) {
+    if (picked.length >= 3) break;
+    if (
+      field.field_type === "textarea" ||
+      field.field_type === "file" ||
+      field.field_type === "image"
+    ) {
+      continue;
+    }
+    if (!picked.includes(field.field_key)) picked.push(field.field_key);
+  }
+
+  return [...picked, "__status", "__submitted"];
+}
+
+export function applicationColumnsStorageKey(formId: string): string {
+  return `program-apps-columns:${formId}`;
+}
+
+export function loadVisibleApplicationColumns(
+  formId: string,
+  availableIds: string[],
+  fallback: string[]
+): string[] {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(
+      applicationColumnsStorageKey(formId)
+    );
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return fallback;
+    const allowed = new Set(availableIds);
+    const filtered = parsed.filter(
+      (id): id is string => typeof id === "string" && allowed.has(id)
+    );
+    return filtered.length > 0 ? filtered : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveVisibleApplicationColumns(
+  formId: string,
+  columnIds: string[]
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      applicationColumnsStorageKey(formId),
+      JSON.stringify(columnIds)
+    );
+  } catch {
+    // Ignore quota / private-mode failures.
+  }
+}
+
+export function getApplicationColumnValue(
+  app: {
+    status: string;
+    submitted_at: string | null;
+    answers: Record<string, unknown>;
+  },
+  column: ApplicationTableColumn
+): string {
+  if (column.id === "__status") {
+    return app.status || "pending";
+  }
+  if (column.id === "__submitted") {
+    return app.submitted_at
+      ? new Date(app.submitted_at).toLocaleDateString()
+      : "—";
+  }
+  if (column.field) {
+    return formatAnswer(column.field, app.answers?.[column.field.field_key]);
+  }
+  const value = app.answers?.[column.id];
+  if (value === null || value === undefined || value === "") return "—";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+}

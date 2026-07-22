@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Plus } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -167,14 +166,17 @@ export default function ProgramsListPage() {
                 </TableRow>
               ) : (
                 forms.map((form) => (
-                  <TableRow key={form.id}>
+                  <TableRow
+                    key={form.id}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      router.push(`/dashboard/programs/${form.id}/applications`)
+                    }
+                  >
                     <TableCell>
-                      <Link
-                        href={`/dashboard/programs/${form.id}`}
-                        className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                      >
+                      <span className="font-medium text-zinc-900 dark:text-zinc-50">
                         {form.title}
-                      </Link>
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -188,7 +190,7 @@ export default function ProgramsListPage() {
                     <TableCell className="text-zinc-500">
                       {formatDateTime(form.updated_at)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" aria-label="Actions">
@@ -201,7 +203,7 @@ export default function ProgramsListPage() {
                               router.push(`/dashboard/programs/${form.id}`)
                             }
                           >
-                            Edit
+                            Edit form
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={form.status !== "draft"}
